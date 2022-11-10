@@ -2,8 +2,6 @@ import express from 'express';
 import path from 'path';
 import createError from 'http-errors';
 
-const indexRouter = require('./routes/index');
-
 // start express listen
 const app = express();
 const port = 3000;
@@ -16,10 +14,10 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
 // routes handler
-app.use('/', indexRouter);
+app.use('/', require('./routes/index'));
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use(function(req: any, res: any, next: any) {
     next(createError(404));
 });
 
