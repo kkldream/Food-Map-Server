@@ -10,7 +10,7 @@ app.listen(port, () => {
 });
 
 // view engine setup
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', './views');
 app.set('view engine', 'jade');
 
 // routes handler
