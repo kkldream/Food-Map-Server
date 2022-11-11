@@ -2,9 +2,7 @@ import express from 'express';
 import createError from 'http-errors';
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
-const { apiResponseBase } = require('./models/dataStruct/apiResponseBase');
-const { getDateFormat } = require('./models/utils');
-
+import utils from './models/utils';
 dotenv.config();
 
 // start express listen
@@ -21,26 +19,11 @@ app.set('view engine', 'jade');
 
 // routes handler
 app.use('/', function (req: any, res: any, next: any) {
-    console.log(`[${getDateFormat()}] ${req.method}: ${req.originalUrl}`);
+    console.log(`[${utils.getDateFormat()}] ${req.method}: ${req.originalUrl}`);
     next();
 });
 app.use('/', require('./routes/index'));
-
-app.use('/api', function (req: any, res: any, next: any) {
-    let token = req.body.token;
-    if (token === process.env.REQUEST_TOKEN) {
-        delete req.body.token;
-        next();
-    } else res.send({errMsg: 'token fail'});
-});
-app.use('/api/restaurant', require('./routes/googleRoute'));
-app.use('/api/user', require('./routes/userRoute'));
-app.use(function (req: any, res: any, next: any) {
-    let response = apiResponseBase();
-    response.status = -1;
-    response.errMsg = `Not found '${req.url}' api`;
-    res.send(response);
-});
+app.use('/api', require('./routes/api'));
 
 // catch 404 and forward to error handler
 app.use(function (req: any, res: any, next: any) {

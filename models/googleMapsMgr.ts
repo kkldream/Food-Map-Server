@@ -1,5 +1,5 @@
 import axios from 'axios';
-const mongoClient = require('./mongodbMgr');
+import mongoClient from './mongodbMgr';
 
 const API_URL = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json';
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
@@ -112,7 +112,7 @@ async function searchByName(name: string) {
     });
 }
 
-module.exports = {
+export default {
     updateRestaurant,
     searchByLocation,
     searchByName
