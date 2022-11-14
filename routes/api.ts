@@ -1,10 +1,20 @@
-import { Router } from "express";
+import { Router } from 'express';
 import apiResponseBase from '../models/dataStruct/apiResponseUserBase';
+import googleRoute from './api/googleRoute';
+import userRoute from './api/userRoute';
 
 const router = Router()
 
-router.use('/restaurant', require('./api/googleRoute'));
-router.use('/user', require('./api/userRoute'));
+router.use('/restaurant', googleRoute);
+router.use('/user', userRoute);
+
+router.get('/', function (req: any, res: any, next: any) {
+    let response = new apiResponseBase();
+    response.status = 0;
+    response.result = { msg: 'api is ready' };
+    res.send(response);
+});
+
 router.use(function (req: any, res: any, next: any) {
     let response = new apiResponseBase();
     response.status = -1;
@@ -12,4 +22,4 @@ router.use(function (req: any, res: any, next: any) {
     res.send(response);
 });
 
-module.exports = router;
+export default router;

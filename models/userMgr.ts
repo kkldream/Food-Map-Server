@@ -1,69 +1,155 @@
+import { ObjectId } from 'mongodb';
 import mongoClient from './mongodbMgr';
 import utils from './utils';
 
-const usernameRegex = /^[a-zA-Z0-9]+$/; // 僅限英文及數字
-const passwordRegex = /^(?=.{6,})/; // 最少八個位元
-const emailRegex = /^(([.](?=[^.]|^))|[\w_%{|}#$~`+!?-])+@(?:[\w-]+\.)+[a-zA-Z.]{2,63}$/; // 電子郵件格式
-
 async function register(username: string, password: string) {
     if (!username || !password) throw { status: 5, msg: '請求內容錯誤' };
-    if (!usernameRegex.test(username) || !passwordRegex.test(password)) throw { status: 1, msg: '帳號密碼格式錯誤' };
     return await mongoClient.exec(async (mdb: any) => {
         const userCol = mdb.collection('user');
-        let findResult = await userCol.find({ username }).toArray();
-        if (findResult.length > 0) throw { status: 2, msg: '帳號已註冊' };
+        let userDoc = await userCol.findOne({ username });
+        if (userDoc) throw { status: 2, msg: '帳號已註冊' };
         let accessKey = utils.generateUUID();
-        await userCol.insertOne({
+        let insertResult = await userCol.insertOne({
             createTime: new Date(),
             updateTime: new Date(),
-            username, password, accessKey
+            username, password, accessKey,
+            userImage: "",
+            devices: []
         });
-        return { msg: '註冊成功' };
-    });
-}
-
-async function login(username: string, password: string, deviceId: string) {
-    if (!usernameRegex.test(username) || !passwordRegex.test(password)) throw { status: 1, msg: '帳號密碼格式錯誤' };
-    return await mongoClient.exec(async (mdb: any) => {
-        const userCol = mdb.collection('user');
-        const loginLogCol = mdb.collection('loginLog');
-        let findResult = await userCol.find({ username }).toArray();
-        if (findResult.length === 0) throw { status: 3, msg: '帳號未註冊' };
-        await loginLogCol.updateMany({ username, isUse: true }, { $set: {isUse: false} });
-        await loginLogCol.insertOne({
-            username,
-            deviceId,
-            loginTime: new Date(),
-            isUse: true
-        })
         return {
-            msg: '登入成功',
-            accessKey: findResult[0].accessKey
+            msg: '註冊成功',
+            userId: insertResult.insertedId,
+            accessKey
         };
     });
 }
 
-async function deleteAccount(username: string) {
+async function loginByDevice(username: string, password: string, deviceId: string) {
+    if (!username || !password || !deviceId) throw { status: 5, msg: '請求內容錯誤' };
     return await mongoClient.exec(async (mdb: any) => {
         const userCol = mdb.collection('user');
         const loginLogCol = mdb.collection('loginLog');
-        await loginLogCol.updateMany({ username, isUse: true }, { $set: {isUse: false} });
-        await userCol.deleteMany({ username })
+        let userDoc = await userCol.findOne({ username });
+        if (!userDoc) throw { status: 3, msg: '帳號未註冊' };
+        if (password !== userDoc.password) throw { status: 1, msg: '帳號或密碼錯誤' };
+        // insert login log
+        await loginLogCol.insertOne({
+            userId: userDoc._id,
+            username,
+            deviceId,
+            createTime: new Date(),
+            isUse: true
+        });
+        // update user document
+        let deviceDoc = userDoc.devices.find((item: any) => item.deviceId === deviceId);
+        if (deviceDoc) {
+            await userCol.updateOne(
+                { _id: new ObjectId(userDoc._id) },
+                { $set: { "devices.$[item].isUse": true } },
+                { arrayFilters: [{ "item.deviceId": deviceId }] }
+            );
+        }
+        else {
+            await userCol.updateOne(
+                { _id: new ObjectId(userDoc._id) },
+                { $push: { devices: { deviceId, fcmToken: "", isUse: true } } }
+            );
+        }
+        // response
+        return {
+            msg: '登入成功',
+            userId: userDoc._id,
+            accessKey: userDoc.accessKey
+        };
+    });
+}
+
+async function addFcmToken(userId: string, deviceId: string, fcmToken: string) {
+    if (!deviceId || !fcmToken) throw { status: 5, msg: '請求內容錯誤' };
+    return await mongoClient.exec(async (mdb: any) => {
+        const userCol = mdb.collection('user');
+        let userDoc = await userCol.findOne({ _id: new ObjectId(userId) });
+        let deviceDoc = userDoc.devices.find((item: any) => item.deviceId === deviceId);
+        if (!deviceDoc) throw { status: -1, errMsg: '無此裝置記錄' };
+        if (deviceDoc.fcmToken === fcmToken)
+            return { msg: '已存在相同fcmToken' };
+        await userCol.updateOne(
+            { _id: new ObjectId(userId) },
+            { $set: { "devices.$[item].fcmToken": fcmToken } },
+            { arrayFilters: [{ "item.deviceId": deviceId }] }
+        );
+        return { msg: '已更新舊fcmToken' };
+    });
+}
+
+async function logoutByDevice(userId: string, deviceId: string) {
+    if (!deviceId) throw { status: 5, msg: '請求內容錯誤' };
+    return await mongoClient.exec(async (mdb: any) => {
+        const userCol = mdb.collection('user');
+        const loginLogCol = mdb.collection('loginLog');
+        let userDoc = await userCol.findOne({ _id: new ObjectId(userId) });
+        // insert logout log
+        await loginLogCol.insertOne({
+            userId,
+            username: userDoc.username,
+            deviceId,
+            createTime: new Date(),
+            isUse: false
+        });
+        // update user document
+        await userCol.updateOne(
+            { _id: new ObjectId(userId) },
+            { $set: { "devices.$[item].isUse": false } },
+            { arrayFilters: [{ "item.deviceId": deviceId }] }
+        );
+        return { msg: '登出成功' };
+    });
+}
+
+async function deleteAccount(userId: string) {
+    return await mongoClient.exec(async (mdb: any) => {
+        const userCol = mdb.collection('user');
+        const loginLogCol = mdb.collection('loginLog');
+        await loginLogCol.updateMany({ _id: new ObjectId(userId), isUse: true }, { $set: { isUse: false } });
+        await userCol.deleteMany({ _id: new ObjectId(userId) })
         return { msg: '刪除帳號成功' };
     });
 }
 
-async function action(username: string) {
+async function getImage(userId: string) {
     return await mongoClient.exec(async (mdb: any) => {
         const userCol = mdb.collection('user');
-        let findResult = await userCol.find({ username }).toArray();
-        return { msg: '操作成功'};
+        let userDoc = await userCol.findOne({ _id: new ObjectId(userId) });
+        return { userImage: userDoc.userImage || '' };
+    });
+}
+
+async function setImage(userId: string, userImage: string) {
+    if (!userImage) throw { status: 5, msg: '請求內容錯誤' };
+    return await mongoClient.exec(async (mdb: any) => {
+        const userCol = mdb.collection('user');
+        let updateResult = await userCol.updateOne({ _id: new ObjectId(userId) }, { $set: { userImage } })
+        if (updateResult.modifiedCount > 0) return { msg: '已更新使用者圖片' };
+        else return { msg: '已存在相同的使用者圖片' };
+    });
+}
+
+async function setPassword(userId: string, password: string) {
+    if (!password) throw { status: 5, msg: '請求內容錯誤' };
+    return await mongoClient.exec(async (mdb: any) => {
+        const userCol = mdb.collection('user');
+        await userCol.updateOne({ _id: new ObjectId(userId) }, { $set: { password } })
+        return { msg: '已更新使用者密碼' };
     });
 }
 
 export default {
     register,
-    login,
+    loginByDevice,
     deleteAccount,
-    action
+    getImage,
+    setImage,
+    setPassword,
+    addFcmToken,
+    logoutByDevice
 };

@@ -3,11 +3,13 @@ import createError from 'http-errors';
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 import utils from './models/utils';
+import indexRoute from './routes/index';
+import apiRoute from './routes/api';
 dotenv.config();
 
 // start express listen
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`server is running on http://localhost:${port}/`);
 });
@@ -22,8 +24,8 @@ app.use('/', function (req: any, res: any, next: any) {
     console.log(`[${utils.getDateFormat()}] ${req.method}: ${req.originalUrl}`);
     next();
 });
-app.use('/', require('./routes/index'));
-app.use('/api', require('./routes/api'));
+app.use('/', indexRoute);
+app.use('/api', apiRoute);
 
 // catch 404 and forward to error handler
 app.use(function (req: any, res: any, next: any) {

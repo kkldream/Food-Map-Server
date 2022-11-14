@@ -20,8 +20,8 @@ router.post('/update', async function(req: any, res: any, next: any) {
 router.post('/search_by_near', async function(req: any, res: any, next: any) {
     let response = new apiResponseBase();
     try {
-        let { username, accessKey, latitude, longitude, radius } = req.body;
-        await response.verifyUser(username, accessKey);
+        let { userId, accessKey, latitude, longitude, radius } = req.body;
+        await response.verifyUser(userId, accessKey);
         response.result = await googleMapsMgr.searchByLocation(latitude, longitude, radius);
     } catch (error: any) {
         if (error.status) response.status = error.status;
@@ -33,8 +33,8 @@ router.post('/search_by_near', async function(req: any, res: any, next: any) {
 router.post('/search_by_name', async function(req: any, res: any, next: any) {
     let response = new apiResponseBase();
     try {
-        let { username, accessKey, name } = req.body;
-        await response.verifyUser(username, accessKey);
+        let { userId, accessKey, name } = req.body;
+        await response.verifyUser(userId, accessKey);
         response.result = await googleMapsMgr.searchByName(name);
     } catch (error: any) {
         if (error.status) response.status = error.status;
@@ -43,4 +43,4 @@ router.post('/search_by_name', async function(req: any, res: any, next: any) {
     res.send(response);
 });
 
-module.exports = router;
+export default router;

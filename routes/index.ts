@@ -11,4 +11,4 @@ router.get('/time', function(req: any, res: any, next: any) {
     res.send({time: new Date()});
 });
 
-module.exports = router;
+export default router;

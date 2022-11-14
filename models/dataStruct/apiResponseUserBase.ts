@@ -1,5 +1,6 @@
 import mongoClient from '../mongodbMgr';
 import dotenv from 'dotenv';
+import { ObjectId } from 'mongodb';
 dotenv.config();
 
 class apiResponseBase {
@@ -12,7 +13,7 @@ class apiResponseBase {
     constructor() {
         this.requestTime = new Date();
         this.verify = undefined;
-        this.status = -1;
+        this.status = 0;
     }
 
     async verifyRoot(accessKey: string) {
@@ -26,16 +27,16 @@ class apiResponseBase {
         return { msg: '驗證成功' };
     }
 
-    async verifyUser(username: string, accessKey: string) {
+    async verifyUser(userId: string, accessKey: string) {
         return await mongoClient.exec(async (mdb: any) => {
             const userCol = mdb.collection('user');
-            let userDoc = await userCol.find({ username }).toArray();
-            if (userDoc.length === 0) {
+            let userDoc = await userCol.findOne({ _id: new ObjectId(userId) });
+            if (!userDoc) {
                 this.verify = false;
                 this.status = 3;
                 throw { msg: '帳號不存在' };
             }
-            if (userDoc[0].accessKey !== accessKey) {
+            if (userDoc.accessKey !== accessKey) {
                 this.verify = false;
                 this.status = 4;
                 throw { msg: '驗證錯誤' };

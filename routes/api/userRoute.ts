@@ -4,56 +4,106 @@ import apiResponseBase from "../../models/dataStruct/apiResponseUserBase";
 
 const router = Router()
 
-router.post('/register', async function(req: any, res: any, next: any) {
+router.post('/register', async function (req: any, res: any, next: any) {
     let response = new apiResponseBase();
     try {
         let { username, password } = req.body;
         response.result = await userMgr.register(username, password);
-        response.status = 0;
     } catch (error: any) {
-        response.status = error.status;
-        response.errMsg = error.msg;
+        response.status = error.status || -1;
+        response.errMsg = error.msg || '未知錯誤';
     }
     res.send(response);
 });
 
-router.post('/login', async function(req: any, res: any, next: any) {
+router.post('/login', async function (req: any, res: any, next: any) {
     let response = new apiResponseBase();
     try {
         let { username, password, deviceId } = req.body;
-        response.result = await userMgr.login(username, password, deviceId);
-        response.status = 0;
+        response.result = await userMgr.loginByDevice(username, password, deviceId);
     } catch (error: any) {
-        response.status = error.status;
-        response.errMsg = error.msg;
+        response.status = error.status || -1;
+        response.errMsg = error.msg || '未知錯誤';
     }
     res.send(response);
 });
 
-router.post('/delete_account', async function(req: any, res: any, next: any) {
+router.post('/add_fcm_token', async function (req: any, res: any, next: any) {
     let response = new apiResponseBase();
     try {
-        let { username, accessKey } = req.body;
-        await response.verifyUser(username, accessKey);
-        response.result = await userMgr.deleteAccount(username);
+        let { userId, accessKey, deviceId, fcmToken } = req.body;
+        await response.verifyUser(userId, accessKey);
+        response.result = await userMgr.addFcmToken(userId, deviceId, fcmToken);
     } catch (error: any) {
-        if (error.status) response.status = error.status;
-        response.errMsg = error.msg;
+        response.status = error.status || -1;
+        response.errMsg = error.msg || '未知錯誤';
     }
     res.send(response);
 });
 
-router.post('/action', async function(req: any, res: any, next: any) {
+router.post('/logout', async function (req: any, res: any, next: any) {
     let response = new apiResponseBase();
     try {
-        let { username, accessKey } = req.body;
-        await response.verifyUser(username, accessKey);
-        response.result = await userMgr.action(username);
+        let { userId, accessKey, deviceId } = req.body;
+        await response.verifyUser(userId, accessKey);
+        response.result = await userMgr.logoutByDevice(userId, deviceId);
     } catch (error: any) {
-        if (error.status) response.status = error.status;
-        response.errMsg = error.msg;
+        response.status = error.status || -1;
+        response.errMsg = error.msg || '未知錯誤';
     }
     res.send(response);
 });
 
-module.exports = router;
+router.post('/delete_account', async function (req: any, res: any, next: any) {
+    let response = new apiResponseBase();
+    try {
+        let { userId, accessKey } = req.body;
+        await response.verifyUser(userId, accessKey);
+        response.result = await userMgr.deleteAccount(userId);
+    } catch (error: any) {
+        response.status = error.status || -1;
+        response.errMsg = error.msg || '未知錯誤';
+    }
+    res.send(response);
+});
+
+router.post('/get_image', async function (req: any, res: any, next: any) {
+    let response = new apiResponseBase();
+    try {
+        let { userId, accessKey } = req.body;
+        await response.verifyUser(userId, accessKey);
+        response.result = await userMgr.getImage(userId);
+    } catch (error: any) {
+        response.status = error.status || -1;
+        response.errMsg = error.msg || '未知錯誤';
+    }
+    res.send(response);
+});
+
+router.post('/set_image', async function (req: any, res: any, next: any) {
+    let response = new apiResponseBase();
+    try {
+        let { userId, accessKey, userImage } = req.body;
+        await response.verifyUser(userId, accessKey);
+        response.result = await userMgr.setImage(userId, userImage);
+    } catch (error: any) {
+        response.status = error.status || -1;
+        response.errMsg = error.msg || '未知錯誤';
+    }
+    res.send(response);
+});
+
+router.post('/set_password', async function (req: any, res: any, next: any) {
+    let response = new apiResponseBase();
+    try {
+        let { userId, accessKey, password } = req.body;
+        await response.verifyUser(userId, accessKey);
+        response.result = await userMgr.setPassword(userId, password);
+    } catch (error: any) {
+        response.status = error.status || -1;
+        response.errMsg = error.msg || '未知錯誤';
+    }
+    res.send(response);
+});
+
+export default router;
