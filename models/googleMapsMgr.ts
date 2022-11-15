@@ -7,7 +7,8 @@ const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 async function updateRestaurant(latitude: Number, longitude: Number, radius: Number) {
     let dataList: any[] = [];
     let next_page_token: string = "";
-    for (let i = 0; i < 3; i++) {
+    let requestCount: number;
+    for (requestCount = 1; requestCount <= 3; requestCount++) {
         let response = await axios({
             method: 'get',
             url: `${API_URL}?pagetoken=${next_page_token}&location=${latitude},${longitude}&radius=${radius}&type=restaurant&language=zh-TW&key=${GOOGLE_API_KEY}`
@@ -77,6 +78,7 @@ async function updateRestaurant(latitude: Number, longitude: Number, radius: Num
             createTime: new Date(),
             type: 'search_by_near',
             request: { latitude, longitude, radius },
+            requestCount,
             response: dataList,
             responseCount: dataList.length,
             googleApiKey: GOOGLE_API_KEY,
