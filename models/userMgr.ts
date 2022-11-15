@@ -2,20 +2,30 @@ import { ObjectId } from 'mongodb';
 import mongoClient from './mongodbMgr';
 import utils from './utils';
 
-async function register(username: string, password: string) {
-    if (!username || !password) throw { status: 5, msg: '請求內容錯誤' };
+async function register(username: string, password: string, deviceId: string) {
+    if (!username || !password || !deviceId) throw { status: 5, msg: '請求內容錯誤' };
     return await mongoClient.exec(async (mdb: any) => {
         const userCol = mdb.collection('user');
         let userDoc = await userCol.findOne({ username });
         if (userDoc) throw { status: 2, msg: '帳號已註冊' };
+        // insert user document
         let accessKey = utils.generateUUID();
         let insertResult = await userCol.insertOne({
             createTime: new Date(),
             updateTime: new Date(),
             username, password, accessKey,
             userImage: "",
-            devices: []
+            devices: [ { deviceId, fcmToken: "", isUse: true } ]
         });
+        // insert login log
+        await mdb.collection('loginLog').insertOne({
+            userId: insertResult.insertedId,
+            username,
+            deviceId,
+            createTime: new Date(),
+            status: 'signin'
+        });
+        // response
         return {
             msg: '註冊成功',
             userId: insertResult.insertedId,
@@ -28,17 +38,16 @@ async function loginByDevice(username: string, password: string, deviceId: strin
     if (!username || !password || !deviceId) throw { status: 5, msg: '請求內容錯誤' };
     return await mongoClient.exec(async (mdb: any) => {
         const userCol = mdb.collection('user');
-        const loginLogCol = mdb.collection('loginLog');
         let userDoc = await userCol.findOne({ username });
         if (!userDoc) throw { status: 3, msg: '帳號未註冊' };
         if (password !== userDoc.password) throw { status: 1, msg: '帳號或密碼錯誤' };
         // insert login log
-        await loginLogCol.insertOne({
+        await mdb.collection('loginLog').insertOne({
             userId: userDoc._id,
             username,
             deviceId,
             createTime: new Date(),
-            isUse: true
+            status: 'login'
         });
         // update user document
         let deviceDoc = userDoc.devices.find((item: any) => item.deviceId === deviceId);
@@ -86,15 +95,16 @@ async function logoutByDevice(userId: string, deviceId: string) {
     if (!deviceId) throw { status: 5, msg: '請求內容錯誤' };
     return await mongoClient.exec(async (mdb: any) => {
         const userCol = mdb.collection('user');
-        const loginLogCol = mdb.collection('loginLog');
         let userDoc = await userCol.findOne({ _id: new ObjectId(userId) });
+        if (!userDoc.devices.find((doc: any) => doc.deviceId === deviceId && doc.isUse === true))
+            throw { status: 6, msg: '無此裝置登入資料' };
         // insert logout log
-        await loginLogCol.insertOne({
+        await mdb.collection('loginLog').insertOne({
             userId,
             username: userDoc.username,
             deviceId,
             createTime: new Date(),
-            isUse: false
+            status: 'logout'
         });
         // update user document
         await userCol.updateOne(

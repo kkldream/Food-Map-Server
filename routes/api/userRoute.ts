@@ -7,8 +7,8 @@ const router = Router()
 router.post('/register', async function (req: any, res: any, next: any) {
     let response = new apiResponseBase();
     try {
-        let { username, password } = req.body;
-        response.result = await userMgr.register(username, password);
+        let { username, password, deviceId } = req.body;
+        response.result = await userMgr.register(username, password, deviceId);
     } catch (error: any) {
         response.status = error.status || -1;
         response.errMsg = error.msg || '未知錯誤';
