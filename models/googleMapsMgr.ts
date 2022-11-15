@@ -53,7 +53,8 @@ async function updateRestaurant(latitude: Number, longitude: Number, radius: Num
 
     // 更新DB資料
     return await mongoClient.exec(async (mdb: any) => {
-        const userCol = mdb.collection('restaurant');
+        const updateLogCol = mdb.collection('updateLog');
+        const restaurantCol = mdb.collection('restaurant');
         let bulkWritePipe = []
         let dataIdList = []
         for (const data of dataList) {
@@ -66,54 +67,25 @@ async function updateRestaurant(latitude: Number, longitude: Number, radius: Num
                 }
             });
         }
-        let result = await userCol.bulkWrite(bulkWritePipe);
-        return {
+        let result = await restaurantCol.bulkWrite(bulkWritePipe);
+        let dbStatus = {
             matchCount: result.nMatched,
             upsertCount: result.nUpserted
         };
-    });
-}
-
-async function searchByLocation(latitude: Number, longitude: Number, radius: Number) {
-    return await mongoClient.exec(async (mdb: any) => {
-        const userCol = mdb.collection('restaurant');
-        let findResult = await userCol.find({
-            location: {
-                $near: {
-                    $geometry: {type: "Point", coordinates: [longitude, latitude]},
-                    $minDistance: 0,
-                    $maxDistance: radius
-                }
-            }
-        }).toArray();
-        for (const data of findResult) {
-            data.location = {
-                lat: data.location.coordinates[1],
-                lng: data.location.coordinates[0]
-            }
-        }
-        return findResult;
-    });
-}
-
-async function searchByName(name: string) {
-    return await mongoClient.exec(async (mdb: any) => {
-        const userCol = mdb.collection('restaurant');
-        let findResult = await userCol.find({
-            name: { $regex: new RegExp(name)}
-        }).toArray();
-        for (const data of findResult) {
-            data.location = {
-                lat: data.location.coordinates[1],
-                lng: data.location.coordinates[0]
-            }
-        }
-        return findResult;
+        // insert update log
+        await updateLogCol.insertOne({
+            createTime: new Date(),
+            type: 'search_by_near',
+            request: { latitude, longitude, radius },
+            response: dataList,
+            responseCount: dataList.length,
+            googleApiKey: GOOGLE_API_KEY,
+            dbStatus
+        });
+        return dbStatus;
     });
 }
 
 export default {
-    updateRestaurant,
-    searchByLocation,
-    searchByName
+    updateRestaurant
 };

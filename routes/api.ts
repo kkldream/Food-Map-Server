@@ -1,11 +1,13 @@
 import { Router } from 'express';
 import apiResponseBase from '../models/dataStruct/apiResponseUserBase';
-import googleRoute from './api/googleRoute';
+import restaurantRoute from './api/restaurantRoute';
+import googleApiRoute from './api/googleApiRoute';
 import userRoute from './api/userRoute';
 
 const router = Router()
 
-router.use('/restaurant', googleRoute);
+router.use('/restaurant', restaurantRoute);
+router.use('/google_api', googleApiRoute);
 router.use('/user', userRoute);
 
 router.get('/', function (req: any, res: any, next: any) {
