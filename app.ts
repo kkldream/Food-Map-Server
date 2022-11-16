@@ -1,10 +1,10 @@
 import express from 'express';
 import createError from 'http-errors';
-import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 import utils from './models/utils';
 import indexRoute from './routes/index';
 import apiRoute from './routes/api';
+
 dotenv.config();
 
 // start express listen
@@ -13,7 +13,7 @@ const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`server is running on http://localhost:${port}/`);
 });
-app.use(bodyParser.json())
+app.use(express.json());
 
 // view engine setup
 app.set('views', './views');
