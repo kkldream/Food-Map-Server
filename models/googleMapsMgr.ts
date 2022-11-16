@@ -2,7 +2,9 @@ import axios from 'axios';
 import mongoClient from './mongodbMgr';
 
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
-const TYPE_LIST = ['cafe', 'food', 'restaurant'];
+
+// https://developers.google.com/maps/documentation/places/web-service/supported_types
+const TYPE_LIST = ['cafe', 'food', 'restaurant', 'bakery', 'bar', 'meal_takeaway'];
 
 async function updateCustom(latitude: number, longitude: number, radius: number, keyword: string) {
     for (const argument of arguments) if (argument === undefined) throw {status: 5, msg: '請求內容錯誤'};
@@ -63,6 +65,7 @@ async function updatePlaceByKeyword(latitude: number, longitude: number, keyword
     return resultStatus;
 }
 
+// https://developers.google.com/maps/documentation/places/web-service/search-nearby
 async function nearBySearch(searchPageNum: number, request: any) {
     let {latitude, longitude, radius, type, keyword} = request
     let dataList: any[] = [];
