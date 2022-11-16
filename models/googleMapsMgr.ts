@@ -4,7 +4,7 @@ import mongoClient from './mongodbMgr';
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
 // https://developers.google.com/maps/documentation/places/web-service/supported_types
-const TYPE_LIST = ['cafe', 'food', 'restaurant', 'bakery', 'bar', 'meal_takeaway'];
+const TYPE_LIST = ['cafe', 'food', 'restaurant', 'meal_takeaway'];
 
 async function updateCustom(latitude: number, longitude: number, radius: number, keyword: string) {
     for (const argument of arguments) if (argument === undefined) throw {status: 5, msg: '請求內容錯誤'};
@@ -72,7 +72,7 @@ async function nearBySearch(searchPageNum: number, request: any) {
     let next_page_token: string = '';
     let requestCount: number;
     for (requestCount = 1; requestCount <= searchPageNum; requestCount++) {
-        if (requestCount > 1) await new Promise((r) => setTimeout(r, 2000));
+        if (requestCount > 1) await new Promise((r) => setTimeout(r, 1000));
         let url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?'
             + `&language=zh-TW`
             + `&key=${GOOGLE_API_KEY}`
@@ -93,13 +93,14 @@ async function nearBySearch(searchPageNum: number, request: any) {
         if (!next_page_token) break;
     }
 
+    if (dataList.length === 0) return {
+        upsertCount: 0,
+        matchCount: 0,
+        modifiedCount: 0
+    };
+
     for (let i = 0; i < dataList.length; i++) {
         const data = dataList[i];
-        // const distance = utils.twoLocateDistance(
-        //     [latitude, longitude],
-        //     [data.geometry.location.lat, data.geometry.location.lng]
-        // );
-        // console.log(`${i}. ${distance}`);
         dataList[i] = {
             updateTime: new Date(),
             uid: data.place_id || '',
