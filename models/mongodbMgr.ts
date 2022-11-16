@@ -1,5 +1,6 @@
 import {MongoClient} from 'mongodb';
 import dotenv from 'dotenv';
+
 dotenv.config();
 
 const mongodbUrl = process.env.MONGODB_URL || 'mongodb://localhost:27017/';
@@ -13,7 +14,7 @@ async function exec(func: any) {
     return result;
 }
 
-function convert2dSphere(lat: number, lng:number) {
+function convert2dSphere(lat: number, lng: number) {
     return {
         "type": "Point",
         "coordinates": [lng, lat]
