@@ -1,4 +1,3 @@
-
 function generateUUID() {
     let d = new Date().getTime();
     const uuid = 'xxxxxxxxxxxxxxxyxxxxxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -20,11 +19,12 @@ function getDateFormat() {
     return `${year}/${mouth}/${day}-${hours}:${minutes}:${seconds}`;
 }
 
-function twoPointDistance(p1: { x:number, y:number }, p2: { x:number, y:number }){
+function twoPointDistance(p1: { x: number, y: number }, p2: { x: number, y: number }) {
     let distance = Math.sqrt(Math.pow((p1.x - p2.x), 2) + Math.pow((p1.y - p2.y), 2));
     return distance;
 }
-function twoLocateDistance(point1:any, point2:any) {
+
+function twoLocateDistance(point1: any, point2: any) {
     let [y1, x1] = point1;
     let [y2, x2] = point2;
     let Lat1 = rad(x1); // 纬度
@@ -41,7 +41,7 @@ function twoLocateDistance(point1:any, point2:any) {
 }
 
 //	角度转换成弧度
-const rad =(d:any) =>{
+const rad = (d: any) => {
     return d * Math.PI / 180.00;
 };
 

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import mongoClient from './mongodbMgr';
+import {throwError, errorCodes} from "./dataStruct/throwError";
 
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
@@ -7,7 +8,7 @@ const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 const TYPE_LIST = ['cafe', 'food', 'restaurant', 'meal_takeaway'];
 
 async function updateCustom(latitude: number, longitude: number, radius: number, keyword: string) {
-    for (const argument of arguments) if (argument === undefined) throw {status: 5, msg: '請求內容錯誤'};
+    if (!latitude || !longitude || !radius || !keyword) throwError(errorCodes.requestDataError);
     let resultStatus = {
         upsertCount: 0,
         matchCount: 0,
@@ -23,7 +24,7 @@ async function updateCustom(latitude: number, longitude: number, radius: number,
 }
 
 async function updatePlaceByDistance(latitude: number, longitude: number, searchPageNum: number = 1) {
-    for (const argument of arguments) if (argument === undefined) throw {status: 5, msg: '請求內容錯誤'};
+    if (!latitude || !longitude) throwError(errorCodes.requestDataError);
     let resultStatus = {
         upsertCount: 0,
         matchCount: 0,
@@ -45,7 +46,7 @@ async function updatePlaceByDistance(latitude: number, longitude: number, search
 }
 
 async function updatePlaceByKeyword(latitude: number, longitude: number, keyword: string, searchPageNum: number = 1) {
-    for (const argument of arguments) if (argument === undefined) throw {status: 5, msg: '請求內容錯誤'};
+    if (!latitude || !longitude || !keyword) throwError(errorCodes.requestDataError);
     let resultStatus = {
         upsertCount: 0,
         matchCount: 0,

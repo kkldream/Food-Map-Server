@@ -1,13 +1,13 @@
 import mongoClient from './mongodbMgr';
 import googleMapsMgr from "./googleMapsMgr";
 import {BSONRegExp} from 'mongodb';
+import {throwError, errorCodes} from './dataStruct/throwError';
 
 const MIN_RESPONSE_NUM: number = 1;
 const MAX_RESPONSE_NUM: number = 20;
 
 async function searchByDistance(latitude: number, longitude: number, distance: number, minNum: number = MIN_RESPONSE_NUM, maxNum: number = MAX_RESPONSE_NUM) {
-    if (maxNum < minNum || maxNum === 0) throw {status: 5, msg: '請求內容錯誤'};
-    for (let i = 0; i < 3; i++) if (arguments[i] === undefined) throw {status: 5, msg: '請求內容錯誤'};
+    if (!latitude || !longitude || !distance || maxNum < minNum || maxNum === 0) throwError(errorCodes.requestDataError);
     return await mongoClient.exec(async (mdb: any) => {
         const placeCol = mdb.collection('place');
         let updated = false;
@@ -53,8 +53,7 @@ async function searchByDistance(latitude: number, longitude: number, distance: n
 }
 
 async function searchByKeyword(latitude: number, longitude: number, keyword: string, minNum: number = MIN_RESPONSE_NUM, maxNum: number = MAX_RESPONSE_NUM) {
-    if (maxNum < minNum || maxNum === 0) throw {status: 5, msg: '請求內容錯誤'};
-    for (let i = 0; i < 3; i++) if (arguments[i] === undefined) throw {status: 5, msg: '請求內容錯誤'};
+    if (!latitude || !longitude || !keyword || maxNum < minNum || maxNum === 0) throwError(errorCodes.requestDataError);
     return await mongoClient.exec(async (mdb: any) => {
         const placeCol = mdb.collection('place');
         let updated = false;

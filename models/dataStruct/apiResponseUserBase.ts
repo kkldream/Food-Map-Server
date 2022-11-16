@@ -1,6 +1,8 @@
 import mongoClient from '../mongodbMgr';
 import dotenv from 'dotenv';
-import { ObjectId } from 'mongodb';
+import {ObjectId} from 'mongodb';
+import {errorCodes, throwError} from "./throwError";
+
 dotenv.config();
 
 class apiResponseBase {
@@ -20,30 +22,30 @@ class apiResponseBase {
         if (accessKey !== process.env.ROOT_ACCESS_KEY) {
             this.verify = false;
             this.status = 4;
-            throw { msg: '驗證錯誤' };
+            throwError(errorCodes.accessKeyVerifyError);
         }
         this.status = 0;
         this.verify = true;
-        return { msg: '驗證成功' };
+        return {msg: '驗證成功'};
     }
 
     async verifyUser(userId: string, accessKey: string) {
         return await mongoClient.exec(async (mdb: any) => {
             const userCol = mdb.collection('user');
-            let userDoc = await userCol.findOne({ _id: new ObjectId(userId) });
+            let userDoc = await userCol.findOne({_id: new ObjectId(userId)});
             if (!userDoc) {
                 this.verify = false;
                 this.status = 3;
-                throw { msg: '帳號不存在' };
+                throwError(errorCodes.accountNotFound);
             }
             if (userDoc.accessKey !== accessKey) {
                 this.verify = false;
                 this.status = 4;
-                throw { msg: '驗證錯誤' };
+                throwError(errorCodes.accessKeyVerifyError);
             }
             this.verify = true;
             this.status = 0;
-            return { msg: '驗證成功' };
+            return {msg: '驗證成功'};
         });
     }
 }

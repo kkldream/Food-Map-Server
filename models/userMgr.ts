@@ -1,13 +1,14 @@
-import { ObjectId } from 'mongodb';
+import {ObjectId} from 'mongodb';
 import mongoClient from './mongodbMgr';
 import utils from './utils';
+import {errorCodes, throwError} from "./dataStruct/throwError";
 
 async function register(username: string, password: string, deviceId: string) {
-    if (!username || !password || !deviceId) throw { status: 5, msg: '請求內容錯誤' };
+    if (!username || !password || !deviceId) throwError(errorCodes.requestDataError);
     return await mongoClient.exec(async (mdb: any) => {
         const userCol = mdb.collection('user');
-        let userDoc = await userCol.findOne({ username });
-        if (userDoc) throw { status: 2, msg: '帳號已註冊' };
+        let userDoc = await userCol.findOne({username});
+        if (userDoc) throwError(errorCodes.accountRegistered);
         // insert user document
         let accessKey = utils.generateUUID();
         let insertResult = await userCol.insertOne({
@@ -15,7 +16,7 @@ async function register(username: string, password: string, deviceId: string) {
             updateTime: new Date(),
             username, password, accessKey,
             userImage: "",
-            devices: [ { deviceId, fcmToken: "", isUse: true } ]
+            devices: [{deviceId, fcmToken: "", isUse: true}]
         });
         // insert login log
         await mdb.collection('loginLog').insertOne({
@@ -35,12 +36,12 @@ async function register(username: string, password: string, deviceId: string) {
 }
 
 async function loginByDevice(username: string, password: string, deviceId: string) {
-    if (!username || !password || !deviceId) throw { status: 5, msg: '請求內容錯誤' };
+    if (!username || !password || !deviceId) throwError(errorCodes.requestDataError);
     return await mongoClient.exec(async (mdb: any) => {
         const userCol = mdb.collection('user');
-        let userDoc = await userCol.findOne({ username });
-        if (!userDoc) throw { status: 3, msg: '帳號未註冊' };
-        if (password !== userDoc.password) throw { status: 1, msg: '帳號或密碼錯誤' };
+        let userDoc = await userCol.findOne({username});
+        if (!userDoc) throwError(errorCodes.accountNotFound);
+        if (password !== userDoc.password) throwError(errorCodes.accountPasswordError);
         // insert login log
         await mdb.collection('loginLog').insertOne({
             userId: userDoc._id,
@@ -53,15 +54,14 @@ async function loginByDevice(username: string, password: string, deviceId: strin
         let deviceDoc = userDoc.devices.find((item: any) => item.deviceId === deviceId);
         if (deviceDoc) {
             await userCol.updateOne(
-                { _id: new ObjectId(userDoc._id) },
-                { $set: { "devices.$[item].isUse": true } },
-                { arrayFilters: [{ "item.deviceId": deviceId }] }
+                {_id: new ObjectId(userDoc._id)},
+                {$set: {"devices.$[item].isUse": true}},
+                {arrayFilters: [{"item.deviceId": deviceId}]}
             );
-        }
-        else {
+        } else {
             await userCol.updateOne(
-                { _id: new ObjectId(userDoc._id) },
-                { $push: { devices: { deviceId, fcmToken: "", isUse: true } } }
+                {_id: new ObjectId(userDoc._id)},
+                {$push: {devices: {deviceId, fcmToken: "", isUse: true}}}
             );
         }
         // response
@@ -74,30 +74,30 @@ async function loginByDevice(username: string, password: string, deviceId: strin
 }
 
 async function addFcmToken(userId: string, deviceId: string, fcmToken: string) {
-    if (!deviceId || !fcmToken) throw { status: 5, msg: '請求內容錯誤' };
+    if (!deviceId || !fcmToken) throwError(errorCodes.requestDataError);
     return await mongoClient.exec(async (mdb: any) => {
         const userCol = mdb.collection('user');
-        let userDoc = await userCol.findOne({ _id: new ObjectId(userId) });
+        let userDoc = await userCol.findOne({_id: new ObjectId(userId)});
         let deviceDoc = userDoc.devices.find((item: any) => item.deviceId === deviceId);
-        if (!deviceDoc) throw { status: -1, errMsg: '無此裝置記錄' };
+        if (!deviceDoc) throwError(errorCodes.loginDeviceNotFound);
         if (deviceDoc.fcmToken === fcmToken)
-            return { msg: '已存在相同fcmToken' };
+            return {msg: '已存在相同fcmToken'};
         await userCol.updateOne(
-            { _id: new ObjectId(userId) },
-            { $set: { "devices.$[item].fcmToken": fcmToken } },
-            { arrayFilters: [{ "item.deviceId": deviceId }] }
+            {_id: new ObjectId(userId)},
+            {$set: {"devices.$[item].fcmToken": fcmToken}},
+            {arrayFilters: [{"item.deviceId": deviceId}]}
         );
-        return { msg: '已更新舊fcmToken' };
+        return {msg: '已更新舊fcmToken'};
     });
 }
 
 async function logoutByDevice(userId: string, deviceId: string) {
-    if (!deviceId) throw { status: 5, msg: '請求內容錯誤' };
+    if (!deviceId) throwError(errorCodes.requestDataError);
     return await mongoClient.exec(async (mdb: any) => {
         const userCol = mdb.collection('user');
-        let userDoc = await userCol.findOne({ _id: new ObjectId(userId) });
+        let userDoc = await userCol.findOne({_id: new ObjectId(userId)});
         if (!userDoc.devices.find((doc: any) => doc.deviceId === deviceId && doc.isUse === true))
-            throw { status: 6, msg: '無此裝置登入資料' };
+            throwError(errorCodes.loginDeviceNotFound);
         // insert logout log
         await mdb.collection('loginLog').insertOne({
             userId,
@@ -108,11 +108,11 @@ async function logoutByDevice(userId: string, deviceId: string) {
         });
         // update user document
         await userCol.updateOne(
-            { _id: new ObjectId(userId) },
-            { $set: { "devices.$[item].isUse": false } },
-            { arrayFilters: [{ "item.deviceId": deviceId }] }
+            {_id: new ObjectId(userId)},
+            {$set: {"devices.$[item].isUse": false}},
+            {arrayFilters: [{"item.deviceId": deviceId}]}
         );
-        return { msg: '登出成功' };
+        return {msg: '登出成功'};
     });
 }
 
@@ -120,36 +120,36 @@ async function deleteAccount(userId: string) {
     return await mongoClient.exec(async (mdb: any) => {
         const userCol = mdb.collection('user');
         const loginLogCol = mdb.collection('loginLog');
-        await loginLogCol.updateMany({ _id: new ObjectId(userId), isUse: true }, { $set: { isUse: false } });
-        await userCol.deleteMany({ _id: new ObjectId(userId) })
-        return { msg: '刪除帳號成功' };
+        await loginLogCol.updateMany({_id: new ObjectId(userId), isUse: true}, {$set: {isUse: false}});
+        await userCol.deleteMany({_id: new ObjectId(userId)})
+        return {msg: '刪除帳號成功'};
     });
 }
 
 async function getImage(userId: string) {
     return await mongoClient.exec(async (mdb: any) => {
         const userCol = mdb.collection('user');
-        let userDoc = await userCol.findOne({ _id: new ObjectId(userId) });
-        return { userImage: userDoc.userImage || '' };
+        let userDoc = await userCol.findOne({_id: new ObjectId(userId)});
+        return {userImage: userDoc.userImage || ''};
     });
 }
 
 async function setImage(userId: string, userImage: string) {
-    if (!userImage) throw { status: 5, msg: '請求內容錯誤' };
+    if (!userImage) throwError(errorCodes.requestDataError);
     return await mongoClient.exec(async (mdb: any) => {
         const userCol = mdb.collection('user');
-        let updateResult = await userCol.updateOne({ _id: new ObjectId(userId) }, { $set: { userImage } })
-        if (updateResult.modifiedCount > 0) return { msg: '已更新使用者圖片' };
-        else return { msg: '已存在相同的使用者圖片' };
+        let updateResult = await userCol.updateOne({_id: new ObjectId(userId)}, {$set: {userImage}})
+        if (updateResult.modifiedCount > 0) return {msg: '已更新使用者圖片'};
+        else return {msg: '已存在相同的使用者圖片'};
     });
 }
 
 async function setPassword(userId: string, password: string) {
-    if (!password) throw { status: 5, msg: '請求內容錯誤' };
+    if (!password) throwError(errorCodes.requestDataError);
     return await mongoClient.exec(async (mdb: any) => {
         const userCol = mdb.collection('user');
-        await userCol.updateOne({ _id: new ObjectId(userId) }, { $set: { password } })
-        return { msg: '已更新使用者密碼' };
+        await userCol.updateOne({_id: new ObjectId(userId)}, {$set: {password}})
+        return {msg: '已更新使用者密碼'};
     });
 }
 
