@@ -4,7 +4,7 @@ import mongoClient from './mongodbMgr';
 const API_URL = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json';
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
-async function updateRestaurant(latitude: Number, longitude: Number, radius: Number) {
+async function updateRestaurant(latitude: number, longitude: number, radius: number) {
     let dataList: any[] = [];
     let next_page_token: string = "";
     let requestCount: number;
@@ -33,10 +33,7 @@ async function updateRestaurant(latitude: Number, longitude: Number, radius: Num
                 total: data.user_ratings_total,
             },
             address: data.vicinity,
-            location: {
-                "type" : "Point",
-                "coordinates" : [data.geometry.location.lng, data.geometry.location.lat]
-            },
+            location: mongoClient.convert2dSphere(data.geometry.location.lat, data.geometry.location.lng),
             icon: {
                 url: data.icon,
                 background_color: data.icon_background_color,
@@ -62,8 +59,8 @@ async function updateRestaurant(latitude: Number, longitude: Number, radius: Num
             dataIdList.push(data.uid);
             bulkWritePipe.push({
                 updateOne: {
-                    filter: { uid: data.uid },
-                    update: { $set: data },
+                    filter: {uid: data.uid},
+                    update: {$set: data},
                     upsert: true
                 }
             });
@@ -77,7 +74,10 @@ async function updateRestaurant(latitude: Number, longitude: Number, radius: Num
         await updateLogCol.insertOne({
             createTime: new Date(),
             type: 'search_by_near',
-            request: { latitude, longitude, radius },
+            request: {
+                location: mongoClient.convert2dSphere(latitude, longitude),
+                radius
+            },
             requestCount,
             response: dataList,
             responseCount: dataList.length,

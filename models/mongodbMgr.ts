@@ -1,4 +1,4 @@
-import { MongoClient } from 'mongodb';
+import {MongoClient} from 'mongodb';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -13,4 +13,14 @@ async function exec(func: any) {
     return result;
 }
 
-export default { exec }
+function convert2dSphere(lat: number, lng:number) {
+    return {
+        "type": "Point",
+        "coordinates": [lng, lat]
+    };
+}
+
+export default {
+    exec,
+    convert2dSphere
+}

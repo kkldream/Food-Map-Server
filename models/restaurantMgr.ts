@@ -1,6 +1,6 @@
 import mongoClient from './mongodbMgr';
 
-async function searchByLocation(latitude: Number, longitude: Number, radius: Number) {
+async function searchByLocation(latitude: number, longitude: number, radius: number) {
     return await mongoClient.exec(async (mdb: any) => {
         const userCol = mdb.collection('restaurant');
         let findResult = await userCol.find({
