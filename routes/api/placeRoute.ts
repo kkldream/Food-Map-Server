@@ -30,4 +30,17 @@ router.post('/search_by_keyword', async function (req: any, res: any, next: any)
     res.send(response);
 });
 
+router.post('/draw_card', async function (req: any, res: any, next: any) {
+    let response = new apiResponseBase();
+    try {
+        let {userId, accessKey, latitude, longitude, mode, num} = req.body;
+        await response.verifyUser(userId, accessKey);
+        response.result = await restaurantMgr.drawCard(userId, latitude, longitude, mode, num);
+    } catch (error: any) {
+        if (error.status) response.status = error.status;
+        response.errMsg = error.msg;
+    }
+    res.send(response);
+});
+
 export default router;

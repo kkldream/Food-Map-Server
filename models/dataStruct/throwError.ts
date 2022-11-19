@@ -11,7 +11,7 @@ export enum errorCodes {
 
 export function throwError(errorCode: errorCodes, msg: string = '') {
     let status = errorCode || errorCodes.unknown;
-    if (msg !== '')
+    if (msg === '')
         switch (errorCode) {
             case errorCodes.ok:
                 msg = '回應成功';
@@ -39,4 +39,12 @@ export function throwError(errorCode: errorCodes, msg: string = '') {
                 break;
         }
     throw {status, msg};
+}
+
+export function isUndefined(argus: any[]) {
+    for (const argu of argus) {
+        if (argu == undefined)
+            return true;
+    }
+    return false;
 }

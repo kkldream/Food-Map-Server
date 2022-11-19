@@ -1,7 +1,7 @@
 import mongoClient from './mongodbMgr';
 import googleMapsMgr from "./googleMapsMgr";
 import {BSONRegExp} from 'mongodb';
-import {throwError, errorCodes} from './dataStruct/throwError';
+import {throwError, errorCodes, isUndefined} from './dataStruct/throwError';
 
 const MIN_RESPONSE_NUM: number = 1;
 const MAX_RESPONSE_NUM: number = 20;
@@ -53,7 +53,7 @@ async function searchByDistance(latitude: number, longitude: number, distance: n
 }
 
 async function searchByKeyword(latitude: number, longitude: number, keyword: string, minNum: number = MIN_RESPONSE_NUM, maxNum: number = MAX_RESPONSE_NUM) {
-    if (!latitude || !longitude || !keyword || maxNum < minNum || maxNum === 0) throwError(errorCodes.requestDataError);
+    if (isUndefined([latitude, longitude, keyword]) || maxNum < minNum || maxNum === 0) throwError(errorCodes.requestDataError);
     return await mongoClient.exec(async (mdb: any) => {
         const placeCol = mdb.collection('place');
         let updated = false;
@@ -98,7 +98,13 @@ async function searchByKeyword(latitude: number, longitude: number, keyword: str
     });
 }
 
+async function drawCard(userId: string, latitude: number, longitude: number, mode: number, num: number) {
+    if (isUndefined([userId, latitude, longitude, mode, num])) throwError(errorCodes.requestDataError);
+    return 'TBD';
+}
+
 export default {
     searchByDistance,
-    searchByKeyword
+    searchByKeyword,
+    drawCard
 };
