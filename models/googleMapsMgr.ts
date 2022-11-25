@@ -1,11 +1,10 @@
 import axios from 'axios';
-import mongoClient from './mongodbMgr';
 import {throwError, errorCodes} from "./dataStruct/throwError";
-
-const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+import utils from "./utils";
 
 // https://developers.google.com/maps/documentation/places/web-service/supported_types
 const TYPE_LIST = ['cafe', 'food', 'restaurant', 'meal_takeaway'];
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
 async function updateCustom(latitude: number, longitude: number, radius: number, keyword: string) {
     if (!latitude || !longitude || !radius || !keyword) throwError(errorCodes.requestDataError);
@@ -69,6 +68,8 @@ async function updatePlaceByKeyword(latitude: number, longitude: number, keyword
 // https://developers.google.com/maps/documentation/places/web-service/search-nearby
 async function nearBySearch(searchPageNum: number, request: any) {
     let {latitude, longitude, radius, type, keyword} = request
+    const placeCol = global.mongodbClient.foodMapDb.placeCol;
+    const updateLogCol = global.mongodbClient.foodMapDb.updateLogCol;
     let dataList: any[] = [];
     let next_page_token: string = '';
     let requestCount: number;
@@ -113,7 +114,7 @@ async function nearBySearch(searchPageNum: number, request: any) {
                 total: data.user_ratings_total || 0,
             },
             address: data.vicinity || '',
-            location: mongoClient.convert2dSphere(data.geometry.location.lat, data.geometry.location.lng),
+            location: utils.converTo2dSphere(data.geometry.location.lat, data.geometry.location.lng),
             icon: {
                 url: data.icon,
                 background_color: data.icon_background_color,
@@ -130,43 +131,39 @@ async function nearBySearch(searchPageNum: number, request: any) {
     }
 
     // 更新DB資料
-    return await mongoClient.exec(async (mdb: any) => {
-        const updateLogCol = mdb.collection('updateLog');
-        const placeCol = mdb.collection('place');
-        let bulkWritePipe = []
-        let dataIdList = []
-        for (const data of dataList) {
-            dataIdList.push(data.uid);
-            bulkWritePipe.push({
-                updateOne: {
-                    filter: {uid: data.uid},
-                    update: {$set: data},
-                    upsert: true
-                }
-            });
-        }
-        let result = await placeCol.bulkWrite(bulkWritePipe);
-        let dbStatus = {
-            upsertCount: result.nUpserted,
-            matchCount: result.nMatched,
-            modifiedCount: result.nModified
-        };
-        // insert update log
-        await updateLogCol.insertOne({
-            createTime: new Date(),
-            type: 'search_by_near',
-            request: {
-                location: mongoClient.convert2dSphere(latitude, longitude),
-                radius, type, keyword
-            },
-            requestCount,
-            response: dataList,
-            responseCount: dataList.length,
-            googleApiKey: GOOGLE_API_KEY,
-            dbStatus
+    let bulkWritePipe = []
+    let dataIdList = []
+    for (const data of dataList) {
+        dataIdList.push(data.uid);
+        bulkWritePipe.push({
+            updateOne: {
+                filter: {uid: data.uid},
+                update: {$set: data},
+                upsert: true
+            }
         });
-        return dbStatus;
+    }
+    let result = await placeCol.bulkWrite(bulkWritePipe);
+    let dbStatus = {
+        upsertCount: result.nUpserted,
+        matchCount: result.nMatched,
+        modifiedCount: result.nModified
+    };
+    // insert update log
+    await updateLogCol.insertOne({
+        createTime: new Date(),
+        type: 'search_by_near',
+        request: {
+            location: utils.converTo2dSphere(latitude, longitude),
+            radius, type, keyword
+        },
+        requestCount,
+        response: dataList,
+        responseCount: dataList.length,
+        googleApiKey: GOOGLE_API_KEY,
+        dbStatus
     });
+    return dbStatus;
 }
 
 export default {

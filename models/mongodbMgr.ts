@@ -1,27 +1,49 @@
-import {MongoClient} from 'mongodb';
-import dotenv from 'dotenv';
+import {MongoClient} from "mongodb";
 
-dotenv.config();
+export default class MongodbClient {
+    private client: MongoClient;
 
-const mongodbUrl = process.env.MONGODB_URL || 'mongodb://localhost:27017/';
-const dbName = 'food_map';
+    // Collection List
+    public foodMapDb: {
+        placeCol?: any,
+        userCol?: any,
+        loginLogCol?: any,
+        updateLogCol?: any,
+        drawCardLogCol?: any
+    } = {};
 
-async function exec(func: any) {
-    const client = await MongoClient.connect(mongodbUrl);
-    const mdb = client.db(dbName);
-    const result = await func(mdb);
-    await client.close();
-    return result;
-}
+    initDbColList(client: MongoClient) {
+        // Db List
+        let foodMapDb = client.db('food_map');
+        // Collection List
+        this.foodMapDb.placeCol = foodMapDb.collection('place');
+        this.foodMapDb.userCol = foodMapDb.collection('user');
+        this.foodMapDb.loginLogCol = foodMapDb.collection('loginLog');
+        this.foodMapDb.updateLogCol = foodMapDb.collection('updateLog');
+        this.foodMapDb.drawCardLogCol = foodMapDb.collection('drawCardLog');
+    }
 
-function convert2dSphere(lat: number, lng: number) {
-    return {
-        "type": "Point",
-        "coordinates": [lng, lat]
-    };
-}
+    constructor(url: string) {
+        this.client = new MongoClient(url);
+        this.client.connect().then(async client => {
+            this.client = client;
+            console.log('mongo client is connected');
+            this.initDbColList(client);
+        })
+    }
 
-export default {
-    exec,
-    convert2dSphere
+    db(dbName: string) {
+        return this.client.db(dbName);
+    }
+
+    // 方法已棄用
+    // isConnected() {
+    //     return this.client.isConnected();
+    // }
+
+    close() {
+        this.client.close().then(r => {
+            console.log('mongo client is disconnect')
+        });
+    }
 }

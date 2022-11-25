@@ -1,4 +1,3 @@
-import mongoClient from '../mongodbMgr';
 import dotenv from 'dotenv';
 import {ObjectId} from 'mongodb';
 import {errorCodes, throwError} from "./throwError";
@@ -30,23 +29,20 @@ class apiResponseBase {
     }
 
     async verifyUser(userId: string, accessKey: string) {
-        return await mongoClient.exec(async (mdb: any) => {
-            const userCol = mdb.collection('user');
-            let userDoc = await userCol.findOne({_id: new ObjectId(userId)});
-            if (!userDoc) {
-                this.verify = false;
-                this.status = 3;
-                throwError(errorCodes.accountNotFound);
-            }
-            if (userDoc.accessKey !== accessKey) {
-                this.verify = false;
-                this.status = 4;
-                throwError(errorCodes.accessKeyVerifyError);
-            }
-            this.verify = true;
-            this.status = 0;
-            return {msg: '驗證成功'};
-        });
+        let userDoc = await global.mongodbClient.foodMapDb.userCol.findOne({_id: new ObjectId(userId)});
+        if (!userDoc) {
+            this.verify = false;
+            this.status = 3;
+            throwError(errorCodes.accountNotFound);
+        }
+        if (userDoc.accessKey !== accessKey) {
+            this.verify = false;
+            this.status = 4;
+            throwError(errorCodes.accessKeyVerifyError);
+        }
+        this.verify = true;
+        this.status = 0;
+        return {msg: '驗證成功'};
     }
 }
 

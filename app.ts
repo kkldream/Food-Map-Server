@@ -4,8 +4,14 @@ import dotenv from 'dotenv';
 import utils from './models/utils';
 import indexRoute from './routes/index';
 import apiRoute from './routes/api';
+import MongodbClient from "./models/mongodbMgr";
 
 dotenv.config();
+
+// Mongodb Init
+const MONGODB_URL = process.env.MONGODB_URL || 'mongodb://localhost:27017';
+declare global { var mongodbClient: MongodbClient; }
+global.mongodbClient = new MongodbClient(MONGODB_URL);
 
 // start express listen
 const app = express();
@@ -41,4 +47,10 @@ app.use(function (err: any, req: any, res: any, next: any) {
     // render the error page
     res.status(err.status || 500);
     res.render('error');
+});
+
+// 終止程式時觸發
+process.on('SIGINT', async () => {
+    await global.mongodbClient.close();
+    process.exit(0);
 });

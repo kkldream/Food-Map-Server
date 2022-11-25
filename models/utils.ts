@@ -45,9 +45,17 @@ const rad = (d: any) => {
     return d * Math.PI / 180.00;
 };
 
+function converTo2dSphere(lat: number, lng: number) {
+    return {
+        "type": "Point",
+        "coordinates": [lng, lat]
+    };
+}
+
 export default {
     generateUUID,
     getDateFormat,
     twoPointDistance,
-    twoLocateDistance
+    twoLocateDistance,
+    converTo2dSphere
 }
