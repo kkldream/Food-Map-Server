@@ -106,4 +106,43 @@ router.post('/set_password', async function (req: any, res: any, next: any) {
     res.send(response);
 });
 
+router.post('/push_favorite', async function (req: any, res: any, next: any) {
+    let response = new apiResponseBase();
+    try {
+        let {userId, accessKey, favoriteList} = req.body;
+        await response.verifyUser(userId, accessKey);
+        response.result = await userMgr.pushFavorite(userId, favoriteList);
+    } catch (error: any) {
+        response.status = error.status || -1;
+        response.errMsg = error.msg || '未知錯誤';
+    }
+    res.send(response);
+});
+
+router.post('/pull_favorite', async function (req: any, res: any, next: any) {
+    let response = new apiResponseBase();
+    try {
+        let {userId, accessKey, favoriteIdList} = req.body;
+        await response.verifyUser(userId, accessKey);
+        response.result = await userMgr.pullFavorite(userId, favoriteIdList);
+    } catch (error: any) {
+        response.status = error.status || -1;
+        response.errMsg = error.msg || '未知錯誤';
+    }
+    res.send(response);
+});
+
+router.post('/get_favorite', async function (req: any, res: any, next: any) {
+    let response = new apiResponseBase();
+    try {
+        let {userId, accessKey} = req.body;
+        await response.verifyUser(userId, accessKey);
+        response.result = await userMgr.getFavorite(userId);
+    } catch (error: any) {
+        response.status = error.status || -1;
+        response.errMsg = error.msg || '未知錯誤';
+    }
+    res.send(response);
+});
+
 export default router;

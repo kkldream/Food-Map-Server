@@ -1,9 +1,11 @@
 import axios from 'axios';
 import {throwError, errorCodes} from "./dataStruct/throwError";
 import utils from "./utils";
+import config from "../config"
+import placeDocument from "./dataStruct/mongodb/placeDocument";
 
 // https://developers.google.com/maps/documentation/places/web-service/supported_types
-const TYPE_LIST = ['cafe', 'food', 'restaurant', 'meal_takeaway'];
+const FOOD_TYPE_LIST = config.foodTypeList;
 const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
 
 async function updateCustom(latitude: number, longitude: number, radius: number, keyword: string) {
@@ -13,7 +15,7 @@ async function updateCustom(latitude: number, longitude: number, radius: number,
         matchCount: 0,
         modifiedCount: 0
     };
-    for (const type of TYPE_LIST) {
+    for (const type of FOOD_TYPE_LIST) {
         let result = await nearBySearch(3, {latitude, longitude, radius, keyword});
         resultStatus.upsertCount += result.upsertCount;
         resultStatus.matchCount += result.matchCount;
@@ -29,7 +31,7 @@ async function updatePlaceByDistance(latitude: number, longitude: number, search
         matchCount: 0,
         modifiedCount: 0
     };
-    for (const type of TYPE_LIST) {
+    for (const type of FOOD_TYPE_LIST) {
         let result = await nearBySearch(searchPageNum, {
                 latitude, longitude,
                 radius: -1,
@@ -51,7 +53,7 @@ async function updatePlaceByKeyword(latitude: number, longitude: number, keyword
         matchCount: 0,
         modifiedCount: 0
     };
-    for (const type of TYPE_LIST) {
+    for (const type of FOOD_TYPE_LIST) {
         let result = await nearBySearch(searchPageNum, {
                 latitude, longitude,
                 type,
@@ -70,7 +72,7 @@ async function nearBySearch(searchPageNum: number, request: any) {
     let {latitude, longitude, radius, type, keyword} = request
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     const updateLogCol = global.mongodbClient.foodMapDb.updateLogCol;
-    let dataList: any[] = [];
+    let dataList: placeDocument[] = [];
     let next_page_token: string = '';
     let requestCount: number;
     for (requestCount = 1; requestCount <= searchPageNum; requestCount++) {
@@ -102,7 +104,7 @@ async function nearBySearch(searchPageNum: number, request: any) {
     };
 
     for (let i = 0; i < dataList.length; i++) {
-        const data = dataList[i];
+        const data: any = dataList[i];
         dataList[i] = {
             updateTime: new Date(),
             uid: data.place_id || '',

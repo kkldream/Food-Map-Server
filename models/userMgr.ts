@@ -1,6 +1,7 @@
 import {ObjectId} from 'mongodb';
 import utils from './utils';
-import {errorCodes, throwError} from "./dataStruct/throwError";
+import {errorCodes, isUndefined, throwError} from "./dataStruct/throwError";
+import userDocument, {favoriteItem} from "./dataStruct/mongodb/userDocument";
 
 async function register(username: string, password: string, deviceId: string) {
     if (!username || !password || !deviceId) throwError(errorCodes.requestDataError);
@@ -12,13 +13,15 @@ async function register(username: string, password: string, deviceId: string) {
 
     // insert user document
     let accessKey = utils.generateUUID();
-    let insertResult = await userCol.insertOne({
+    let insertDoc: userDocument = {
         createTime: new Date(),
         updateTime: new Date(),
         username, password, accessKey,
         userImage: "",
-        devices: [{deviceId, fcmToken: "", isUse: true}]
-    });
+        devices: [{deviceId, fcmToken: "", isUse: true}],
+        favoriteList: []
+    };
+    let insertResult = await userCol.insertOne(insertDoc);
 
     // insert login log
     await loginLogCol.insertOne({
@@ -142,6 +145,36 @@ async function setPassword(userId: string, password: string) {
     return {msg: '已更新使用者密碼'};
 }
 
+async function pushFavorite(userId: string, favoriteList: favoriteItem[]) {
+    if (isUndefined([favoriteList])) throwError(errorCodes.requestDataError);
+    const userCol = global.mongodbClient.foodMapDb.userCol;
+    let userDoc: userDocument = await userCol.findOne({_id: new ObjectId(userId)});
+    let favoriteIdList = favoriteList.map(e => e.placeId);
+    let oldFavoriteList = userDoc.favoriteList.filter(e => !favoriteIdList.includes(e.placeId));
+    let newFavoriteList = favoriteList.map(e => {
+        e.updateTime = new Date();
+        return e;
+    });
+    let outFavoriteList = oldFavoriteList.concat(newFavoriteList);
+    await userCol.updateOne({_id: new ObjectId(userId)}, {$set: {favoriteList: outFavoriteList}});
+    return {msg: '添加最愛成功'};
+}
+
+async function pullFavorite(userId: string, favoriteIdList: string[]) {
+    if (isUndefined([favoriteIdList])) throwError(errorCodes.requestDataError);
+    const userCol = global.mongodbClient.foodMapDb.userCol;
+    let userDoc: userDocument = await userCol.findOne({_id: new ObjectId(userId)});
+    let outFavoriteList = userDoc.favoriteList.filter(e => !favoriteIdList.includes(e.placeId));
+    await userCol.updateOne({_id: new ObjectId(userId)}, {$set: {favoriteList: outFavoriteList}});
+    return {msg: '移除最愛成功'};
+}
+
+async function getFavorite(userId: string) {
+    const userCol = global.mongodbClient.foodMapDb.userCol;
+    let userDoc: userDocument = await userCol.findOne({_id: new ObjectId(userId)});
+    return userDoc.favoriteList;
+}
+
 export default {
     register,
     loginByDevice,
@@ -150,5 +183,8 @@ export default {
     setImage,
     setPassword,
     addFcmToken,
-    logoutByDevice
+    logoutByDevice,
+    pushFavorite,
+    pullFavorite,
+    getFavorite
 };

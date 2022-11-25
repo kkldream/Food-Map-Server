@@ -1,7 +1,9 @@
 import googleMapsMgr from "./googleMapsMgr";
 import {BSONRegExp} from 'mongodb';
 import {throwError, errorCodes, isUndefined} from './dataStruct/throwError';
+import config from "../config"
 
+const FOOD_TYPE_LIST = config.foodTypeList;
 const MIN_RESPONSE_NUM: number = 1;
 const MAX_RESPONSE_NUM: number = 20;
 
@@ -19,7 +21,8 @@ async function searchByDistance(latitude: number, longitude: number, distance: n
                 },
                 "distanceField": "distance",
                 "spherical": true,
-                "maxDistance": distance
+                "maxDistance": distance,
+                "query": {"types": {"$in": FOOD_TYPE_LIST}}
             }
         },
         {
@@ -63,7 +66,12 @@ async function searchByKeyword(latitude: number, longitude: number, keyword: str
                 },
                 "distanceField": "distance",
                 "spherical": true,
-                "query": {"name": {"$regex": new BSONRegExp(keyword)}}
+                "query": {
+                    "$and": [
+                        {"name": {"$regex": new BSONRegExp(keyword)}},
+                        {"types": {"$in": FOOD_TYPE_LIST}}
+                    ]
+                }
             }
         },
         {
