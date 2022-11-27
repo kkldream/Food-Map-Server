@@ -168,8 +168,20 @@ async function nearBySearch(searchPageNum: number, request: any) {
     return dbStatus;
 }
 
+// https://developers.google.com/maps/documentation/places/web-service/details
+async function detailsByPlaceId(place_id: string) {
+    // const placeCol = global.mongodbClient.foodMapDb.placeCol;
+    // const updateLogCol = global.mongodbClient.foodMapDb.updateLogCol;
+    let url = 'https://maps.googleapis.com/maps/api/place/details/json?'
+        + `&place_id=${place_id}`
+        + `&key=${GOOGLE_API_KEY}`;
+    let response = (await axios({method: 'get', url})).data;
+    return response;
+}
+
 export default {
     updateCustom,
     updatePlaceByDistance,
-    updatePlaceByKeyword
+    updatePlaceByKeyword,
+    detailsByPlaceId
 };

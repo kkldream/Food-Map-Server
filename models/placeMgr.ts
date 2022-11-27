@@ -2,6 +2,7 @@ import googleMapsMgr from "./googleMapsMgr";
 import {BSONRegExp} from 'mongodb';
 import {throwError, errorCodes, isUndefined} from './dataStruct/throwError';
 import config from "../config"
+import {drawCardModeEnum} from "./dataStruct/staticCode/drawCardModeEnum";
 
 const FOOD_TYPE_LIST = config.foodTypeList;
 const MIN_RESPONSE_NUM: number = 1;
@@ -101,8 +102,17 @@ async function searchByKeyword(latitude: number, longitude: number, keyword: str
     return {updated, dbStatus, placeCount: placeList.length, placeList};
 }
 
-async function drawCard(userId: string, latitude: number, longitude: number, mode: number, num: number) {
+async function drawCard(userId: string, latitude: number, longitude: number, mode: drawCardModeEnum, num: number) {
     if (isUndefined([userId, latitude, longitude, mode, num])) throwError(errorCodes.requestDataError);
+    const userCol = global.mongodbClient.foodMapDb.userCol;
+    const placeCol = global.mongodbClient.foodMapDb.placeCol;
+    switch (mode) {
+        case drawCardModeEnum.favorite:
+
+            break;
+        case drawCardModeEnum.near:
+            break;
+    }
     return 'TBD';
 }
 
