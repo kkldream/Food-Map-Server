@@ -1,8 +1,9 @@
 import googleMapsMgr from "./googleMapsMgr";
-import {BSONRegExp} from 'mongodb';
+import {BSONRegExp, ObjectId} from 'mongodb';
 import {throwError, errorCodes, isUndefined} from './dataStruct/throwError';
 import config from "../config"
 import {drawCardModeEnum} from "./dataStruct/staticCode/drawCardModeEnum";
+import placeDocument from "./dataStruct/mongodb/placeDocument";
 
 const FOOD_TYPE_LIST = config.foodTypeList;
 const MIN_RESPONSE_NUM: number = 1;
@@ -44,12 +45,13 @@ async function searchByDistance(latitude: number, longitude: number, distance: n
         updated = true;
         placeList = await placeCol.aggregate(pipeline).toArray();
     }
-    for (const place of placeList) {
+    placeList.map((place: any) => {
+        delete place._id;
         place.location = {
             lat: place.location.coordinates[1],
             lng: place.location.coordinates[0]
-        }
-    }
+        };
+    })
     return {updated, dbStatus, placeCount: placeList.length, placeList};
 }
 
@@ -93,27 +95,47 @@ async function searchByKeyword(latitude: number, longitude: number, keyword: str
         updated = true;
         placeList = await placeCol.aggregate(pipeline).toArray();
     }
-    for (const place of placeList) {
+    placeList.map((place: any) => {
+        delete place._id;
         place.location = {
             lat: place.location.coordinates[1],
             lng: place.location.coordinates[0]
-        }
-    }
+        };
+    })
     return {updated, dbStatus, placeCount: placeList.length, placeList};
 }
 
+// 先隨機取幾個，之後會改成依距離判斷
 async function drawCard(userId: string, latitude: number, longitude: number, mode: drawCardModeEnum, num: number) {
     if (isUndefined([userId, latitude, longitude, mode, num])) throwError(errorCodes.requestDataError);
     const userCol = global.mongodbClient.foodMapDb.userCol;
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
+    let placeList: any;
     switch (mode) {
         case drawCardModeEnum.favorite:
-
+            let favoriteList = (await userCol.findOne({_id: new ObjectId(userId)})).favoriteList;
+            if (!favoriteList) return {msg: '無最愛紀錄'};
+            let favoriteIdList = [];
+            for (let i = 0; i < num && i < favoriteList.length; i++) {
+                favoriteIdList.push(favoriteList[i].placeId)
+            }
+            placeList = await placeCol.aggregate([
+                {$match: {uid: {$in: favoriteIdList}}},
+                {$sample: {size: num}}
+            ]).toArray();
             break;
         case drawCardModeEnum.near:
+            placeList = await placeCol.aggregate([{$sample: {size: num}}]).toArray();
             break;
     }
-    return 'TBD';
+    placeList.map((place: any) => {
+        delete place._id;
+        place.location = {
+            lat: place.location.coordinates[1],
+            lng: place.location.coordinates[0]
+        };
+    })
+    return placeList;
 }
 
 export default {

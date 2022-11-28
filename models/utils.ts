@@ -52,6 +52,10 @@ function converTo2dSphere(lat: number, lng: number) {
     };
 }
 
+function randInt(min: number, max: number) {
+    return Math.random() * (max - min) + min;
+}
+
 export default {
     generateUUID,
     getDateFormat,
