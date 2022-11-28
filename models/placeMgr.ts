@@ -3,7 +3,6 @@ import {BSONRegExp, ObjectId} from 'mongodb';
 import {throwError, errorCodes, isUndefined} from './dataStruct/throwError';
 import config from "../config"
 import {drawCardModeEnum} from "./dataStruct/staticCode/drawCardModeEnum";
-import placeDocument from "./dataStruct/mongodb/placeDocument";
 
 const FOOD_TYPE_LIST = config.foodTypeList;
 const MIN_RESPONSE_NUM: number = 1;
