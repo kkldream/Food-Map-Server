@@ -134,7 +134,7 @@ async function drawCard(userId: string, latitude: number, longitude: number, mod
             lng: place.location.coordinates[0]
         };
     })
-    return placeList;
+    return {placeCount: placeList.length, placeList};
 }
 
 export default {
