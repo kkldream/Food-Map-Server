@@ -119,7 +119,7 @@ async function drawCard(userId: string, latitude: number, longitude: number, mod
                 favoriteIdList.push(favoriteList[i].placeId)
             }
             placeList = await placeCol.aggregate([
-                {$match: {uid: {$in: favoriteIdList}}},
+                {$match: {$and: [{uid: {$in: favoriteIdList}}, {types: {$in: FOOD_TYPE_LIST}}]}},
                 {$sample: {size: num}}
             ]).toArray();
             break;
