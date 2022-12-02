@@ -109,22 +109,22 @@ async function drawCard(userId: string, latitude: number, longitude: number, mod
     if (isUndefined([userId, latitude, longitude, mode, num])) throwError(errorCodes.requestDataError);
     const userCol = global.mongodbClient.foodMapDb.userCol;
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
-    let placeList: any;
+    let placeList: any[];
     switch (mode) {
         case drawCardModeEnum.favorite:
             let favoriteList = (await userCol.findOne({_id: new ObjectId(userId)})).favoriteList;
             if (!favoriteList) return {msg: '無最愛紀錄'};
-            let favoriteIdList = [];
-            for (let i = 0; i < num && i < favoriteList.length; i++) {
-                favoriteIdList.push(favoriteList[i].placeId)
-            }
+            let favoriteIdList = favoriteList.map((favorite: any) => favorite.placeId).slice(0, num);
             placeList = await placeCol.aggregate([
                 {$match: {$and: [{uid: {$in: favoriteIdList}}, {types: {$in: FOOD_TYPE_LIST}}]}},
                 {$sample: {size: num}}
             ]).toArray();
             break;
         case drawCardModeEnum.near:
-            placeList = await placeCol.aggregate([{$sample: {size: num}}]).toArray();
+            placeList = await placeCol.aggregate([
+                {$match: {types: {$in: FOOD_TYPE_LIST}}},
+                {$sample: {size: num}}
+            ]).toArray();
             break;
     }
     placeList.map((place: any) => {
