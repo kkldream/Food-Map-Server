@@ -2,9 +2,10 @@ import {ObjectId} from 'mongodb';
 import utils from './utils';
 import {errorCodes, isUndefined, throwError} from "./dataStruct/throwError";
 import userDocument, {favoriteItem} from "./dataStruct/mongodb/userDocument";
+import {locationItem} from "./dataStruct/mongodb/placeDocument";
 
 async function register(username: string, password: string, deviceId: string) {
-    if (!username || !password || !deviceId) throwError(errorCodes.requestDataError);
+    if (isUndefined([username, password, deviceId])) throwError(errorCodes.requestDataError);
     const userCol = global.mongodbClient.foodMapDb.userCol;
     const loginLogCol = global.mongodbClient.foodMapDb.loginLogCol;
 
@@ -41,7 +42,7 @@ async function register(username: string, password: string, deviceId: string) {
 }
 
 async function loginByDevice(username: string, password: string, deviceId: string) {
-    if (!username || !password || !deviceId) throwError(errorCodes.requestDataError);
+    if (isUndefined([username, password, deviceId])) throwError(errorCodes.requestDataError);
     const userCol = global.mongodbClient.foodMapDb.userCol;
     const loginLogCol = global.mongodbClient.foodMapDb.loginLogCol;
     let userDoc = await userCol.findOne({username});
@@ -78,7 +79,7 @@ async function loginByDevice(username: string, password: string, deviceId: strin
 }
 
 async function addFcmToken(userId: string, deviceId: string, fcmToken: string) {
-    if (!deviceId || !fcmToken) throwError(errorCodes.requestDataError);
+    if (isUndefined([deviceId, fcmToken])) throwError(errorCodes.requestDataError);
     const userCol = global.mongodbClient.foodMapDb.userCol;
     let userDoc = await userCol.findOne({_id: new ObjectId(userId)});
     let deviceDoc = userDoc.devices.find((item: any) => item.deviceId === deviceId);
@@ -131,7 +132,7 @@ async function getImage(userId: string) {
 }
 
 async function setImage(userId: string, userImage: string) {
-    if (!userImage) throwError(errorCodes.requestDataError);
+    if (isUndefined([userImage])) throwError(errorCodes.requestDataError);
     const userCol = global.mongodbClient.foodMapDb.userCol;
     let updateResult = await userCol.updateOne({_id: new ObjectId(userId)}, {$set: {userImage}})
     if (updateResult.modifiedCount > 0) return {msg: '已更新使用者圖片'};
@@ -139,7 +140,7 @@ async function setImage(userId: string, userImage: string) {
 }
 
 async function setPassword(userId: string, password: string) {
-    if (!password) throwError(errorCodes.requestDataError);
+    if (isUndefined([password])) throwError(errorCodes.requestDataError);
     const userCol = global.mongodbClient.foodMapDb.userCol;
     await userCol.updateOne({_id: new ObjectId(userId)}, {$set: {password}})
     return {msg: '已更新使用者密碼'};
@@ -172,7 +173,28 @@ async function pullFavorite(userId: string, favoriteIdList: string[]) {
 async function getFavorite(userId: string) {
     const userCol = global.mongodbClient.foodMapDb.userCol;
     let userDoc: userDocument = await userCol.findOne({_id: new ObjectId(userId)});
-    return userDoc.favoriteList;
+    let favoriteList: any[] = userDoc.favoriteList.map((favorite: favoriteItem) => ({
+        updateTime: favorite.updateTime || new Date(0),
+        placeId: favorite.placeId || "",
+        photos: favorite.photos || [],
+        name: favorite.name || "",
+        vicinity: favorite.vicinity || "",
+        workDay: favorite.workDay || [],
+        dine_in: favorite.dine_in || false,
+        takeout: favorite.takeout || false,
+        delivery: favorite.delivery || false,
+        website: favorite.website || "",
+        phone: favorite.phone || "",
+        rating: favorite.rating || 0,
+        ratings_total: favorite.ratings_total || 0,
+        price_level: favorite.price_level || 0,
+        location: favorite.location ? {
+            lat: favorite.location.coordinates[1],
+            lng: favorite.location.coordinates[0]
+        } : {lat: 0, lng: 0},
+        url: favorite.url || ""
+    }))
+    return favoriteList;
 }
 
 export default {

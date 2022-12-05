@@ -24,7 +24,7 @@ export default interface placeDocument {
     }
 }
 
-interface locationItem {
+export interface locationItem {
     type: string,
     coordinates: number[]
 }

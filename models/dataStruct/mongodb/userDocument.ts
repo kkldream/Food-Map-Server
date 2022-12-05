@@ -1,4 +1,5 @@
 import {ObjectId} from "mongodb";
+import {locationItem} from "./placeDocument";
 
 export default interface userDocument {
     _id?: ObjectId,
@@ -31,5 +32,8 @@ export interface favoriteItem {
     website: string, // 網站 可能為null
     phone: string, // 電話 可能為null
     rating: number,
-    ratings_total: number
+    ratings_total: number,
+    price_level: number,
+    location: locationItem,
+    url: string
 }
