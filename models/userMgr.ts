@@ -189,7 +189,7 @@ async function getFavorite(userId: string) {
         phone: favorite.phone || "",
         rating: favorite.rating || 0,
         ratings_total: favorite.ratings_total || 0,
-        price_level: favorite.price_level || 0,
+        price_level: favorite.price_level || 1,
         location: favorite.location ? {
             lat: favorite.location.coordinates[1],
             lng: favorite.location.coordinates[0]
