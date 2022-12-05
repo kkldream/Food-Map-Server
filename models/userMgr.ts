@@ -151,7 +151,7 @@ async function pushFavorite(userId: string, favoriteList: favoriteItem[]) {
     const userCol = global.mongodbClient.foodMapDb.userCol;
     let userDoc: userDocument = await userCol.findOne({_id: new ObjectId(userId)});
     let favoriteIdList = favoriteList.map(e => e.placeId);
-    let oldFavoriteList = userDoc.favoriteList.filter(e => !favoriteIdList.includes(e.placeId));
+    let oldFavoriteList = userDoc.favoriteList ? userDoc.favoriteList.filter(e => !favoriteIdList.includes(e.placeId)) : [];
     let newFavoriteList = favoriteList.map(e => {
         e.updateTime = new Date();
         return e;
@@ -165,6 +165,7 @@ async function pullFavorite(userId: string, favoriteIdList: string[]) {
     if (isUndefined([favoriteIdList])) throwError(errorCodes.requestDataError);
     const userCol = global.mongodbClient.foodMapDb.userCol;
     let userDoc: userDocument = await userCol.findOne({_id: new ObjectId(userId)});
+    if (!userDoc.favoriteList) return {msg: '無最愛紀錄'};
     let outFavoriteList = userDoc.favoriteList.filter(e => !favoriteIdList.includes(e.placeId));
     await userCol.updateOne({_id: new ObjectId(userId)}, {$set: {favoriteList: outFavoriteList}});
     return {msg: '移除最愛成功'};
@@ -173,6 +174,7 @@ async function pullFavorite(userId: string, favoriteIdList: string[]) {
 async function getFavorite(userId: string) {
     const userCol = global.mongodbClient.foodMapDb.userCol;
     let userDoc: userDocument = await userCol.findOne({_id: new ObjectId(userId)});
+    if (!userDoc.favoriteList) return [];
     let favoriteList: any[] = userDoc.favoriteList.map((favorite: favoriteItem) => ({
         updateTime: favorite.updateTime || new Date(0),
         placeId: favorite.placeId || "",
