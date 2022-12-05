@@ -1,8 +1,9 @@
 export default {
-  "foodTypeList": [
+  foodTypeList: [
     "cafe",
     "food",
     "restaurant",
     "meal_takeaway"
-  ]
+  ],
+  minResponseCount: 1
 }

@@ -3,13 +3,29 @@ import {BSONRegExp, ObjectId} from 'mongodb';
 import {throwError, errorCodes, isUndefined} from './dataStruct/throwError';
 import config from "../config"
 import {drawCardModeEnum} from "./dataStruct/staticCode/drawCardModeEnum";
+import {favoriteItem} from "./dataStruct/mongodb/userDocument";
+import placeDocument from "./dataStruct/mongodb/placeDocument";
 
 const FOOD_TYPE_LIST = config.foodTypeList;
-const MIN_RESPONSE_NUM: number = 1;
-const MAX_RESPONSE_NUM: number = 20;
+const MIN_RESPONSE_COUNT = config.minResponseCount;
 
-async function searchByDistance(latitude: number, longitude: number, distance: number, minNum: number = MIN_RESPONSE_NUM, maxNum: number = MAX_RESPONSE_NUM) {
-    if (!latitude || !longitude || !distance || maxNum < minNum || maxNum === 0) throwError(errorCodes.requestDataError);
+async function placeListConvertOutput(placeList: placeDocument[], userId: string) {
+    const userCol = global.mongodbClient.foodMapDb.userCol;
+    let userDoc = await userCol.findOne({_id: new ObjectId(userId)});
+    let favoriteIdList: string[] = userDoc.favoriteList ? userDoc.favoriteList.map((favorite: favoriteItem) => favorite.placeId) : [];
+    placeList.map((place: any) => {
+        delete place._id;
+        place.location = {
+            lat: place.location.coordinates[1],
+            lng: place.location.coordinates[0]
+        };
+        place.isFavorite = favoriteIdList.includes(place.uid);
+    })
+    return placeList;
+}
+
+async function searchByDistance(userId: string, latitude: number, longitude: number, distance: number, skip: number, limit: number) {
+    if (isUndefined([userId, latitude, longitude, distance, skip, limit])) throwError(errorCodes.requestDataError);
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let updated = false;
     let dbStatus: any;
@@ -26,36 +42,22 @@ async function searchByDistance(latitude: number, longitude: number, distance: n
                 "query": {"types": {"$in": FOOD_TYPE_LIST}}
             }
         },
-        {
-            "$sort": {
-                "distance": 1,
-                "rating.star": -1,
-                "rating.total": -1,
-                "name": 1
-            }
-        },
-        {
-            "$limit": maxNum
-        }
+        {"$sort": {"distance": 1}},
+        {"$skip": skip},
+        {"$limit": limit}
     ];
-    let placeList = await placeCol.aggregate(pipeline).toArray();
-    if (placeList.length < minNum) {
+    let placeCount = (await placeCol.aggregate([pipeline[0], { "$count": "count" }]).toArray())[0].count;
+    if (placeCount < MIN_RESPONSE_COUNT) {
         dbStatus = await googleMapsMgr.updatePlaceByDistance(latitude, longitude);
         updated = true;
-        placeList = await placeCol.aggregate(pipeline).toArray();
     }
-    placeList.map((place: any) => {
-        delete place._id;
-        place.location = {
-            lat: place.location.coordinates[1],
-            lng: place.location.coordinates[0]
-        };
-    })
-    return {updated, dbStatus, placeCount: placeList.length, placeList};
+    let placeList = await placeCol.aggregate(pipeline).toArray();
+    placeList = await placeListConvertOutput(placeList, userId);
+    return {updated, dbStatus, placeCount, placeList}
 }
 
-async function searchByKeyword(latitude: number, longitude: number, keyword: string, minNum: number = MIN_RESPONSE_NUM, maxNum: number = MAX_RESPONSE_NUM) {
-    if (isUndefined([latitude, longitude, keyword]) || maxNum < minNum || maxNum === 0) throwError(errorCodes.requestDataError);
+async function searchByKeyword(userId: string, latitude: number, longitude: number, keyword: string, skip: number, limit: number) {
+    if (isUndefined([userId, latitude, longitude, keyword, skip, limit])) throwError(errorCodes.requestDataError);
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let updated = false;
     let dbStatus: any;
@@ -76,32 +78,18 @@ async function searchByKeyword(latitude: number, longitude: number, keyword: str
                 }
             }
         },
-        {
-            "$sort": {
-                "distance": 1,
-                "rating.star": -1,
-                "rating.total": -1,
-                "name": 1
-            }
-        },
-        {
-            "$limit": maxNum
-        }
+        {"$sort": {"distance": 1}},
+        {"$skip": skip},
+        {"$limit": limit}
     ];
-    let placeList = await placeCol.aggregate(pipeline).toArray();
-    if (placeList.length < minNum) {
+    let placeCount = (await placeCol.aggregate([pipeline[0], { "$count": "count" }]).toArray())[0].count;
+    if (placeCount < MIN_RESPONSE_COUNT) {
         dbStatus = await googleMapsMgr.updatePlaceByKeyword(latitude, longitude, keyword);
         updated = true;
-        placeList = await placeCol.aggregate(pipeline).toArray();
     }
-    placeList.map((place: any) => {
-        delete place._id;
-        place.location = {
-            lat: place.location.coordinates[1],
-            lng: place.location.coordinates[0]
-        };
-    })
-    return {updated, dbStatus, placeCount: placeList.length, placeList};
+    let placeList = await placeCol.aggregate(pipeline).toArray();
+    placeList = await placeListConvertOutput(placeList, userId);
+    return {updated, dbStatus, placeCount, placeList};
 }
 
 // 先隨機取幾個，之後會改成依距離判斷
@@ -127,13 +115,7 @@ async function drawCard(userId: string, latitude: number, longitude: number, mod
             ]).toArray();
             break;
     }
-    placeList.map((place: any) => {
-        delete place._id;
-        place.location = {
-            lat: place.location.coordinates[1],
-            lng: place.location.coordinates[0]
-        };
-    })
+    placeList = await placeListConvertOutput(placeList, userId);
     return {placeCount: placeList.length, placeList};
 }
 

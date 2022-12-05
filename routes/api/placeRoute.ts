@@ -8,9 +8,9 @@ const router = Router()
 router.post('/search_by_distance', async function (req: any, res: any, next: any) {
     let response = new apiResponseBase();
     try {
-        let {userId, accessKey, latitude, longitude, distance, minNum, maxNum} = req.body;
+        let {userId, accessKey, latitude, longitude, distance, skip, limit} = req.body;
         await response.verifyUser(userId, accessKey);
-        response.result = await placeMgr.searchByDistance(latitude, longitude, distance, minNum, maxNum);
+        response.result = await placeMgr.searchByDistance(userId, latitude, longitude, distance, skip, limit);
     } catch (error: any) {
         if (error.status) response.status = error.status;
         response.errMsg = error.msg;
@@ -21,9 +21,9 @@ router.post('/search_by_distance', async function (req: any, res: any, next: any
 router.post('/search_by_keyword', async function (req: any, res: any, next: any) {
     let response = new apiResponseBase();
     try {
-        let {userId, accessKey, latitude, longitude, keyword, minNum, maxNum} = req.body;
+        let {userId, accessKey, latitude, longitude, keyword, skip, limit} = req.body;
         await response.verifyUser(userId, accessKey);
-        response.result = await placeMgr.searchByKeyword(latitude, longitude, keyword, minNum, maxNum);
+        response.result = await placeMgr.searchByKeyword(userId, latitude, longitude, keyword, skip, limit);
     } catch (error: any) {
         if (error.status) response.status = error.status;
         response.errMsg = error.msg;

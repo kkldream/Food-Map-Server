@@ -173,6 +173,7 @@ async function detailsByPlaceId(place_id: string) {
     // const placeCol = global.mongodbClient.foodMapDb.placeCol;
     // const updateLogCol = global.mongodbClient.foodMapDb.updateLogCol;
     let url = 'https://maps.googleapis.com/maps/api/place/details/json?'
+        + `&language=zh-TW`
         + `&place_id=${place_id}`
         + `&key=${GOOGLE_API_KEY}`;
     let response = (await axios({method: 'get', url})).data;
