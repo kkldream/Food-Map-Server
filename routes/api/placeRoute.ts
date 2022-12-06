@@ -36,7 +36,7 @@ router.post('/details_by_place_id', async function (req: any, res: any, next: an
     try {
         let {userId, accessKey, place_id} = req.body;
         await response.verifyUser(userId, accessKey);
-        response.result = await googleMapsMgr.detailsByPlaceId(place_id);
+        response.result = await googleMapsMgr.detailsByPlaceId(userId, place_id);
     } catch (error: any) {
         if (error.status) response.status = error.status;
         response.errMsg = error.msg;

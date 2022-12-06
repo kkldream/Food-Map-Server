@@ -1,8 +1,10 @@
 import axios from 'axios';
-import {throwError, errorCodes} from "./dataStruct/throwError";
+import {throwError, errorCodes, isUndefined} from "./dataStruct/throwError";
 import utils from "./utils";
 import config from "../config"
 import placeDocument from "./dataStruct/mongodb/placeDocument";
+import {ObjectId} from "mongodb";
+import {favoriteItem} from "./dataStruct/mongodb/userDocument";
 
 // https://developers.google.com/maps/documentation/places/web-service/supported_types
 const FOOD_TYPE_LIST = config.foodTypeList;
@@ -169,14 +171,17 @@ async function nearBySearch(searchPageNum: number, request: any) {
 }
 
 // https://developers.google.com/maps/documentation/places/web-service/details
-async function detailsByPlaceId(place_id: string) {
-    // const placeCol = global.mongodbClient.foodMapDb.placeCol;
-    // const updateLogCol = global.mongodbClient.foodMapDb.updateLogCol;
+async function detailsByPlaceId(userId: string, place_id: string) {
+    if (isUndefined([place_id])) throwError(errorCodes.requestDataError);
+    const userCol = global.mongodbClient.foodMapDb.userCol;
     let url = 'https://maps.googleapis.com/maps/api/place/details/json?'
         + `&language=zh-TW`
         + `&place_id=${place_id}`
         + `&key=${GOOGLE_API_KEY}`;
     let response = (await axios({method: 'get', url})).data;
+    let userDoc = await userCol.findOne({_id: new ObjectId(userId)});
+    let favoriteIdList: string[] = userDoc.favoriteList ? userDoc.favoriteList.map((favorite: favoriteItem) => favorite.placeId) : [];
+    response.isFavorite = favoriteIdList.includes(place_id);
     return response;
 }
 
