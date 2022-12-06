@@ -5,5 +5,10 @@ export default {
     "restaurant",
     "meal_takeaway"
   ],
-  minResponseCount: 1
+  minResponseCount: 1,
+  drawCard: {
+    maxDistance: 1000,
+    ratingStar: 4,
+    ratingTotal: 100
+  }
 }

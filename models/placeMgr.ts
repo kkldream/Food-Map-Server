@@ -8,6 +8,7 @@ import placeDocument from "./dataStruct/mongodb/placeDocument";
 
 const FOOD_TYPE_LIST = config.foodTypeList;
 const MIN_RESPONSE_COUNT = config.minResponseCount;
+const DRAW_CARD_PARAMETER = config.drawCard;
 
 async function placeListConvertOutput(placeList: placeDocument[], userId: string) {
     const userCol = global.mongodbClient.foodMapDb.userCol;
@@ -111,7 +112,21 @@ async function drawCard(userId: string, latitude: number, longitude: number, mod
             break;
         case drawCardModeEnum.near:
             placeList = await placeCol.aggregate([
-                {$match: {types: {$in: FOOD_TYPE_LIST}}},
+                {
+                    "$geoNear": {
+                        "near": {"type": "Point", "coordinates": [longitude, latitude]},
+                        "distanceField": "distance",
+                        "spherical": true,
+                        "maxDistance": DRAW_CARD_PARAMETER.maxDistance,
+                        "query": {
+                            "$and": [
+                                {"types": {"$in": FOOD_TYPE_LIST}},
+                                {"rating.star": {"$gte": DRAW_CARD_PARAMETER.ratingStar}},
+                                {"rating.total": {"$gte": DRAW_CARD_PARAMETER.ratingTotal}}
+                            ]
+                        }
+                    }
+                },
                 {$sample: {size: num}}
             ]).toArray();
             break;
