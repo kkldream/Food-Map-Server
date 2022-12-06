@@ -146,15 +146,16 @@ async function setPassword(userId: string, password: string) {
     return {msg: '已更新使用者密碼'};
 }
 
-async function pushFavorite(userId: string, favoriteList: favoriteItem[]) {
+async function pushFavorite(userId: string, favoriteList: any[]) {
     if (isUndefined([favoriteList])) throwError(errorCodes.requestDataError);
     const userCol = global.mongodbClient.foodMapDb.userCol;
     let userDoc: userDocument = await userCol.findOne({_id: new ObjectId(userId)});
     let favoriteIdList = favoriteList.map(e => e.placeId);
     let oldFavoriteList = userDoc.favoriteList ? userDoc.favoriteList.filter(e => !favoriteIdList.includes(e.placeId)) : [];
-    let newFavoriteList = favoriteList.map(e => {
-        e.updateTime = new Date();
-        return e;
+    let newFavoriteList = favoriteList.map(favorite => {
+        favorite.updateTime = new Date();
+        favorite.location = utils.converTo2dSphere(favorite.location.lat, favorite.location.lng)
+        return favorite;
     });
     let outFavoriteList = oldFavoriteList.concat(newFavoriteList);
     await userCol.updateOne({_id: new ObjectId(userId)}, {$set: {favoriteList: outFavoriteList}});
