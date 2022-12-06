@@ -18,7 +18,7 @@ async function updateCustom(latitude: number, longitude: number, radius: number,
         modifiedCount: 0
     };
     for (const type of FOOD_TYPE_LIST) {
-        let result = await nearBySearch(3, {latitude, longitude, radius, keyword});
+        let result = await nearBySearch(3, {latitude, longitude, radius, keyword}, "custom");
         resultStatus.upsertCount += result.upsertCount;
         resultStatus.matchCount += result.matchCount;
         resultStatus.modifiedCount += result.modifiedCount;
@@ -39,7 +39,7 @@ async function updatePlaceByDistance(latitude: number, longitude: number, search
                 radius: -1,
                 type,
                 keyword: ''
-            }
+            }, "search_by_near"
         );
         resultStatus.upsertCount += result.upsertCount;
         resultStatus.matchCount += result.matchCount;
@@ -60,7 +60,7 @@ async function updatePlaceByKeyword(latitude: number, longitude: number, keyword
                 latitude, longitude,
                 type,
                 keyword
-            }
+            }, "search_by_keyword"
         );
         resultStatus.upsertCount += result.upsertCount;
         resultStatus.matchCount += result.matchCount;
@@ -70,7 +70,7 @@ async function updatePlaceByKeyword(latitude: number, longitude: number, keyword
 }
 
 // https://developers.google.com/maps/documentation/places/web-service/search-nearby
-async function nearBySearch(searchPageNum: number, request: any) {
+async function nearBySearch(searchPageNum: number, request: any, msg: string = "") {
     let {latitude, longitude, radius, type, keyword} = request
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     const updateLogCol = global.mongodbClient.foodMapDb.updateLogCol;
@@ -156,7 +156,7 @@ async function nearBySearch(searchPageNum: number, request: any) {
     // insert update log
     await updateLogCol.insertOne({
         createTime: new Date(),
-        type: 'search_by_near',
+        type: msg,
         request: {
             location: utils.converTo2dSphere(latitude, longitude),
             radius, type, keyword
