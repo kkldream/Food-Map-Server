@@ -46,7 +46,7 @@ async function searchByDistance(userId: string, latitude: number, longitude: num
         {"$skip": skip},
         {"$limit": limit}
     ];
-    let placeCount = (await placeCol.aggregate([pipeline[0], { "$count": "count" }]).toArray())[0].count;
+    let placeCount = (await placeCol.aggregate([pipeline[0], {"$count": "count"}]).toArray())[0].count;
     if (placeCount < MIN_RESPONSE_COUNT) {
         dbStatus = await googleMapsMgr.updatePlaceByDistance(latitude, longitude);
         updated = true;
@@ -82,7 +82,8 @@ async function searchByKeyword(userId: string, latitude: number, longitude: numb
         {"$skip": skip},
         {"$limit": limit}
     ];
-    let placeCount = (await placeCol.aggregate([pipeline[0], { "$count": "count" }]).toArray())[0].count;
+    let placeCount = await placeCol.aggregate([pipeline[0], {"$count": "count"}]).toArray();
+    placeCount = placeCount.length === 0 ? 0 : placeCount[0].count;
     if (placeCount < MIN_RESPONSE_COUNT) {
         dbStatus = await googleMapsMgr.updatePlaceByKeyword(latitude, longitude, keyword);
         updated = true;
