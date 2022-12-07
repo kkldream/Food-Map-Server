@@ -2,7 +2,7 @@ import {ObjectId} from 'mongodb';
 import utils from './utils';
 import {errorCodes, isUndefined, throwError} from "./dataStruct/throwError";
 import userDocument, {favoriteItem} from "./dataStruct/mongodb/userDocument";
-import {locationItem} from "./dataStruct/mongodb/placeDocument";
+import {locationItem} from "./dataStruct/mongodb/googlePlaceDocument";
 
 async function register(username: string, password: string, deviceId: string) {
     if (isUndefined([username, password, deviceId])) throwError(errorCodes.requestDataError);

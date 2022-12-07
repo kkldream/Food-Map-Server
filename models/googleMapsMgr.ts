@@ -2,7 +2,7 @@ import axios from 'axios';
 import {throwError, errorCodes, isUndefined} from "./dataStruct/throwError";
 import utils from "./utils";
 import config from "../config"
-import placeDocument from "./dataStruct/mongodb/placeDocument";
+import googlePlaceDocument, {placeItem, originalGooglePlaceItem} from "./dataStruct/mongodb/googlePlaceDocument";
 import {ObjectId} from "mongodb";
 import {favoriteItem} from "./dataStruct/mongodb/userDocument";
 
@@ -74,7 +74,7 @@ async function nearBySearch(searchPageNum: number, request: any, msg: string = "
     let {latitude, longitude, radius, type, keyword} = request
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     const updateLogCol = global.mongodbClient.foodMapDb.updateLogCol;
-    let dataList: placeDocument[] = [];
+    let originalDataList: originalGooglePlaceItem[] = [];
     let next_page_token: string = '';
     let requestCount: number;
     for (requestCount = 1; requestCount <= searchPageNum; requestCount++) {
@@ -93,23 +93,22 @@ async function nearBySearch(searchPageNum: number, request: any, msg: string = "
             else url += `&radius=${radius}`;
         }
         let response = await axios({method: 'get', url});
-        dataList = dataList.concat(response.data.results);
+        originalDataList = originalDataList.concat(response.data.results);
         next_page_token = response.data.next_page_token;
-        console.log(`update ${type}: +${response.data.results.length}/${dataList.length}, next_page = ${next_page_token !== undefined}`)
+        console.log(`update ${type}: +${response.data.results.length}/${originalDataList.length}, next_page = ${next_page_token !== undefined}`)
         if (!next_page_token) break;
     }
 
-    if (dataList.length === 0) return {
+    if (originalDataList.length === 0) return {
         upsertCount: 0,
         matchCount: 0,
         modifiedCount: 0
     };
 
-    for (let i = 0; i < dataList.length; i++) {
-        const data: any = dataList[i];
-        dataList[i] = {
+    let placeList = originalDataList.map((data: originalGooglePlaceItem): placeItem => {
+        return {
             updateTime: new Date(),
-            uid: data.place_id || '',
+            place_id: data.place_id || '',
             status: data.business_status || '',
             name: data.name || '',
             photos: data.photos || [],
@@ -129,15 +128,26 @@ async function nearBySearch(searchPageNum: number, request: any, msg: string = "
                 periods: data.opening_hours?.periods || [],
                 special_days: data.opening_hours?.special_days || [],
                 type: data.opening_hours?.type || "",
-                weekday_text: data.opening_hours?.weekday_text || "",
+                weekday_text: data.opening_hours?.weekday_text || [],
             }
         }
-    }
-
+    })
+    let output: googlePlaceDocument[] = placeList.map((place: placeItem): googlePlaceDocument => {
+        let place_id = place.place_id;
+        placeCol.findOne()
+        return {
+            creatTime: new Date(),
+            updateTime: new Date(),
+            place: place,
+            detail: undefined,
+            originalPlace: originalDataList,
+            originalDetail: []
+        }
+    });
     // 更新DB資料
     let bulkWritePipe = []
     let dataIdList = []
-    for (const data of dataList) {
+    for (const data of originalDataList) {
         dataIdList.push(data.uid);
         bulkWritePipe.push({
             updateOne: {
@@ -162,8 +172,8 @@ async function nearBySearch(searchPageNum: number, request: any, msg: string = "
             radius, type, keyword
         },
         requestCount,
-        response: dataList,
-        responseCount: dataList.length,
+        response: originalDataList,
+        responseCount: originalDataList.length,
         googleApiKey: GOOGLE_API_KEY,
         dbStatus
     });

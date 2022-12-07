@@ -1,4 +1,6 @@
-export default interface placeDocument {
+import {photosItem, locationItem} from "../mongodb/googlePlaceDocument";
+
+export default interface placeResponse {
     updateTime: Date,
     uid: string,
     status: string,
@@ -22,16 +24,4 @@ export default interface placeDocument {
         type: string,
         weekday_text: string
     }
-}
-
-export interface locationItem {
-    type: string,
-    coordinates: number[]
-}
-
-interface photosItem {
-    height: number,
-    width: number,
-    photo_reference: string,
-    html_attributions: string[]
 }

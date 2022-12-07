@@ -1,5 +1,5 @@
 import {ObjectId} from "mongodb";
-import {locationItem} from "./placeDocument";
+import {locationItem} from "./googlePlaceDocument";
 
 export default interface userDocument {
     _id?: ObjectId,

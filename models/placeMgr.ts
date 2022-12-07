@@ -4,13 +4,13 @@ import {throwError, errorCodes, isUndefined} from './dataStruct/throwError';
 import config from "../config"
 import {drawCardModeEnum} from "./dataStruct/staticCode/drawCardModeEnum";
 import {favoriteItem} from "./dataStruct/mongodb/userDocument";
-import placeDocument from "./dataStruct/mongodb/placeDocument";
+import googlePlaceDocument from "./dataStruct/mongodb/googlePlaceDocument";
 
 const FOOD_TYPE_LIST = config.foodTypeList;
 const MIN_RESPONSE_COUNT = config.minResponseCount;
 const DRAW_CARD_PARAMETER = config.drawCard;
 
-async function placeListConvertOutput(placeList: placeDocument[], userId: string) {
+async function placeListConvertOutput(placeList: googlePlaceDocument[], userId: string) {
     const userCol = global.mongodbClient.foodMapDb.userCol;
     let userDoc = await userCol.findOne({_id: new ObjectId(userId)});
     let favoriteIdList: string[] = userDoc.favoriteList ? userDoc.favoriteList.map((favorite: favoriteItem) => favorite.placeId) : [];
