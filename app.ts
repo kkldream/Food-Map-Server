@@ -1,7 +1,7 @@
 import express from 'express';
 import createError from 'http-errors';
 import dotenv from 'dotenv';
-import utils from './models/utils';
+import {getDateFormat} from './models/utils';
 import indexRoute from './routes/index';
 import apiRoute from './routes/api';
 import MongodbClient from "./models/mongodbMgr";
@@ -27,7 +27,7 @@ app.set('view engine', 'jade');
 
 // routes handler
 app.use('/', function (req: any, res: any, next: any) {
-    console.log(`[${utils.getDateFormat()}] ${req.method}: ${req.originalUrl}`);
+    console.log(`[${getDateFormat()}] ${req.method}: ${req.originalUrl}`);
     next();
 });
 app.use('/', indexRoute);

@@ -1,31 +1,37 @@
 import googleMapsMgr from "./googleMapsMgr";
 import {BSONRegExp, ObjectId} from 'mongodb';
-import {throwError, errorCodes, isUndefined} from './dataStruct/throwError';
+import {errorCodes, isUndefined, throwError} from './dataStruct/throwError';
 import config from "../config"
 import {drawCardModeEnum} from "./dataStruct/staticCode/drawCardModeEnum";
-import {favoriteItem} from "./dataStruct/mongodb/userDocument";
-import googlePlaceDocument from "./dataStruct/mongodb/googlePlaceDocument";
+import {dbPlaceDocument, dbPlaceItem} from "./dataStruct/mongodb/googlePlaceDocument";
+import {responsePlaceItem, responsePlaceResult} from "./dataStruct/response/placeResponses";
+import {userDocument} from "./dataStruct/mongodb/userDocument";
 
 const FOOD_TYPE_LIST = config.foodTypeList;
 const MIN_RESPONSE_COUNT = config.minResponseCount;
 const DRAW_CARD_PARAMETER = config.drawCard;
 
-async function placeListConvertOutput(placeList: googlePlaceDocument[], userId: string) {
+async function dbPlaceListConvertResponse(placeList: dbPlaceItem[], userId: string): Promise<responsePlaceItem[]> {
     const userCol = global.mongodbClient.foodMapDb.userCol;
-    let userDoc = await userCol.findOne({_id: new ObjectId(userId)});
-    let favoriteIdList: string[] = userDoc.favoriteList ? userDoc.favoriteList.map((favorite: favoriteItem) => favorite.placeId) : [];
-    placeList.map((place: any) => {
-        delete place._id;
-        place.location = {
-            lat: place.location.coordinates[1],
-            lng: place.location.coordinates[0]
-        };
-        place.isFavorite = favoriteIdList.includes(place.uid);
-    })
-    return placeList;
+    let userDoc: userDocument = await userCol.findOne({_id: new ObjectId(userId)});
+    let favoriteIdList: string[] = userDoc.favoriteList;
+    return placeList.map((place: dbPlaceItem): responsePlaceItem => ({
+        updateTime: place.updateTime,
+        uid: place.place_id,
+        status: place.status,
+        name: place.name,
+        photos: place.photos,
+        rating: place.rating,
+        address: place.address,
+        location: place.location,
+        icon: place.icon,
+        types: place.types,
+        opening_hours: place.opening_hours,
+        isFavorite: favoriteIdList.includes(place.place_id)
+    }));
 }
 
-async function searchByDistance(userId: string, latitude: number, longitude: number, distance: number, skip: number, limit: number) {
+async function searchByDistance(userId: string, latitude: number, longitude: number, distance: number, skip: number, limit: number): Promise<responsePlaceResult> {
     if (isUndefined([userId, latitude, longitude, distance, skip, limit])) throwError(errorCodes.requestDataError);
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let updated = false;
@@ -47,17 +53,19 @@ async function searchByDistance(userId: string, latitude: number, longitude: num
         {"$skip": skip},
         {"$limit": limit}
     ];
-    let placeCount = (await placeCol.aggregate([pipeline[0], {"$count": "count"}]).toArray())[0].count;
+    let placeCountResult = await placeCol.aggregate([pipeline[0], {"$count": "count"}]).toArray();
+    let placeCount = placeCountResult.length !== 0 ? placeCountResult[0].count : 0;
     if (placeCount < MIN_RESPONSE_COUNT) {
         dbStatus = await googleMapsMgr.updatePlaceByDistance(latitude, longitude);
         updated = true;
     }
-    let placeList = await placeCol.aggregate(pipeline).toArray();
-    placeList = await placeListConvertOutput(placeList, userId);
-    return {updated, dbStatus, placeCount, placeList}
+    let dbPlaceDocList: dbPlaceDocument[] = await placeCol.aggregate(pipeline).toArray();
+    let dbPlaceList: dbPlaceItem[] = dbPlaceDocList.map((dbPlaceDoc: dbPlaceDocument) => dbPlaceDoc.content);
+    let responsePlaceList: responsePlaceItem[] = await dbPlaceListConvertResponse(dbPlaceList, userId);
+    return {updated, dbStatus, placeCount, placeList: responsePlaceList}
 }
 
-async function searchByKeyword(userId: string, latitude: number, longitude: number, keyword: string, skip: number, limit: number) {
+async function searchByKeyword(userId: string, latitude: number, longitude: number, keyword: string, skip: number, limit: number): Promise<responsePlaceResult> {
     if (isUndefined([userId, latitude, longitude, keyword, skip, limit])) throwError(errorCodes.requestDataError);
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let updated = false;
@@ -89,9 +97,10 @@ async function searchByKeyword(userId: string, latitude: number, longitude: numb
         dbStatus = await googleMapsMgr.updatePlaceByKeyword(latitude, longitude, keyword);
         updated = true;
     }
-    let placeList = await placeCol.aggregate(pipeline).toArray();
-    placeList = await placeListConvertOutput(placeList, userId);
-    return {updated, dbStatus, placeCount, placeList};
+    let dbPlaceDocList: dbPlaceDocument[] = await placeCol.aggregate(pipeline).toArray();
+    let dbPlaceList: dbPlaceItem[] = dbPlaceDocList.map((dbPlaceDoc: dbPlaceDocument) => dbPlaceDoc.content);
+    let responsePlaceList: responsePlaceItem[] = await dbPlaceListConvertResponse(dbPlaceList, userId);
+    return {updated, dbStatus, placeCount, placeList: responsePlaceList}
 }
 
 // 先隨機取幾個，之後會改成依距離判斷
@@ -131,7 +140,7 @@ async function drawCard(userId: string, latitude: number, longitude: number, mod
             ]).toArray();
             break;
     }
-    placeList = await placeListConvertOutput(placeList, userId);
+    placeList = await dbPlaceListConvertResponse(placeList, userId);
     return {placeCount: placeList.length, placeList};
 }
 

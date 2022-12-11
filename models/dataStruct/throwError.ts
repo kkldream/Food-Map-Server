@@ -1,3 +1,5 @@
+import {apiError} from "./response/baseResponse";
+
 export enum errorCodes {
     unknown = -1,
     ok = 0,
@@ -6,11 +8,11 @@ export enum errorCodes {
     accountNotFound = 3,
     accessKeyVerifyError = 4,
     requestDataError = 5,
-    loginDeviceNotFound = 6
+    loginDeviceNotFound = 6,
 }
 
-export function throwError(errorCode: errorCodes, msg: string = '') {
-    let status = errorCode || errorCodes.unknown;
+export function throwError(errorCode: errorCodes, msg: string = ''): apiError {
+    let status = errorCode ?? errorCodes.unknown;
     if (msg === '')
         switch (errorCode) {
             case errorCodes.ok:
@@ -38,12 +40,12 @@ export function throwError(errorCode: errorCodes, msg: string = '') {
                 msg = '未知錯誤';
                 break;
         }
-    throw {status, msg};
+    throw {status, text: msg};
 }
 
 export function isUndefined(argus: any[]) {
     for (const argu of argus) {
-        if (argu == undefined)
+        if (argu === undefined)
             return true;
     }
     return false;

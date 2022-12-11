@@ -1,4 +1,7 @@
-function generateUUID() {
+import {responseLocationItem} from "./dataStruct/response/publicItem/responseLocationItem";
+import {dbLocationItem} from "./dataStruct/mongodb/publicItem/dbLocationItem";
+
+export function generateUUID() {
     let d = new Date().getTime();
     const uuid = 'xxxxxxxxxxxxxxxyxxxxxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
         const r = (d + Math.random() * 16) % 16 | 0;
@@ -8,7 +11,21 @@ function generateUUID() {
     return uuid;
 }
 
-function getDateFormat() {
+export function dbLocationConvertResponse(dbLocation: dbLocationItem): responseLocationItem {
+    return {
+        lat: dbLocation.coordinates[1],
+        lng: dbLocation.coordinates[0]
+    }
+}
+
+export function responseLocationConvertDb(responseLocation: responseLocationItem): dbLocationItem {
+    return {
+        type: "Point",
+        coordinates: [responseLocation.lng, responseLocation.lat]
+    }
+}
+
+export function getDateFormat() {
     const date = new Date();
     const year = date.getFullYear();
     const mouth = date.getMonth().toString().padStart(2, '0');
@@ -19,12 +36,12 @@ function getDateFormat() {
     return `${year}/${mouth}/${day}-${hours}:${minutes}:${seconds}`;
 }
 
-function twoPointDistance(p1: { x: number, y: number }, p2: { x: number, y: number }) {
+export function twoPointDistance(p1: { x: number, y: number }, p2: { x: number, y: number }) {
     let distance = Math.sqrt(Math.pow((p1.x - p2.x), 2) + Math.pow((p1.y - p2.y), 2));
     return distance;
 }
 
-function twoLocateDistance(point1: any, point2: any) {
+export function twoLocateDistance(point1: any, point2: any) {
     let [y1, x1] = point1;
     let [y2, x2] = point2;
     let Lat1 = rad(x1); // 纬度
@@ -45,21 +62,6 @@ const rad = (d: any) => {
     return d * Math.PI / 180.00;
 };
 
-function converTo2dSphere(lat: number, lng: number) {
-    return {
-        "type": "Point",
-        "coordinates": [lng, lat]
-    };
-}
-
-function randInt(min: number, max: number) {
+export function randInt(min: number, max: number) {
     return Math.random() * (max - min) + min;
-}
-
-export default {
-    generateUUID,
-    getDateFormat,
-    twoPointDistance,
-    twoLocateDistance,
-    converTo2dSphere
 }

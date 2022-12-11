@@ -1,19 +1,22 @@
 import {ObjectId} from 'mongodb';
-import utils from './utils';
+import {generateUUID} from './utils';
 import {errorCodes, isUndefined, throwError} from "./dataStruct/throwError";
-import userDocument, {favoriteItem} from "./dataStruct/mongodb/userDocument";
-import {locationItem} from "./dataStruct/mongodb/googlePlaceDocument";
+import {userDocument} from "./dataStruct/mongodb/userDocument";
+import {favoriteItem} from "./dataStruct/response/favoriteResponse";
+import {dbPlaceDocument} from "./dataStruct/mongodb/googlePlaceDocument";
+import {callGoogleApiDetail} from "./service/googleApiService";
+import {googleDetailResponse} from "./dataStruct/mongodb/originalGooglePlaceData";
 
 async function register(username: string, password: string, deviceId: string) {
     if (isUndefined([username, password, deviceId])) throwError(errorCodes.requestDataError);
     const userCol = global.mongodbClient.foodMapDb.userCol;
     const loginLogCol = global.mongodbClient.foodMapDb.loginLogCol;
 
-    let userDoc = await userCol.findOne({username});
+    let userDoc: userDocument = await userCol.findOne({username});
     if (userDoc) throwError(errorCodes.accountRegistered);
 
     // insert user document
-    let accessKey = utils.generateUUID();
+    let accessKey = generateUUID();
     let insertDoc: userDocument = {
         createTime: new Date(),
         updateTime: new Date(),
@@ -146,19 +149,12 @@ async function setPassword(userId: string, password: string) {
     return {msg: '已更新使用者密碼'};
 }
 
-async function pushFavorite(userId: string, favoriteList: any[]) {
-    if (isUndefined([favoriteList])) throwError(errorCodes.requestDataError);
+async function pushFavorite(userId: string, favoriteIdList: string[]) {
+    if (isUndefined([favoriteIdList])) throwError(errorCodes.requestDataError);
     const userCol = global.mongodbClient.foodMapDb.userCol;
     let userDoc: userDocument = await userCol.findOne({_id: new ObjectId(userId)});
-    let favoriteIdList = favoriteList.map(e => e.placeId);
-    let oldFavoriteList = userDoc.favoriteList ? userDoc.favoriteList.filter(e => !favoriteIdList.includes(e.placeId)) : [];
-    let newFavoriteList = favoriteList.map(favorite => {
-        favorite.updateTime = new Date();
-        favorite.location = utils.converTo2dSphere(favorite.location.lat, favorite.location.lng)
-        return favorite;
-    });
-    let outFavoriteList = oldFavoriteList.concat(newFavoriteList);
-    await userCol.updateOne({_id: new ObjectId(userId)}, {$set: {favoriteList: outFavoriteList}});
+    let outputFavoriteIdList: string[] = [...new Set(favoriteIdList.concat(userDoc.favoriteList))];
+    await userCol.updateOne({_id: new ObjectId(userId)}, {$set: {favoriteList: outputFavoriteIdList}});
     return {msg: '添加最愛成功'};
 }
 
@@ -166,37 +162,41 @@ async function pullFavorite(userId: string, favoriteIdList: string[]) {
     if (isUndefined([favoriteIdList])) throwError(errorCodes.requestDataError);
     const userCol = global.mongodbClient.foodMapDb.userCol;
     let userDoc: userDocument = await userCol.findOne({_id: new ObjectId(userId)});
-    if (!userDoc.favoriteList) return {msg: '無最愛紀錄'};
-    let outFavoriteList = userDoc.favoriteList.filter(e => !favoriteIdList.includes(e.placeId));
-    await userCol.updateOne({_id: new ObjectId(userId)}, {$set: {favoriteList: outFavoriteList}});
+    let outputFavoriteIdList = userDoc.favoriteList.filter((favoriteId: string) => !favoriteIdList.includes(favoriteId));
+    await userCol.updateOne({_id: new ObjectId(userId)}, {$set: {favoriteList: outputFavoriteIdList}});
     return {msg: '移除最愛成功'};
 }
 
-async function getFavorite(userId: string) {
+async function getFavorite(userId: string): Promise<favoriteItem[]> {
     const userCol = global.mongodbClient.foodMapDb.userCol;
+    const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let userDoc: userDocument = await userCol.findOne({_id: new ObjectId(userId)});
     if (!userDoc.favoriteList) return [];
-    let favoriteList: any[] = userDoc.favoriteList.map((favorite: favoriteItem) => ({
-        updateTime: favorite.updateTime || new Date(0),
-        placeId: favorite.placeId || "",
-        photos: favorite.photos || [],
-        name: favorite.name || "",
-        vicinity: favorite.vicinity || "",
-        workDay: favorite.workDay || [],
-        dine_in: favorite.dine_in || false,
-        takeout: favorite.takeout || false,
-        delivery: favorite.delivery || false,
-        website: favorite.website || "",
-        phone: favorite.phone || "",
-        rating: favorite.rating || 0,
-        ratings_total: favorite.ratings_total || 0,
-        price_level: favorite.price_level || 1,
-        location: favorite.location ? {
-            lat: favorite.location.coordinates[1],
-            lng: favorite.location.coordinates[0]
-        } : {lat: 0, lng: 0},
-        url: favorite.url || ""
-    }))
+    let favoriteList: favoriteItem[] = await Promise.all(userDoc.favoriteList.map(async (favoriteId: string): Promise<favoriteItem> => {
+        let dbPlace: dbPlaceDocument = await placeCol.findOne({place_id: favoriteId});
+        if (dbPlace.originalDetail === null) {
+            let response: googleDetailResponse = await callGoogleApiDetail(favoriteId);
+            dbPlace.originalDetail = response.result;
+        }
+        return {
+            updateTime: dbPlace.updateTime,
+            placeId: dbPlace.place_id,
+            photos: dbPlace.content.photos,
+            name: dbPlace.content.name,
+            vicinity: dbPlace.originalDetail.vicinity ?? "",
+            workDay: dbPlace.originalDetail.opening_hours.weekday_text ?? [],
+            dine_in: dbPlace.originalDetail.dine_in ?? false,
+            takeout: dbPlace.originalDetail.takeout ?? false,
+            delivery: dbPlace.originalDetail.delivery ?? false,
+            website: dbPlace.originalDetail.website ?? "",
+            phone: dbPlace.originalDetail.formatted_phone_number ?? "",
+            rating: dbPlace.content.rating.star,
+            ratings_total: dbPlace.content.rating.total,
+            price_level: dbPlace.originalDetail.price_level ?? 1,
+            location: dbPlace.content.location,
+            url: dbPlace.originalDetail.url ?? ""
+        }
+    }));
     return favoriteList;
 }
 

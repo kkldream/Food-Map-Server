@@ -20,7 +20,7 @@ router.get('/', function (req: any, res: any, next: any) {
 router.use(function (req: any, res: any, next: any) {
     let response = new apiResponseBase();
     response.status = -1;
-    response.errMsg = `Not found '${req.url}' api`;
+    response.errMsg = new Error(`Not found '${req.url}' api`);
     res.send(response);
 });
 

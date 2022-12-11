@@ -1,15 +1,16 @@
 import dotenv from 'dotenv';
 import {ObjectId} from 'mongodb';
 import {errorCodes, throwError} from "./throwError";
+import {apiError, baseResponses, msgItem} from "./response/baseResponse";
 
 dotenv.config();
 
-class apiResponseBase {
+export default class apiResponseBase implements baseResponses{
     requestTime: Date;
+    verify?: boolean;
     status: number;
+    errMsg?: apiError;
     result: any;
-    errMsg: any;
-    verify: boolean | undefined;
 
     constructor() {
         this.requestTime = new Date();
@@ -17,18 +18,18 @@ class apiResponseBase {
         this.status = 0;
     }
 
-    async verifyRoot(accessKey: string) {
+    async verifyRoot(accessKey: string): Promise<msgItem> {
         if (accessKey !== process.env.ROOT_ACCESS_KEY) {
             this.verify = false;
             this.status = 4;
-            throwError(errorCodes.accessKeyVerifyError);
+            throw throwError(errorCodes.accessKeyVerifyError);
         }
         this.status = 0;
         this.verify = true;
         return {msg: '驗證成功'};
     }
 
-    async verifyUser(userId: string, accessKey: string) {
+    async verifyUser(userId: string, accessKey: string): Promise<msgItem> {
         let userDoc = await global.mongodbClient.foodMapDb.userCol.findOne({_id: new ObjectId(userId)});
         if (!userDoc) {
             this.verify = false;
@@ -45,5 +46,3 @@ class apiResponseBase {
         return {msg: '驗證成功'};
     }
 }
-
-export default apiResponseBase;
