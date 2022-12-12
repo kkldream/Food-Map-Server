@@ -1,21 +1,18 @@
 import {dbPhotoItem} from "../dataStruct/mongodb/googlePlaceDocument";
 import config from "../../config";
 import {googlePhotosItem} from "../dataStruct/mongodb/originalGooglePlaceData";
-
-var imageToBase64 = require('image-to-base64');
-var Canvas = require('canvas');
-
-const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+const imageToBase64 = require('image-to-base64');
+const Canvas = require('canvas');
 
 export async function googleImageListConvertDb(photoReference: googlePhotosItem[], maxWidth: number = config.image.maxWidth, rate: number = config.image.compressRate): Promise<dbPhotoItem[]> {
+    if (!photoReference) return [];
     return await Promise.all(photoReference.map(async (googlePhoto: googlePhotosItem): Promise<dbPhotoItem> => {
         let imageUrl = "https://maps.googleapis.com/maps/api/place/photo?"
             + `&maxwidth=${maxWidth}&`
             + `photoreference=${googlePhoto.photo_reference}`
-            + `&key=${GOOGLE_API_KEY}`;
+            + `&key=${process.env.GOOGLE_API_KEY}`;
         return await compressUrlImageToBase64(imageUrl, rate);
-    }))
-
+    }));
 }
 
 async function compressUrlImageToBase64(url: string, rate: number = 0.5): Promise<dbPhotoItem> {
