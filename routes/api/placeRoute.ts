@@ -13,8 +13,7 @@ router.post('/search_by_distance', async function (req: any, res: any, next: any
         await response.verifyUser(userId, accessKey);
         response.result = await placeMgr.searchByDistance(userId, latitude, longitude, distance, skip, limit);
     } catch (error: apiError | any) {
-        response.status = error.status ? error.status : -1;
-        response.errMsg = error.status ? error.text : {name: error.name, message: error.message, stack: error.stack};
+        response.errorHandle(error);
     }
     return res.send(response);
 });
@@ -26,8 +25,7 @@ router.post('/search_by_keyword', async function (req: any, res: any, next: any)
         await response.verifyUser(userId, accessKey);
         response.result = await placeMgr.searchByKeyword(userId, latitude, longitude, keyword, skip, limit);
     } catch (error: apiError | any) {
-        response.status = error.status ? error.status : -1;
-        response.errMsg = error.status ? error.text : {name: error.name, message: error.message, stack: error.stack};
+        response.errorHandle(error);
     }
     return res.send(response);
 });
@@ -39,8 +37,7 @@ router.post('/details_by_place_id', async function (req: any, res: any, next: an
         await response.verifyUser(userId, accessKey);
         response.result = await googleMapsMgr.detailsByPlaceId(userId, place_id);
     } catch (error: apiError | any) {
-        response.status = error.status ? error.status : -1;
-        response.errMsg = error.status ? error.text : {name: error.name, message: error.message, stack: error.stack};
+        response.errorHandle(error);
     }
     return res.send(response);
 });
@@ -52,8 +49,7 @@ router.post('/draw_card', async function (req: any, res: any, next: any) {
         await response.verifyUser(userId, accessKey);
         response.result = await placeMgr.drawCard(userId, latitude, longitude, mode, num);
     } catch (error: apiError | any) {
-        response.status = error.status ? error.status : -1;
-        response.errMsg = error.status ? error.text : {name: error.name, message: error.message, stack: error.stack};
+        response.errorHandle(error);
     }
     return res.send(response);
 });

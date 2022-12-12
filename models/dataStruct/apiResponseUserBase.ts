@@ -18,6 +18,11 @@ export default class apiResponseBase implements baseResponses{
         this.status = 0;
     }
 
+    errorHandle(error: apiError | any): void {
+        this.status = error.status ? error.status : -1;
+        this.errMsg = error.status ? error.text : {name: error.name, message: error.message, stack: error.stack};
+    }
+
     async verifyRoot(accessKey: string): Promise<msgItem> {
         if (accessKey !== process.env.ROOT_ACCESS_KEY) {
             this.verify = false;

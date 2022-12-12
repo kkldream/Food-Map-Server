@@ -12,8 +12,7 @@ router.post('/update_custom', async function (req: any, res: any, next: any) {
         await response.verifyRoot(accessKey);
         response.result = await googleMapsMgr.updateCustom(latitude, longitude, radius, keyword);
     } catch (error: apiError | any) {
-        response.status = error.status ? error.status : -1;
-        response.errMsg = error.status ? error.text : {name: error.name, message: error.message, stack: error.stack};
+        response.errorHandle(error);
     }
     return res.send(response);
 });
@@ -25,8 +24,7 @@ router.post('/update_place_by_distance', async function (req: any, res: any, nex
         await response.verifyRoot(accessKey);
         response.result = await googleMapsMgr.updatePlaceByDistance(latitude, longitude, searchPageNum);
     } catch (error: apiError | any) {
-        response.status = error.status ? error.status : -1;
-        response.errMsg = error.status ? error.text : {name: error.name, message: error.message, stack: error.stack};
+        response.errorHandle(error);
     }
     return res.send(response);
 });

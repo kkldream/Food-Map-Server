@@ -23,7 +23,7 @@ export interface responseDetailItem {
     dine_in: boolean;
     formatted_address: string;
     formatted_phone_number: string;
-    geometry: { location: responseLocationItem };
+    location: responseLocationItem;
     name: string;
     photos: dbPhotoItem[];
     place_id: string;

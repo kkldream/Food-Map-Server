@@ -173,7 +173,7 @@ async function detailsByPlaceId(userId: string, place_id: string): Promise<respo
             dine_in: findResult.originalDetail.dine_in,
             formatted_address: findResult.originalDetail.formatted_address,
             formatted_phone_number: findResult.originalDetail.formatted_phone_number,
-            geometry: {location: findResult.originalDetail.geometry.location},
+            location: findResult.originalDetail.geometry.location,
             name: findResult.originalDetail.name,
             photos: await googleImageListConvertDb(findResult.originalDetail.photos ?? []),
             place_id: findResult.originalDetail.place_id,
