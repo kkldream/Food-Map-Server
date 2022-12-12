@@ -1,10 +1,12 @@
+import {foodTypeEnum} from "./models/dataStruct/staticCode/foodTypeEnum";
+
 export default {
   // https://developers.google.com/maps/documentation/places/web-service/supported_types
   foodTypeList: [
-    "cafe",
-    "food",
-    "restaurant",
-    "meal_takeaway"
+    foodTypeEnum.food,
+    foodTypeEnum.meal_delivery,
+    foodTypeEnum.meal_takeaway,
+    foodTypeEnum.restaurant,
   ],
   minResponseCount: 1,
   drawCard: {

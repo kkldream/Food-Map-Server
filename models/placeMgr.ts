@@ -6,6 +6,7 @@ import {drawCardModeEnum} from "./dataStruct/staticCode/drawCardModeEnum";
 import {dbPlaceDocument} from "./dataStruct/mongodb/googlePlaceDocument";
 import {responsePlaceItem, responsePlaceResult} from "./dataStruct/response/placeResponses";
 import {userDocument} from "./dataStruct/mongodb/userDocument";
+import {getBlackList} from "./service/blackListService";
 
 interface dbPlaceDocumentWithDistance extends dbPlaceDocument {
     distance: number;
@@ -15,6 +16,8 @@ async function dbPlaceListConvertResponse(dbPlaceDocList: dbPlaceDocumentWithDis
     const userCol = global.mongodbClient.foodMapDb.userCol;
     let userDoc: userDocument = await userCol.findOne({_id: new ObjectId(userId)});
     let favoriteIdList: string[] = userDoc.favoriteList;
+    let blackList: string[] = await getBlackList();
+    dbPlaceDocList.filter(dbPlaceDoc => !blackList.includes(dbPlaceDoc.place_id));
     return dbPlaceDocList.map((dbPlaceDoc: dbPlaceDocumentWithDistance): responsePlaceItem => ({
         updateTime: dbPlaceDoc.content.updateTime,
         place_id: dbPlaceDoc.place_id,

@@ -1,4 +1,5 @@
 import {ObjectId} from "mongodb";
+import {foodTypeEnum} from "../staticCode/foodTypeEnum";
 
 export interface userDocument {
     _id?: ObjectId;
@@ -10,6 +11,7 @@ export interface userDocument {
     userImage: string;
     devices: deviceItem[];
     favoriteList: string[];
+    selectTypeList?: foodTypeEnum[];
 }
 
 interface deviceItem {
