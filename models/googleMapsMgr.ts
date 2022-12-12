@@ -7,6 +7,7 @@ import {callGoogleApiDetail, callGoogleApiNearBySearch} from "./service/googleAp
 import {responseLocationItem} from "./dataStruct/response/publicItem/responseLocationItem";
 import {responseDetailResult} from "./dataStruct/response/detailResponses";
 import {isFavoriteByUserId} from "./service/placeService";
+import {googleImageListConvertDb} from "./service/imageService";
 
 // https://developers.google.com/maps/documentation/places/web-service/supported_types
 const FOOD_TYPE_LIST = config.foodTypeList;
@@ -90,7 +91,7 @@ async function nearBySearch(searchPageNum: number, request: { location: response
             place_id: googlePlace.place_id || '',
             status: googlePlace.business_status || '',
             name: googlePlace.name || '',
-            photos: googlePlace.photos || [],
+            photos: await googleImageListConvertDb(googlePlace.photos ?? []),
             rating: {
                 star: googlePlace.rating || 0,
                 total: googlePlace.user_ratings_total || 0,

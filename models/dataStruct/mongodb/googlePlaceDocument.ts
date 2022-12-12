@@ -26,7 +26,7 @@ export interface dbPlaceItem {
     place_id: string;
     status: string;
     name: string;
-    photos: googlePhotosItem[];
+    photos: dbPhotoItem[];
     rating: {
         star: number;
         total: number;
@@ -45,4 +45,12 @@ export interface dbPlaceItem {
         type: string;
         weekday_text: string[];
     };
+}
+
+export interface dbPhotoItem {
+    width: number;
+    height: number;
+    data: string;
+    length: number;
+    format: string;
 }

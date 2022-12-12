@@ -1,6 +1,7 @@
 import {responseLocationItem} from "./publicItem/responseLocationItem";
 import {googlePhotosItem} from "../mongodb/originalGooglePlaceData";
 import {baseResponses} from "./baseResponse";
+import {dbPhotoItem} from "../mongodb/googlePlaceDocument";
 
 export interface placeResponses extends baseResponses{
     result: responsePlaceResult;
@@ -18,7 +19,7 @@ export interface responsePlaceItem {
     uid: string;
     status: string;
     name: string;
-    photos: googlePhotosItem[];
+    photos: dbPhotoItem[];
     rating: {
         star: number;
         total: number;

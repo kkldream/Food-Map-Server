@@ -11,5 +11,9 @@ export default {
     ratingStar: 4,
     ratingTotal: 100
   },
-  detailUpdateRangeSecond: 3
+  detailUpdateRangeSecond: 3,
+  image: {
+    maxWidth: 400,
+    compressRate: 0.5
+  },
 }

@@ -1,6 +1,7 @@
 import {baseResponses} from "./baseResponse";
 import {googlePhotosItem} from "../mongodb/originalGooglePlaceData";
 import {responseLocationItem} from "./publicItem/responseLocationItem";
+import {dbPhotoItem} from "../mongodb/googlePlaceDocument";
 
 export interface favoriteResponse extends baseResponses {
     result: favoriteItem;
@@ -9,7 +10,7 @@ export interface favoriteResponse extends baseResponses {
 export interface favoriteItem {
     updateTime: Date;
     placeId: string;
-    photos: googlePhotosItem[]; // 多張
+    photos: dbPhotoItem[]; // 多張
     name: string;
     vicinity: string;
     workDay: string[]; // 營業時段 可能為null
