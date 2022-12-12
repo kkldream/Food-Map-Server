@@ -1,5 +1,5 @@
 import {responseLocationItem} from "./publicItem/responseLocationItem";
-import {googlePhotosItem, placeOpeningHours} from "../mongodb/originalGooglePlaceData";
+import {placeOpeningHours} from "../mongodb/originalGooglePlaceData";
 import {baseResponses} from "./baseResponse";
 import {dbPhotoItem} from "../mongodb/googlePlaceDocument";
 
@@ -16,7 +16,7 @@ export interface responsePlaceResult {
 
 export interface responsePlaceItem {
     updateTime: Date;
-    placeId: string;
+    place_id: string;
     status: string;
     name: string;
     photos: dbPhotoItem[];

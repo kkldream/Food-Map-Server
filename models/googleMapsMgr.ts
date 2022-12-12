@@ -9,9 +9,6 @@ import {responseDetailResult} from "./dataStruct/response/detailResponses";
 import {isFavoriteByUserId} from "./service/placeService";
 import {googleImageListConvertDb} from "./service/imageService";
 
-// https://developers.google.com/maps/documentation/places/web-service/supported_types
-const FOOD_TYPE_LIST = config.foodTypeList;
-
 async function updateCustom(latitude: number, longitude: number, radius: number, keyword: string) {
     if (!latitude || !longitude || !radius || !keyword) throwError(errorCodes.requestDataError);
     let resultStatus = {
@@ -19,7 +16,7 @@ async function updateCustom(latitude: number, longitude: number, radius: number,
         matchCount: 0,
         modifiedCount: 0
     };
-    for (const type of FOOD_TYPE_LIST) {
+    for (const type of config.foodTypeList) {
         let result = await nearBySearch(3, {
             location: {lat: latitude, lng: longitude},
             type,
@@ -40,7 +37,7 @@ async function updatePlaceByDistance(latitude: number, longitude: number, search
         matchCount: 0,
         modifiedCount: 0
     };
-    for (const type of FOOD_TYPE_LIST) {
+    for (const type of config.foodTypeList) {
         let result = await nearBySearch(searchPageNum, {
                 location: {lat: latitude, lng: longitude},
                 type,
@@ -62,7 +59,7 @@ async function updatePlaceByKeyword(latitude: number, longitude: number, keyword
         matchCount: 0,
         modifiedCount: 0
     };
-    for (const type of FOOD_TYPE_LIST) {
+    for (const type of config.foodTypeList) {
         let result = await nearBySearch(searchPageNum, {
                 location: {lat: latitude, lng: longitude},
                 type,
@@ -149,25 +146,46 @@ async function nearBySearch(searchPageNum: number, request: { location: response
 async function detailsByPlaceId(userId: string, place_id: string): Promise<responseDetailResult> {
     if (isUndefined([place_id])) throwError(errorCodes.requestDataError);
     let requestTime: Date = new Date();
-    let isFavorite = await isFavoriteByUserId(userId, place_id);
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let findResult: dbPlaceDocument = await placeCol.findOne({place_id});
-    if (findResult.originalDetail !== null && requestTime.getTime() - (findResult.originalDetail.updateTime?.getTime() ?? 0) < config.detailUpdateRangeSecond * 1000) {
-        return {
-            updated: false,
-            isFavorite,
-            result: {
-                html_attributions: [],
-                result: findResult.originalDetail,
-                status: "OK"
-            },
-        };
+    let updated = false;
+    if (findResult.originalDetail === null || requestTime.getTime() - (findResult.originalDetail.updateTime?.getTime() ?? 0) > config.detailUpdateRangeSecond * 1000) {
+        findResult.originalDetail = (await callGoogleApiDetail(place_id)).result;
+        findResult.originalDetail.updateTime = requestTime;
+        await placeCol.updateOne({place_id}, {
+            $set: {
+                updateTime: findResult.originalDetail.updateTime,
+                originalDetail: findResult.originalDetail
+            }
+        });
+        updated = true;
     }
-    let response = await callGoogleApiDetail(place_id);
     return {
-        updated: true,
-        isFavorite: isFavorite,
-        result: response
+        updated,
+        isFavorite: await isFavoriteByUserId(userId, place_id),
+        updateTime: findResult.originalDetail.updateTime ?? requestTime,
+        place: {
+            current_opening_hours: {
+                open_now: findResult.originalDetail.current_opening_hours.open_now ?? false,
+                weekday_text: findResult.originalDetail.current_opening_hours.weekday_text ?? []
+            },
+            delivery: findResult.originalDetail.delivery,
+            dine_in: findResult.originalDetail.dine_in,
+            formatted_address: findResult.originalDetail.formatted_address,
+            formatted_phone_number: findResult.originalDetail.formatted_phone_number,
+            geometry: {location: findResult.originalDetail.geometry.location},
+            name: findResult.originalDetail.name,
+            photos: await googleImageListConvertDb(findResult.originalDetail.photos ?? []),
+            place_id: findResult.originalDetail.place_id,
+            price_level: findResult.originalDetail.price_level,
+            rating: findResult.originalDetail.rating,
+            reviews: findResult.originalDetail.reviews,
+            takeout: findResult.originalDetail.takeout,
+            url: findResult.originalDetail.url,
+            user_ratings_total: findResult.originalDetail.user_ratings_total,
+            vicinity: findResult.originalDetail.vicinity,
+            website: findResult.originalDetail.website
+        }
     };
 }
 

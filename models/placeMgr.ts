@@ -3,7 +3,7 @@ import {BSONRegExp, ObjectId} from 'mongodb';
 import {errorCodes, isUndefined, throwError} from './dataStruct/throwError';
 import config from "../config"
 import {drawCardModeEnum} from "./dataStruct/staticCode/drawCardModeEnum";
-import {dbPlaceDocument, dbPlaceItem} from "./dataStruct/mongodb/googlePlaceDocument";
+import {dbPlaceDocument} from "./dataStruct/mongodb/googlePlaceDocument";
 import {responsePlaceItem, responsePlaceResult} from "./dataStruct/response/placeResponses";
 import {userDocument} from "./dataStruct/mongodb/userDocument";
 
@@ -17,7 +17,7 @@ async function dbPlaceListConvertResponse(dbPlaceDocList: dbPlaceDocumentWithDis
     let favoriteIdList: string[] = userDoc.favoriteList;
     return dbPlaceDocList.map((dbPlaceDoc: dbPlaceDocumentWithDistance): responsePlaceItem => ({
         updateTime: dbPlaceDoc.content.updateTime,
-        placeId: dbPlaceDoc.place_id,
+        place_id: dbPlaceDoc.place_id,
         status: dbPlaceDoc.content.status,
         name: dbPlaceDoc.content.name,
         photos: dbPlaceDoc.content.photos,

@@ -1,5 +1,4 @@
 import {baseResponses} from "./baseResponse";
-import {googlePhotosItem} from "../mongodb/originalGooglePlaceData";
 import {responseLocationItem} from "./publicItem/responseLocationItem";
 import {dbPhotoItem} from "../mongodb/googlePlaceDocument";
 

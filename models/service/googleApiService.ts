@@ -1,5 +1,4 @@
 import {
-    googleDetailItem,
     googleDetailResponse,
     googlePlaceResponse,
     googlePlaceResult
@@ -38,18 +37,9 @@ export async function callGoogleApiNearBySearch(searchPageNum: number, location:
 }
 
 export async function callGoogleApiDetail(place_id: string): Promise<googleDetailResponse> {
-    const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let url = 'https://maps.googleapis.com/maps/api/place/details/json?'
         + `&language=zh-TW`
         + `&place_id=${place_id}`
         + `&key=${GOOGLE_API_KEY}`;
-    let response: googleDetailResponse = (await axios({method: 'get', url})).data;
-    let googleDetail: googleDetailItem = {updateTime: new Date(), ...response.result};
-    await placeCol.updateOne({place_id}, {
-        $set: {
-            updateTime: googleDetail.updateTime,
-            originalDetail: googleDetail
-        }
-    });
-    return response;
+    return (await axios({method: 'get', url})).data;
 }

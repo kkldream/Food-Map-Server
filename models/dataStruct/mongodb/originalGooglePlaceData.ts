@@ -1,3 +1,5 @@
+import {responseLocationItem} from "../response/publicItem/responseLocationItem";
+
 export interface googlePlaceResponse {
     html_attributions: string[];
     next_page_token: string;
@@ -123,13 +125,12 @@ interface placeOpeningHoursPeriod {
     truncated: boolean;
 }
 
-interface latLngLiteral {
+export interface latLngLiteral {
     lat: number;
     lng: number;
 }
 
-
-interface placeReview {
+export interface placeReview {
     author_name: string;
     rating: number;
     relative_time_description: string;

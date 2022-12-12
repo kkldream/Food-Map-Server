@@ -1,4 +1,5 @@
-export interface responseLocationItem {
-    lat: number;
-    lng: number;
+import {latLngLiteral} from "../../mongodb/originalGooglePlaceData";
+
+export interface responseLocationItem extends latLngLiteral {
+
 }

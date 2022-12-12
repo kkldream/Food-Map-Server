@@ -1,4 +1,5 @@
 export default {
+  // https://developers.google.com/maps/documentation/places/web-service/supported_types
   foodTypeList: [
     "cafe",
     "food",
@@ -11,7 +12,7 @@ export default {
     ratingStar: 4,
     ratingTotal: 100
   },
-  detailUpdateRangeSecond: 3,
+  detailUpdateRangeSecond: 10,
   image: {
     maxWidth: 400,
     compressRate: 0.5
