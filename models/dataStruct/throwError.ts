@@ -9,6 +9,7 @@ export enum errorCodes {
     accessKeyVerifyError = 4,
     requestDataError = 5,
     loginDeviceNotFound = 6,
+    favoriteNotFound = 7,
 }
 
 export function throwError(errorCode: errorCodes, msg: string = ''): apiError {
@@ -35,6 +36,9 @@ export function throwError(errorCode: errorCodes, msg: string = ''): apiError {
                 break;
             case errorCodes.loginDeviceNotFound:
                 msg = '無此裝置登入資料';
+                break;
+            case errorCodes.favoriteNotFound:
+                msg = '無最愛紀錄';
                 break;
             default:
                 msg = '未知錯誤';

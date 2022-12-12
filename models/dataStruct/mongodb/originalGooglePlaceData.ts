@@ -108,7 +108,7 @@ export interface googleDetailItem {
     wheelchair_accessible_entrance: boolean;
 }
 
-interface placeOpeningHours {
+export interface placeOpeningHours {
     open_now?: boolean;
     periods?: placeOpeningHoursPeriod[];
     special_days?: placeOpeningHoursPeriod[];

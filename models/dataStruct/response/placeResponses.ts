@@ -1,5 +1,5 @@
 import {responseLocationItem} from "./publicItem/responseLocationItem";
-import {googlePhotosItem} from "../mongodb/originalGooglePlaceData";
+import {googlePhotosItem, placeOpeningHours} from "../mongodb/originalGooglePlaceData";
 import {baseResponses} from "./baseResponse";
 import {dbPhotoItem} from "../mongodb/googlePlaceDocument";
 
@@ -16,7 +16,7 @@ export interface responsePlaceResult {
 
 export interface responsePlaceItem {
     updateTime: Date;
-    uid: string;
+    placeId: string;
     status: string;
     name: string;
     photos: dbPhotoItem[];
@@ -32,11 +32,7 @@ export interface responsePlaceItem {
         mask_base_uri: string;
     };
     types: string[];
-    opening_hours: {
-        periods: any[];
-        special_days: any[];
-        type: string;
-        weekday_text: string[];
-    };
-    isFavorite?: boolean;
+    opening_hours: placeOpeningHours;
+    distance: number;
+    isFavorite: boolean;
 }

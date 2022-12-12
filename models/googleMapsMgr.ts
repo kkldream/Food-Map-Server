@@ -104,12 +104,7 @@ async function nearBySearch(searchPageNum: number, request: { location: response
                 mask_base_uri: googlePlace.icon_mask_base_uri,
             },
             types: googlePlace.types,
-            opening_hours: {
-                periods: googlePlace.opening_hours?.periods || [],
-                special_days: googlePlace.opening_hours?.special_days || [],
-                type: googlePlace.opening_hours?.type || "",
-                weekday_text: googlePlace.opening_hours?.weekday_text || [],
-            }
+            opening_hours: googlePlace.opening_hours
         };
         googlePlace.updateTime = requestTime;
         let findResult = await placeCol.findOne({"place.place_id": googlePlace.place_id});

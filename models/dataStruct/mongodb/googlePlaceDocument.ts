@@ -1,5 +1,5 @@
 import {ObjectId} from "mongodb";
-import {googleDetailItem, googlePhotosItem, googlePlaceResult} from "./originalGooglePlaceData";
+import {googleDetailItem, googlePhotosItem, googlePlaceResult, placeOpeningHours} from "./originalGooglePlaceData";
 import {dbLocationItem} from "./publicItem/dbLocationItem";
 import {responseLocationItem} from "../response/publicItem/responseLocationItem";
 
@@ -39,12 +39,7 @@ export interface dbPlaceItem {
         mask_base_uri: string;
     };
     types: string[];
-    opening_hours: {
-        periods: any[];
-        special_days: any[];
-        type: string;
-        weekday_text: string[];
-    };
+    opening_hours: placeOpeningHours;
 }
 
 export interface dbPhotoItem {
