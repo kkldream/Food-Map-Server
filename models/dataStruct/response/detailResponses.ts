@@ -15,14 +15,14 @@ export interface responseDetailResult {
 }
 
 export interface responseDetailItem {
-    current_opening_hours: {
+    opening_hours: {
         open_now: boolean;
         weekday_text: string[];
     };
     delivery: boolean;
     dine_in: boolean;
-    formatted_address: string;
-    formatted_phone_number: string;
+    address: string;
+    phone: string;
     location: responseLocationItem;
     name: string;
     photos: dbPhotoItem[];
@@ -32,7 +32,7 @@ export interface responseDetailItem {
     reviews: placeReview[];
     takeout: boolean;
     url: string;
-    user_ratings_total: number;
+    ratings_total: number;
     vicinity: string;
     website: string;
 }

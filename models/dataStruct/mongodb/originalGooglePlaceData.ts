@@ -1,5 +1,3 @@
-import {responseLocationItem} from "../response/publicItem/responseLocationItem";
-
 export interface googlePlaceResponse {
     html_attributions: string[];
     next_page_token: string;

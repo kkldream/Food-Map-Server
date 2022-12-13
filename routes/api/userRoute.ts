@@ -2,7 +2,6 @@ import {Router} from "express";
 import userMgr from '../../models/userMgr';
 import apiResponseBase from "../../models/dataStruct/apiResponseUserBase";
 import {apiError} from "../../models/dataStruct/response/baseResponse";
-import rootMgr from "../../models/rootMgr";
 
 const router = Router()
 
@@ -155,6 +154,18 @@ router.post('/pull_black_list', async function (req: any, res: any, next: any) {
         let {userId, accessKey, placeIdList} = req.body;
         await response.verifyUser(userId, accessKey);
         response.result = await userMgr.pullBlackList(userId, placeIdList);
+    } catch (error: apiError | any) {
+        response.errorHandle(error);
+    }
+    return res.send(response);
+});
+
+router.post('/get_black_list', async function (req: any, res: any, next: any) {
+    let response = new apiResponseBase();
+    try {
+        let {userId, accessKey} = req.body;
+        await response.verifyUser(userId, accessKey);
+        response.result = await userMgr.getBlackList(userId);
     } catch (error: apiError | any) {
         response.errorHandle(error);
     }

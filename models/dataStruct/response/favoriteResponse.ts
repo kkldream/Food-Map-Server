@@ -8,7 +8,7 @@ export interface favoriteResponse extends baseResponses {
 
 export interface favoriteItem {
     updateTime: Date;
-    placeId: string;
+    place_id: string;
     photos: dbPhotoItem[]; // 多張
     name: string;
     vicinity: string;

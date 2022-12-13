@@ -183,14 +183,14 @@ async function detailsByPlaceId(userId: string, place_id: string): Promise<respo
         isFavorite: await isFavoriteByUserId(userId, place_id),
         updateTime: findResult.originalDetail.updateTime ?? requestTime,
         place: {
-            current_opening_hours: {
+            opening_hours: {
                 open_now: findResult.originalDetail.current_opening_hours.open_now ?? false,
                 weekday_text: findResult.originalDetail.current_opening_hours.weekday_text ?? []
             },
             delivery: findResult.originalDetail.delivery,
             dine_in: findResult.originalDetail.dine_in,
-            formatted_address: findResult.originalDetail.formatted_address,
-            formatted_phone_number: findResult.originalDetail.formatted_phone_number,
+            address: findResult.originalDetail.formatted_address,
+            phone: findResult.originalDetail.formatted_phone_number,
             location: findResult.originalDetail.geometry.location,
             name: findResult.originalDetail.name,
             photos: await googleImageListConvertDb(findResult.originalDetail.photos),
@@ -200,7 +200,7 @@ async function detailsByPlaceId(userId: string, place_id: string): Promise<respo
             reviews: findResult.originalDetail.reviews,
             takeout: findResult.originalDetail.takeout,
             url: findResult.originalDetail.url,
-            user_ratings_total: findResult.originalDetail.user_ratings_total,
+            ratings_total: findResult.originalDetail.user_ratings_total,
             vicinity: findResult.originalDetail.vicinity,
             website: findResult.originalDetail.website
         }

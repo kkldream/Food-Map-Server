@@ -173,7 +173,7 @@ async function getFavorite(userId: string): Promise<favoriteItem[]> {
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let userDoc: userDocument = await userCol.findOne({_id: new ObjectId(userId)});
     if (!userDoc.favoriteList) return [];
-    let favoriteList: favoriteItem[] = await Promise.all(userDoc.favoriteList.map(async (favoriteId: string): Promise<favoriteItem> => {
+    return await Promise.all(userDoc.favoriteList.map(async (favoriteId: string): Promise<favoriteItem> => {
         let dbPlace: dbPlaceDocument = await placeCol.findOne({place_id: favoriteId});
         if (dbPlace.originalDetail === null) {
             let response: googleDetailResponse = await callGoogleApiDetail(favoriteId);
@@ -181,7 +181,7 @@ async function getFavorite(userId: string): Promise<favoriteItem[]> {
         }
         return {
             updateTime: dbPlace.updateTime,
-            placeId: dbPlace.place_id,
+            place_id: dbPlace.place_id,
             photos: dbPlace.content.photos,
             name: dbPlace.content.name,
             vicinity: dbPlace.originalDetail.vicinity ?? "",
@@ -198,7 +198,6 @@ async function getFavorite(userId: string): Promise<favoriteItem[]> {
             url: dbPlace.originalDetail.url ?? ""
         }
     }));
-    return favoriteList;
 }
 
 async function pushBlackList(userId: string, placeIdList: string[]) {
@@ -219,6 +218,13 @@ async function pullBlackList(userId: string, placeIdList: string[]) {
     return {msg: '移除黑名單成功'};
 }
 
+async function getBlackList(userId: string): Promise<string[]> {
+    const userCol = global.mongodbClient.foodMapDb.userCol;
+    let userQuery = {_id: new ObjectId(userId)};
+    let userDoc: userDocument = await userCol.findOne(userQuery);
+    return userDoc.blackList;
+}
+
 export default {
     register,
     loginByDevice,
@@ -233,4 +239,5 @@ export default {
     getFavorite,
     pushBlackList,
     pullBlackList,
+    getBlackList,
 };
