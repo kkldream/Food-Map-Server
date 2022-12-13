@@ -11,7 +11,7 @@ export interface userDocument {
     userImage: string;
     devices: deviceItem[];
     favoriteList: string[];
-    selectTypeList?: foodTypeEnum[];
+    blackList: string[];
 }
 
 interface deviceItem {

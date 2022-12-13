@@ -23,7 +23,8 @@ async function register(username: string, password: string, deviceId: string) {
         username, password, accessKey,
         userImage: "",
         devices: [{deviceId, fcmToken: "", isUse: true}],
-        favoriteList: []
+        favoriteList: [],
+        blackList: []
     };
     let insertResult = await userCol.insertOne(insertDoc);
 
@@ -200,6 +201,24 @@ async function getFavorite(userId: string): Promise<favoriteItem[]> {
     return favoriteList;
 }
 
+async function pushBlackList(userId: string, placeIdList: string[]) {
+    const userCol = global.mongodbClient.foodMapDb.userCol;
+    let userQuery = {_id: new ObjectId(userId)};
+    let userDoc: userDocument = await userCol.findOne(userQuery);
+    let newBlackList: string[] = [...new Set(userDoc.blackList.concat(placeIdList))];
+    await userCol.updateOne(userQuery, {$set: {blackList: newBlackList}});
+    return {msg: '添加黑名單成功'};
+}
+
+async function pullBlackList(userId: string, placeIdList: string[]) {
+    const userCol = global.mongodbClient.foodMapDb.userCol;
+    let userQuery = {_id: new ObjectId(userId)};
+    let userDoc: userDocument = await userCol.findOne(userQuery);
+    let newBlackList: string[] = userDoc.blackList.filter((blackId: string) => !placeIdList.includes(blackId));
+    await userCol.updateOne(userQuery, {$set: {blackList: newBlackList}});
+    return {msg: '移除黑名單成功'};
+}
+
 export default {
     register,
     loginByDevice,
@@ -211,5 +230,7 @@ export default {
     logoutByDevice,
     pushFavorite,
     pullFavorite,
-    getFavorite
+    getFavorite,
+    pushBlackList,
+    pullBlackList,
 };

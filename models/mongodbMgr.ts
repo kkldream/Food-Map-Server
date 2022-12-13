@@ -10,7 +10,6 @@ export default class MongodbClient {
         loginLogCol?: any,
         updateLogCol?: any,
         drawCardLogCol?: any,
-        blackListCol?: any,
     } = {};
 
     initDbColList(client: MongoClient) {
@@ -21,7 +20,6 @@ export default class MongodbClient {
         this.foodMapDb.userCol = foodMapDb.collection('userV2');
         this.foodMapDb.loginLogCol = foodMapDb.collection('userLog');
         this.foodMapDb.updateLogCol = foodMapDb.collection('searchLog');
-        this.foodMapDb.blackListCol = foodMapDb.collection('blackList');
     }
 
     constructor(url: string) {

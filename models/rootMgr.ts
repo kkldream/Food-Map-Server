@@ -8,13 +8,16 @@ import {responseLocationItem} from "./dataStruct/response/publicItem/responseLoc
 import {responseDetailResult} from "./dataStruct/response/detailResponses";
 import {isFavoriteByUserId} from "./service/placeService";
 import {googleImageListConvertDb} from "./service/imageService";
+import {ObjectId} from "mongodb";
+import {userDocument} from "./dataStruct/mongodb/userDocument";
+import userMgr from "./userMgr";
 
-async function pushBlackList(place_id: string) {
-
+async function pushBlackList(placeIdList: string[]) {
+    return userMgr.pushBlackList(config.root.userId, placeIdList);
 }
 
-async function pullBlackList(place_id: string) {
-
+async function pullBlackList(placeIdList: string[]) {
+    return userMgr.pullBlackList(config.root.userId, placeIdList);
 }
 
 export default {

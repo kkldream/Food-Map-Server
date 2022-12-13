@@ -19,4 +19,7 @@ export default {
     maxWidth: 400,
     compressRate: 0.5
   },
+  root: {
+    userId: "6397e9ee54d1a2bf6c2d6869"
+  },
 }

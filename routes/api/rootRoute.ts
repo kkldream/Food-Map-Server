@@ -9,9 +9,9 @@ const router = Router()
 router.post('/push_black_list', async function (req: any, res: any, next: any) {
     let response = new apiResponseBase();
     try {
-        let {accessKey, place_id} = req.body;
+        let {accessKey, placeIdList} = req.body;
         await response.verifyRoot(accessKey);
-        response.result = await rootMgr.pushBlackList(place_id);
+        response.result = await rootMgr.pushBlackList(placeIdList);
     } catch (error: apiError | any) {
         response.errorHandle(error);
     }
@@ -21,9 +21,9 @@ router.post('/push_black_list', async function (req: any, res: any, next: any) {
 router.post('/pull_black_list', async function (req: any, res: any, next: any) {
     let response = new apiResponseBase();
     try {
-        let {accessKey, place_id} = req.body;
+        let {accessKey, placeIdList} = req.body;
         await response.verifyRoot(accessKey);
-        response.result = await rootMgr.pullBlackList(place_id);
+        response.result = await rootMgr.pullBlackList(placeIdList);
     } catch (error: apiError | any) {
         response.errorHandle(error);
     }

@@ -3,12 +3,14 @@ import apiResponseBase from '../models/dataStruct/apiResponseUserBase';
 import placeRoute from './api/placeRoute';
 import googleApiRoute from './api/googleApiRoute';
 import userRoute from './api/userRoute';
+import rootRoute from "./api/rootRoute";
 
 const router = Router()
 
 router.use('/place', placeRoute);
 router.use('/google_api', googleApiRoute);
 router.use('/user', userRoute);
+router.use('/root', rootRoute);
 
 router.get('/', function (req: any, res: any, next: any) {
     let response = new apiResponseBase();

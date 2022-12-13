@@ -1,7 +1,10 @@
-import {blackListDocument} from "../dataStruct/mongodb/blackListDocument";
+import {ObjectId} from "mongodb";
+import {userDocument} from "../dataStruct/mongodb/userDocument";
+import config from "../../config";
 
 export async function getBlackList(): Promise<string[]> {
-    const blackListCol = global.mongodbClient.foodMapDb.blackListCol;
-    let blackListDoc: blackListDocument[] = await blackListCol.find({}).toArray();
-    return blackListDoc.map((blackList: blackListDocument): string => blackList.place_id);
+    const userCol = global.mongodbClient.foodMapDb.userCol;
+    let userQuery = {_id: new ObjectId(config.root.userId)};
+    let userDoc: userDocument = await userCol.findOne(userQuery);
+    return userDoc.blackList ?? []
 }
