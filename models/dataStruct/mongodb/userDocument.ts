@@ -1,5 +1,4 @@
 import {ObjectId} from "mongodb";
-import {foodTypeEnum} from "../staticCode/foodTypeEnum";
 
 export interface userDocument {
     _id?: ObjectId;

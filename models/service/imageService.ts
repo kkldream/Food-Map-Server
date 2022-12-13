@@ -1,6 +1,7 @@
 import {dbPhotoItem} from "../dataStruct/mongodb/googlePlaceDocument";
 import config from "../../config";
 import {googlePhotosItem} from "../dataStruct/mongodb/originalGooglePlaceData";
+
 const imageToBase64 = require('image-to-base64');
 const Canvas = require('canvas');
 
