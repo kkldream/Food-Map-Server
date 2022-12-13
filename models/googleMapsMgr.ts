@@ -1,14 +1,13 @@
-import axios from 'axios';
-import {throwError, errorCodes, isUndefined} from "./dataStruct/throwError";
-import utils from "./utils";
+import {errorCodes, isUndefined, throwError} from "./dataStruct/throwError";
+import {responseLocationConvertDb} from "./utils";
 import config from "../config"
-import placeDocument from "./dataStruct/mongodb/placeDocument";
-import {ObjectId} from "mongodb";
-import {favoriteItem} from "./dataStruct/mongodb/userDocument";
-
-// https://developers.google.com/maps/documentation/places/web-service/supported_types
-const FOOD_TYPE_LIST = config.foodTypeList;
-const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+import {googlePlaceResult} from "./dataStruct/mongodb/originalGooglePlaceData";
+import {dbPlaceDocument, dbPlaceItem} from "./dataStruct/mongodb/googlePlaceDocument";
+import {callGoogleApiDetail, callGoogleApiNearBySearch} from "./service/googleApiService";
+import {responseLocationItem} from "./dataStruct/response/publicItem/responseLocationItem";
+import {responseDetailResult} from "./dataStruct/response/detailResponses";
+import {isFavoriteByUserId} from "./service/placeService";
+import {googleImageListConvertDb} from "./service/imageService";
 
 async function updateCustom(latitude: number, longitude: number, radius: number, keyword: string) {
     if (!latitude || !longitude || !radius || !keyword) throwError(errorCodes.requestDataError);
@@ -17,8 +16,13 @@ async function updateCustom(latitude: number, longitude: number, radius: number,
         matchCount: 0,
         modifiedCount: 0
     };
-    for (const type of FOOD_TYPE_LIST) {
-        let result = await nearBySearch(3, {latitude, longitude, radius, keyword}, "custom");
+    for (const type of config.foodTypeList) {
+        let result = await nearBySearch(3, {
+            location: {lat: latitude, lng: longitude},
+            type,
+            keyword,
+            radius
+        }, "custom");
         resultStatus.upsertCount += result.upsertCount;
         resultStatus.matchCount += result.matchCount;
         resultStatus.modifiedCount += result.modifiedCount;
@@ -33,12 +37,12 @@ async function updatePlaceByDistance(latitude: number, longitude: number, search
         matchCount: 0,
         modifiedCount: 0
     };
-    for (const type of FOOD_TYPE_LIST) {
+    for (const type of config.foodTypeList) {
         let result = await nearBySearch(searchPageNum, {
-                latitude, longitude,
-                radius: -1,
+                location: {lat: latitude, lng: longitude},
                 type,
-                keyword: ''
+                keyword: "",
+                radius: -1
             }, "search_by_near"
         );
         resultStatus.upsertCount += result.upsertCount;
@@ -55,11 +59,12 @@ async function updatePlaceByKeyword(latitude: number, longitude: number, keyword
         matchCount: 0,
         modifiedCount: 0
     };
-    for (const type of FOOD_TYPE_LIST) {
+    for (const type of config.foodTypeList) {
         let result = await nearBySearch(searchPageNum, {
-                latitude, longitude,
+                location: {lat: latitude, lng: longitude},
                 type,
-                keyword
+                keyword,
+                radius: -1
             }, "search_by_keyword"
         );
         resultStatus.upsertCount += result.upsertCount;
@@ -70,119 +75,136 @@ async function updatePlaceByKeyword(latitude: number, longitude: number, keyword
 }
 
 // https://developers.google.com/maps/documentation/places/web-service/search-nearby
-async function nearBySearch(searchPageNum: number, request: any, msg: string = "") {
-    let {latitude, longitude, radius, type, keyword} = request
+async function nearBySearch(searchPageNum: number, request: { location: responseLocationItem; type: string; keyword: string; radius: number; }, msg: string = "") {
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
-    const updateLogCol = global.mongodbClient.foodMapDb.updateLogCol;
-    let dataList: placeDocument[] = [];
-    let next_page_token: string = '';
-    let requestCount: number;
-    for (requestCount = 1; requestCount <= searchPageNum; requestCount++) {
-        if (requestCount > 1) await new Promise((r) => setTimeout(r, 1000));
-        let url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?'
-            + `&language=zh-TW`
-            + `&key=${GOOGLE_API_KEY}`
-            + `&pagetoken=${next_page_token}`
-            + `&location=${latitude},${longitude}`
-            + `&type=${type}`;
-        if (keyword !== '') {
-            url += `&keyword=${keyword}`;
-            url += `&rankby=distance`;
-        } else {
-            if (radius === -1) url += `&rankby=distance`;
-            else url += `&radius=${radius}`;
-        }
-        let response = await axios({method: 'get', url});
-        dataList = dataList.concat(response.data.results);
-        next_page_token = response.data.next_page_token;
-        console.log(`update ${type}: +${response.data.results.length}/${dataList.length}, next_page = ${next_page_token !== undefined}`)
-        if (!next_page_token) break;
-    }
-
-    if (dataList.length === 0) return {
-        upsertCount: 0,
-        matchCount: 0,
-        modifiedCount: 0
-    };
-
-    for (let i = 0; i < dataList.length; i++) {
-        const data: any = dataList[i];
-        dataList[i] = {
+    let requestTime: Date = new Date();
+    let {location, type, keyword, radius} = request;
+    let googlePlaceList: googlePlaceResult[] = await callGoogleApiNearBySearch(searchPageNum, location, type, keyword, radius);
+    let dbPlaceDocumentList: dbPlaceDocument[] = await Promise.all(googlePlaceList.map(async (googlePlace: googlePlaceResult): Promise<dbPlaceDocument> => {
+        let dbPlace: dbPlaceItem = {
             updateTime: new Date(),
-            uid: data.place_id || '',
-            status: data.business_status || '',
-            name: data.name || '',
-            photos: data.photos || [],
+            place_id: googlePlace.place_id || '',
+            status: googlePlace.business_status || '',
+            name: googlePlace.name || '',
+            photos: await googleImageListConvertDb(googlePlace.photos),
             rating: {
-                star: data.rating || 0,
-                total: data.user_ratings_total || 0,
+                star: googlePlace.rating || 0,
+                total: googlePlace.user_ratings_total || 0,
             },
-            address: data.vicinity || '',
-            location: utils.converTo2dSphere(data.geometry.location.lat, data.geometry.location.lng),
+            address: googlePlace.vicinity || '',
+            location: googlePlace.geometry.location,
             icon: {
-                url: data.icon,
-                background_color: data.icon_background_color,
-                mask_base_uri: data.icon_mask_base_uri,
+                url: googlePlace.icon,
+                background_color: googlePlace.icon_background_color,
+                mask_base_uri: googlePlace.icon_mask_base_uri,
             },
-            types: data.types,
-            opening_hours: {
-                periods: data.opening_hours?.periods || [],
-                special_days: data.opening_hours?.special_days || [],
-                type: data.opening_hours?.type || "",
-                weekday_text: data.opening_hours?.weekday_text || "",
-            }
+            types: googlePlace.types,
+            opening_hours: googlePlace.opening_hours
+        };
+        googlePlace.updateTime = requestTime;
+        let findResult = await placeCol.findOne({"place.place_id": googlePlace.place_id});
+        return {
+            creatTime: findResult ? findResult.creatTime : requestTime,
+            updateTime: requestTime,
+            place_id: dbPlace.place_id,
+            location: responseLocationConvertDb(dbPlace.location),
+            types: dbPlace.types,
+            name: dbPlace.name,
+            content: dbPlace,
+            originalPlace: googlePlace,
+            originalDetail: findResult ? findResult.originalDetail : null
         }
+    }));
+
+    if (dbPlaceDocumentList.length === 0) {
+        return {
+            upsertCount: 0,
+            matchCount: 0,
+            modifiedCount: 0
+        };
     }
 
     // 更新DB資料
-    let bulkWritePipe = []
-    let dataIdList = []
-    for (const data of dataList) {
-        dataIdList.push(data.uid);
-        bulkWritePipe.push({
-            updateOne: {
-                filter: {uid: data.uid},
-                update: {$set: data},
-                upsert: true
-            }
-        });
-    }
+    let bulkWritePipe = dbPlaceDocumentList.map(dbPlace => ({
+        updateOne: {
+            filter: {place_id: dbPlace.place_id},
+            update: {$set: dbPlace},
+            upsert: true
+        }
+    }));
     let result = await placeCol.bulkWrite(bulkWritePipe);
-    let dbStatus = {
+    return {
         upsertCount: result.nUpserted,
         matchCount: result.nMatched,
         modifiedCount: result.nModified
     };
-    // insert update log
-    await updateLogCol.insertOne({
-        createTime: new Date(),
-        type: msg,
-        request: {
-            location: utils.converTo2dSphere(latitude, longitude),
-            radius, type, keyword
-        },
-        requestCount,
-        response: dataList,
-        responseCount: dataList.length,
-        googleApiKey: GOOGLE_API_KEY,
-        dbStatus
-    });
-    return dbStatus;
 }
 
 // https://developers.google.com/maps/documentation/places/web-service/details
-async function detailsByPlaceId(userId: string, place_id: string) {
+async function detailsByPlaceId(userId: string, place_id: string): Promise<responseDetailResult> {
     if (isUndefined([place_id])) throwError(errorCodes.requestDataError);
-    const userCol = global.mongodbClient.foodMapDb.userCol;
-    let url = 'https://maps.googleapis.com/maps/api/place/details/json?'
-        + `&language=zh-TW`
-        + `&place_id=${place_id}`
-        + `&key=${GOOGLE_API_KEY}`;
-    let response = (await axios({method: 'get', url})).data;
-    let userDoc = await userCol.findOne({_id: new ObjectId(userId)});
-    let favoriteIdList: string[] = userDoc.favoriteList ? userDoc.favoriteList.map((favorite: favoriteItem) => favorite.placeId) : [];
-    response.isFavorite = favoriteIdList.includes(place_id);
-    return response;
+    let requestTime: Date = new Date();
+    const placeCol = global.mongodbClient.foodMapDb.placeCol;
+    let findResult: dbPlaceDocument = await placeCol.findOne({place_id});
+    let updated = false;
+    if (findResult.originalDetail === null || requestTime.getTime() - (findResult.originalDetail.updateTime?.getTime() ?? 0) > config.detailUpdateRangeSecond * 1000) {
+        findResult.originalDetail = (await callGoogleApiDetail(place_id)).result;
+        findResult.originalDetail.updateTime = requestTime;
+        let content: dbPlaceItem = {
+            updateTime: requestTime,
+            place_id: findResult.originalDetail.place_id,
+            status: findResult.originalDetail.business_status,
+            name: findResult.originalDetail.name,
+            photos: await googleImageListConvertDb(findResult.originalDetail.photos),
+            rating: {
+                star: findResult.originalDetail.rating,
+                total: findResult.originalDetail.user_ratings_total,
+            },
+            address: findResult.originalDetail.vicinity,
+            location: findResult.originalDetail.geometry.location,
+            icon: {
+                url: findResult.originalDetail.icon,
+                background_color: findResult.originalDetail.icon_background_color,
+                mask_base_uri: findResult.originalDetail.icon_mask_base_uri,
+            },
+            types: findResult.originalDetail.types,
+            opening_hours: findResult.originalDetail.opening_hours
+        };
+        await placeCol.updateOne({place_id}, {
+            $set: {
+                updateTime: requestTime, content,
+                originalDetail: findResult.originalDetail
+            }
+        });
+        updated = true;
+    }
+    return {
+        updated,
+        isFavorite: await isFavoriteByUserId(userId, place_id),
+        updateTime: findResult.originalDetail.updateTime ?? requestTime,
+        place: {
+            opening_hours: {
+                open_now: findResult.originalDetail.current_opening_hours.open_now ?? false,
+                weekday_text: findResult.originalDetail.current_opening_hours.weekday_text ?? []
+            },
+            delivery: findResult.originalDetail.delivery,
+            dine_in: findResult.originalDetail.dine_in,
+            address: findResult.originalDetail.formatted_address,
+            phone: findResult.originalDetail.formatted_phone_number,
+            location: findResult.originalDetail.geometry.location,
+            name: findResult.originalDetail.name,
+            photos: await googleImageListConvertDb(findResult.originalDetail.photos),
+            place_id: findResult.originalDetail.place_id,
+            price_level: findResult.originalDetail.price_level,
+            rating: findResult.originalDetail.rating,
+            reviews: findResult.originalDetail.reviews,
+            takeout: findResult.originalDetail.takeout,
+            url: findResult.originalDetail.url,
+            ratings_total: findResult.originalDetail.user_ratings_total,
+            vicinity: findResult.originalDetail.vicinity,
+            website: findResult.originalDetail.website
+        }
+    };
 }
 
 export default {

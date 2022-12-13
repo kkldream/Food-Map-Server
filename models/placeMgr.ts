@@ -1,31 +1,41 @@
 import googleMapsMgr from "./googleMapsMgr";
 import {BSONRegExp, ObjectId} from 'mongodb';
-import {throwError, errorCodes, isUndefined} from './dataStruct/throwError';
+import {errorCodes, isUndefined, throwError} from './dataStruct/throwError';
 import config from "../config"
 import {drawCardModeEnum} from "./dataStruct/staticCode/drawCardModeEnum";
-import {favoriteItem} from "./dataStruct/mongodb/userDocument";
-import placeDocument from "./dataStruct/mongodb/placeDocument";
+import {dbPlaceDocument} from "./dataStruct/mongodb/googlePlaceDocument";
+import {responsePlaceItem, responsePlaceResult} from "./dataStruct/response/placeResponses";
+import {userDocument} from "./dataStruct/mongodb/userDocument";
+import {getBlackList} from "./service/blackListService";
 
-const FOOD_TYPE_LIST = config.foodTypeList;
-const MIN_RESPONSE_COUNT = config.minResponseCount;
-const DRAW_CARD_PARAMETER = config.drawCard;
-
-async function placeListConvertOutput(placeList: placeDocument[], userId: string) {
-    const userCol = global.mongodbClient.foodMapDb.userCol;
-    let userDoc = await userCol.findOne({_id: new ObjectId(userId)});
-    let favoriteIdList: string[] = userDoc.favoriteList ? userDoc.favoriteList.map((favorite: favoriteItem) => favorite.placeId) : [];
-    placeList.map((place: any) => {
-        delete place._id;
-        place.location = {
-            lat: place.location.coordinates[1],
-            lng: place.location.coordinates[0]
-        };
-        place.isFavorite = favoriteIdList.includes(place.uid);
-    })
-    return placeList;
+interface dbPlaceDocumentWithDistance extends dbPlaceDocument {
+    distance: number;
 }
 
-async function searchByDistance(userId: string, latitude: number, longitude: number, distance: number, skip: number, limit: number) {
+async function dbPlaceListConvertResponse(dbPlaceDocList: dbPlaceDocumentWithDistance[], userId: string): Promise<responsePlaceItem[]> {
+    const userCol = global.mongodbClient.foodMapDb.userCol;
+    let userDoc: userDocument = await userCol.findOne({_id: new ObjectId(userId)});
+    let favoriteIdList: string[] = userDoc.favoriteList;
+    let blackList: string[] = await getBlackList();
+    dbPlaceDocList.filter(dbPlaceDoc => !blackList.includes(dbPlaceDoc.place_id));
+    return dbPlaceDocList.map((dbPlaceDoc: dbPlaceDocumentWithDistance): responsePlaceItem => ({
+        updateTime: dbPlaceDoc.content.updateTime,
+        place_id: dbPlaceDoc.place_id,
+        status: dbPlaceDoc.content.status,
+        name: dbPlaceDoc.content.name,
+        photos: dbPlaceDoc.content.photos,
+        rating: dbPlaceDoc.content.rating,
+        address: dbPlaceDoc.content.address,
+        location: dbPlaceDoc.content.location,
+        icon: dbPlaceDoc.content.icon,
+        types: dbPlaceDoc.content.types,
+        opening_hours: dbPlaceDoc.content.opening_hours,
+        distance: dbPlaceDoc.distance,
+        isFavorite: favoriteIdList.includes(dbPlaceDoc.place_id)
+    }));
+}
+
+async function searchByDistance(userId: string, latitude: number, longitude: number, distance: number, skip: number, limit: number): Promise<responsePlaceResult> {
     if (isUndefined([userId, latitude, longitude, distance, skip, limit])) throwError(errorCodes.requestDataError);
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let updated = false;
@@ -33,31 +43,29 @@ async function searchByDistance(userId: string, latitude: number, longitude: num
     let pipeline = [
         {
             "$geoNear": {
-                "near": {
-                    "type": "Point",
-                    "coordinates": [longitude, latitude]
-                },
+                "near": {"type": "Point", "coordinates": [longitude, latitude]},
                 "distanceField": "distance",
                 "spherical": true,
                 "maxDistance": distance,
-                "query": {"types": {"$in": FOOD_TYPE_LIST}}
+                "query": {"types": {"$in": config.foodTypeList}}
             }
         },
         {"$sort": {"distance": 1}},
         {"$skip": skip},
         {"$limit": limit}
     ];
-    let placeCount = (await placeCol.aggregate([pipeline[0], {"$count": "count"}]).toArray())[0].count;
-    if (placeCount < MIN_RESPONSE_COUNT) {
+    let placeCountResult = await placeCol.aggregate([pipeline[0], {"$count": "count"}]).toArray();
+    let placeCount = placeCountResult.length !== 0 ? placeCountResult[0].count : 0;
+    if (placeCount < config.minResponseCount) {
         dbStatus = await googleMapsMgr.updatePlaceByDistance(latitude, longitude);
         updated = true;
     }
-    let placeList = await placeCol.aggregate(pipeline).toArray();
-    placeList = await placeListConvertOutput(placeList, userId);
-    return {updated, dbStatus, placeCount, placeList}
+    let dbPlaceDocList: dbPlaceDocumentWithDistance[] = await placeCol.aggregate(pipeline).toArray();
+    let responsePlaceList: responsePlaceItem[] = await dbPlaceListConvertResponse(dbPlaceDocList, userId);
+    return {updated, dbStatus, placeCount, placeList: responsePlaceList}
 }
 
-async function searchByKeyword(userId: string, latitude: number, longitude: number, keyword: string, skip: number, limit: number) {
+async function searchByKeyword(userId: string, latitude: number, longitude: number, keyword: string, skip: number, limit: number): Promise<responsePlaceResult> {
     if (isUndefined([userId, latitude, longitude, keyword, skip, limit])) throwError(errorCodes.requestDataError);
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let updated = false;
@@ -65,16 +73,13 @@ async function searchByKeyword(userId: string, latitude: number, longitude: numb
     let pipeline = [
         {
             "$geoNear": {
-                "near": {
-                    "type": "Point",
-                    "coordinates": [longitude, latitude]
-                },
+                "near": {"type": "Point", "coordinates": [longitude, latitude]},
                 "distanceField": "distance",
                 "spherical": true,
                 "query": {
                     "$and": [
                         {"name": {"$regex": new BSONRegExp(keyword)}},
-                        {"types": {"$in": FOOD_TYPE_LIST}}
+                        {"types": {"$in": config.foodTypeList}}
                     ]
                 }
             }
@@ -85,54 +90,62 @@ async function searchByKeyword(userId: string, latitude: number, longitude: numb
     ];
     let placeCount = await placeCol.aggregate([pipeline[0], {"$count": "count"}]).toArray();
     placeCount = placeCount.length === 0 ? 0 : placeCount[0].count;
-    if (placeCount < MIN_RESPONSE_COUNT) {
+    if (placeCount < config.minResponseCount) {
         dbStatus = await googleMapsMgr.updatePlaceByKeyword(latitude, longitude, keyword);
         updated = true;
     }
-    let placeList = await placeCol.aggregate(pipeline).toArray();
-    placeList = await placeListConvertOutput(placeList, userId);
-    return {updated, dbStatus, placeCount, placeList};
+    let dbPlaceDocList: dbPlaceDocumentWithDistance[] = await placeCol.aggregate(pipeline).toArray();
+    let responsePlaceList: responsePlaceItem[] = await dbPlaceListConvertResponse(dbPlaceDocList, userId);
+    return {updated, dbStatus, placeCount, placeList: responsePlaceList}
 }
 
-// 先隨機取幾個，之後會改成依距離判斷
-async function drawCard(userId: string, latitude: number, longitude: number, mode: drawCardModeEnum, num: number) {
+async function drawCard(userId: string, latitude: number, longitude: number, mode: drawCardModeEnum, num: number): Promise<responsePlaceResult> {
     if (isUndefined([userId, latitude, longitude, mode, num])) throwError(errorCodes.requestDataError);
     const userCol = global.mongodbClient.foodMapDb.userCol;
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
-    let placeList: any[];
+    let placeList: dbPlaceDocumentWithDistance[];
+    let updated = false;
+    let dbStatus: any;
     switch (mode) {
-        case drawCardModeEnum.favorite:
-            let favoriteList = (await userCol.findOne({_id: new ObjectId(userId)})).favoriteList;
-            if (!favoriteList) return {msg: '無最愛紀錄'};
-            let favoriteIdList = favoriteList.map((favorite: any) => favorite.placeId).slice(0, num);
-            placeList = await placeCol.aggregate([
-                {$match: {$and: [{uid: {$in: favoriteIdList}}, {types: {$in: FOOD_TYPE_LIST}}]}},
-                {$sample: {size: num}}
-            ]).toArray();
-            break;
         case drawCardModeEnum.near:
-            placeList = await placeCol.aggregate([
+            let pipeline = [
                 {
                     "$geoNear": {
                         "near": {"type": "Point", "coordinates": [longitude, latitude]},
                         "distanceField": "distance",
                         "spherical": true,
-                        "maxDistance": DRAW_CARD_PARAMETER.maxDistance,
+                        "maxDistance": config.drawCard.maxDistance,
                         "query": {
                             "$and": [
-                                {"types": {"$in": FOOD_TYPE_LIST}},
-                                {"rating.star": {"$gte": DRAW_CARD_PARAMETER.ratingStar}},
-                                {"rating.total": {"$gte": DRAW_CARD_PARAMETER.ratingTotal}}
+                                {"types": {"$in": config.foodTypeList}},
+                                {"content.rating.star": {"$gte": config.drawCard.ratingStar}},
+                                {"content.rating.total": {"$gte": config.drawCard.ratingTotal}}
                             ]
                         }
                     }
                 },
+                {"$sample": {"size": num}},
+                {"$sort": {"distance": 1}}
+            ];
+            let placeCountResult = await placeCol.aggregate([pipeline[0], {"$count": "count"}]).toArray();
+            let placeCount = placeCountResult.length !== 0 ? placeCountResult[0].count : 0;
+            if (placeCount < config.minResponseCount) {
+                dbStatus = await googleMapsMgr.updatePlaceByDistance(latitude, longitude);
+                updated = true;
+            }
+            placeList = await placeCol.aggregate(pipeline).toArray();
+            break;
+        case drawCardModeEnum.favorite:
+            let favoriteIdList: string[] = (await userCol.findOne({_id: new ObjectId(userId)})).favoriteList;
+            if (favoriteIdList.length === 0) throwError(errorCodes.favoriteNotFound);
+            placeList = await placeCol.aggregate([
+                {$match: {$and: [{place_id: {$in: favoriteIdList}}, {types: {$in: config.foodTypeList}}]}},
                 {$sample: {size: num}}
             ]).toArray();
             break;
     }
-    placeList = await placeListConvertOutput(placeList, userId);
-    return {placeCount: placeList.length, placeList};
+    let responsePlaceList: responsePlaceItem[] = await dbPlaceListConvertResponse(placeList, userId);
+    return {updated, placeCount: responsePlaceList.length, placeList: responsePlaceList}
 }
 
 export default {

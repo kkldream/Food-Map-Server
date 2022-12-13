@@ -1,3 +1,5 @@
+import {apiError} from "./response/baseResponse";
+
 export enum errorCodes {
     unknown = -1,
     ok = 0,
@@ -6,11 +8,12 @@ export enum errorCodes {
     accountNotFound = 3,
     accessKeyVerifyError = 4,
     requestDataError = 5,
-    loginDeviceNotFound = 6
+    loginDeviceNotFound = 6,
+    favoriteNotFound = 7,
 }
 
-export function throwError(errorCode: errorCodes, msg: string = '') {
-    let status = errorCode || errorCodes.unknown;
+export function throwError(errorCode: errorCodes, msg: string = ''): apiError {
+    let status = errorCode ?? errorCodes.unknown;
     if (msg === '')
         switch (errorCode) {
             case errorCodes.ok:
@@ -34,16 +37,19 @@ export function throwError(errorCode: errorCodes, msg: string = '') {
             case errorCodes.loginDeviceNotFound:
                 msg = '無此裝置登入資料';
                 break;
+            case errorCodes.favoriteNotFound:
+                msg = '無最愛紀錄';
+                break;
             default:
                 msg = '未知錯誤';
                 break;
         }
-    throw {status, msg};
+    throw {status, text: msg};
 }
 
 export function isUndefined(argus: any[]) {
     for (const argu of argus) {
-        if (argu == undefined)
+        if (argu === undefined)
             return true;
     }
     return false;
