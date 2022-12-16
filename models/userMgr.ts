@@ -236,7 +236,7 @@ async function getBlackList(userId: string): Promise<blackListResult> {
     for (let blackId of userDoc.blackList) {
         let placeDoc: dbPlaceItem;
         try { // 避免ObjectId建構失敗
-            placeDoc = await placeCol.findOne({_id: new ObjectId(blackId)});
+            placeDoc = await placeCol.findOne({place_id: blackId});
         } catch (error) {
             continue;
         }
