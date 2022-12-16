@@ -24,19 +24,20 @@ export async function googleImageListConvertPhotoId(photoReference: googlePhotos
             + `&key=${process.env.GOOGLE_API_KEY}`;
         let photo: photoItem = await compressUrlImageToBase64(imageUrl, config.image.compressRate);
         let responseTime = new Date();
-        return await insertPhotoItem({
+        let uploadUserTemp = googlePhoto.html_attributions[0];
+        return await getPhotoId({
             updateTime: responseTime,
             photo_reference: googlePhoto.photo_reference,
             uploadUser: {
-                name: googlePhoto.html_attributions[0].split("\"")[2].slice(1, -4),
-                url: googlePhoto.html_attributions[0].split("\"")[1]
+                name: uploadUserTemp.split("\"")[2].slice(1, -4),
+                url: uploadUserTemp.split("\"")[1]
             },
             photoItem: photo
         });
     }));
 }
 
-export async function insertPhotoItem(req: insertPhotoItemInput): Promise<string> {
+export async function getPhotoId(req: insertPhotoItemInput): Promise<string> {
     let nowTime = new Date();
     const photoCol = global.mongodbClient.foodMapDb.photoCol;
     let photoDoc: photoDocument = await photoCol.findOne({photo_reference: req.photo_reference});
