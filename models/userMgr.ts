@@ -234,7 +234,7 @@ async function getBlackList(userId: string): Promise<blackListResult> {
     let userDoc: userDocument = await userCol.findOne(userQuery);
     let blackListItems: blackListItem[] = [];
     for (let blackId of userDoc.blackList) {
-        let placeDoc: dbPlaceItem;
+        let placeDoc: dbPlaceDocument;
         try { // 避免ObjectId建構失敗
             placeDoc = await placeCol.findOne({place_id: blackId});
         } catch (error) {
@@ -244,15 +244,15 @@ async function getBlackList(userId: string): Promise<blackListResult> {
         blackListItems.push({
             updateTime: placeDoc.updateTime,
             place_id: blackId,
-            status: placeDoc.status,
+            status: placeDoc.content.status,
             name: placeDoc.name,
-            photos: placeDoc.photos,
-            rating: placeDoc.rating,
-            address: placeDoc.address,
-            location: placeDoc.location,
-            icon: placeDoc.icon,
+            photos: placeDoc.content.photos,
+            rating: placeDoc.content.rating,
+            address: placeDoc.content.address,
+            location: placeDoc.content.location,
+            icon: placeDoc.content.icon,
             types: placeDoc.types,
-            opening_hours: placeDoc.opening_hours,
+            opening_hours: placeDoc.content.opening_hours,
 
         });
     }
