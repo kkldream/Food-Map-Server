@@ -10,6 +10,8 @@ export enum errorCodes {
     requestDataError = 5,
     loginDeviceNotFound = 6,
     favoriteNotFound = 7,
+    photoNotFound = 8,
+    placeNotFound = 9,
 }
 
 export function throwError(errorCode: errorCodes, msg: string = ''): apiError {
@@ -39,6 +41,12 @@ export function throwError(errorCode: errorCodes, msg: string = ''): apiError {
                 break;
             case errorCodes.favoriteNotFound:
                 msg = '無最愛紀錄';
+                break;
+            case errorCodes.photoNotFound:
+                msg = '照片不存在';
+                break;
+            case errorCodes.placeNotFound:
+                msg = '地點不存在';
                 break;
             default:
                 msg = '未知錯誤';

@@ -7,7 +7,7 @@ import {callGoogleApiDetail, callGoogleApiNearBySearch} from "./service/googleAp
 import {responseLocationItem} from "./dataStruct/response/publicItem/responseLocationItem";
 import {responseDetailResult} from "./dataStruct/response/detailResponses";
 import {isFavoriteByUserId} from "./service/placeService";
-import {googleImageListConvertDb} from "./service/imageService";
+import {googleImageListConvertPhotoId} from "./service/imageService";
 
 async function updateCustom(latitude: number, longitude: number, radius: number, keyword: string) {
     if (!latitude || !longitude || !radius || !keyword) throwError(errorCodes.requestDataError);
@@ -86,7 +86,7 @@ async function nearBySearch(searchPageNum: number, request: { location: response
             place_id: googlePlace.place_id || '',
             status: googlePlace.business_status || '',
             name: googlePlace.name || '',
-            photos: await googleImageListConvertDb(googlePlace.photos),
+            photos: await googleImageListConvertPhotoId(googlePlace.photos),
             rating: {
                 star: googlePlace.rating || 0,
                 total: googlePlace.user_ratings_total || 0,
@@ -146,6 +146,7 @@ async function detailsByPlaceId(userId: string, place_id: string): Promise<respo
     let requestTime: Date = new Date();
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let findResult: dbPlaceDocument = await placeCol.findOne({place_id});
+    if (!findResult) throwError(errorCodes.placeNotFound)
     let updated = false;
     if (findResult.originalDetail === null || requestTime.getTime() - (findResult.originalDetail.updateTime?.getTime() ?? 0) > config.detailUpdateRangeSecond * 1000) {
         findResult.originalDetail = (await callGoogleApiDetail(place_id)).result;
@@ -155,7 +156,7 @@ async function detailsByPlaceId(userId: string, place_id: string): Promise<respo
             place_id: findResult.originalDetail.place_id,
             status: findResult.originalDetail.business_status,
             name: findResult.originalDetail.name,
-            photos: await googleImageListConvertDb(findResult.originalDetail.photos),
+            photos: await googleImageListConvertPhotoId(findResult.originalDetail.photos),
             rating: {
                 star: findResult.originalDetail.rating,
                 total: findResult.originalDetail.user_ratings_total,
@@ -193,7 +194,7 @@ async function detailsByPlaceId(userId: string, place_id: string): Promise<respo
             phone: findResult.originalDetail.formatted_phone_number,
             location: findResult.originalDetail.geometry.location,
             name: findResult.originalDetail.name,
-            photos: await googleImageListConvertDb(findResult.originalDetail.photos),
+            photos: await googleImageListConvertPhotoId(findResult.originalDetail.photos),
             place_id: findResult.originalDetail.place_id,
             price_level: findResult.originalDetail.price_level,
             rating: findResult.originalDetail.rating,

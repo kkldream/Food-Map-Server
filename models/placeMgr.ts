@@ -7,6 +7,8 @@ import {dbPlaceDocument} from "./dataStruct/mongodb/googlePlaceDocument";
 import {responsePlaceItem, responsePlaceResult} from "./dataStruct/response/placeResponses";
 import {userDocument} from "./dataStruct/mongodb/userDocument";
 import {getBlackList} from "./service/blackListService";
+import {photoDocument} from "./dataStruct/mongodb/photoDocument";
+import {photoResult} from "./dataStruct/response/photoResponse";
 
 interface dbPlaceDocumentWithDistance extends dbPlaceDocument {
     distance: number;
@@ -148,8 +150,26 @@ async function drawCard(userId: string, latitude: number, longitude: number, mod
     return {updated, placeCount: responsePlaceList.length, placeList: responsePlaceList}
 }
 
+async function get_photo(photoId: string, detail: boolean = false): Promise<photoResult> {
+    if (isUndefined([photoId])) throwError(errorCodes.requestDataError);
+    const photoCol = global.mongodbClient.foodMapDb.photoCol;
+    let photoDoc: photoDocument = await photoCol.findOne({_id: new ObjectId(photoId)});
+    if (!photoDoc) throwError(errorCodes.photoNotFound);
+    return {
+        updateTime: photoDoc.updateTime,
+        photo_reference: detail ? photoDoc.photo_reference : undefined,
+        uploadUser: detail ? photoDoc.uploadUser : undefined,
+        width: photoDoc.width,
+        height: photoDoc.height,
+        data: photoDoc.data,
+        length: photoDoc.length,
+        format: photoDoc.format
+    };
+}
+
 export default {
     searchByDistance,
     searchByKeyword,
-    drawCard
+    drawCard,
+    get_photo,
 };

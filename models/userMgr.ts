@@ -3,9 +3,10 @@ import {generateUUID} from './utils';
 import {errorCodes, isUndefined, throwError} from "./dataStruct/throwError";
 import {userDocument} from "./dataStruct/mongodb/userDocument";
 import {favoriteItem} from "./dataStruct/response/favoriteResponse";
-import {dbPlaceDocument} from "./dataStruct/mongodb/googlePlaceDocument";
+import {dbPlaceDocument, dbPlaceItem} from "./dataStruct/mongodb/googlePlaceDocument";
 import {callGoogleApiDetail} from "./service/googleApiService";
 import {googleDetailResponse} from "./dataStruct/mongodb/originalGooglePlaceData";
+import {blackListItem, blackListResult} from "./dataStruct/response/blackListResponses";
 
 async function register(username: string, password: string, deviceId: string) {
     if (isUndefined([username, password, deviceId])) throwError(errorCodes.requestDataError);
@@ -173,13 +174,20 @@ async function getFavorite(userId: string): Promise<favoriteItem[]> {
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let userDoc: userDocument = await userCol.findOne({_id: new ObjectId(userId)});
     if (!userDoc.favoriteList) return [];
-    return await Promise.all(userDoc.favoriteList.map(async (favoriteId: string): Promise<favoriteItem> => {
-        let dbPlace: dbPlaceDocument = await placeCol.findOne({place_id: favoriteId});
+    let output: favoriteItem[] = [];
+    for (let favoriteId of userDoc.favoriteList) {
+        let dbPlace: dbPlaceDocument;
+        try { // 避免ObjectId建構失敗
+            dbPlace = await placeCol.findOne({place_id: favoriteId});
+        } catch (error) {
+            continue;
+        }
+        if (!dbPlace) continue;
         if (dbPlace.originalDetail === null) {
             let response: googleDetailResponse = await callGoogleApiDetail(favoriteId);
             dbPlace.originalDetail = response.result;
         }
-        return {
+        output.push({
             updateTime: dbPlace.updateTime,
             place_id: dbPlace.place_id,
             photos: dbPlace.content.photos,
@@ -196,8 +204,9 @@ async function getFavorite(userId: string): Promise<favoriteItem[]> {
             price_level: dbPlace.originalDetail.price_level ?? 1,
             location: dbPlace.content.location,
             url: dbPlace.originalDetail.url ?? ""
-        }
-    }));
+        });
+    }
+    return output;
 }
 
 async function pushBlackList(userId: string, placeIdList: string[]) {
@@ -218,11 +227,36 @@ async function pullBlackList(userId: string, placeIdList: string[]) {
     return {msg: '移除黑名單成功'};
 }
 
-async function getBlackList(userId: string): Promise<string[]> {
+async function getBlackList(userId: string): Promise<blackListResult> {
     const userCol = global.mongodbClient.foodMapDb.userCol;
+    const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let userQuery = {_id: new ObjectId(userId)};
     let userDoc: userDocument = await userCol.findOne(userQuery);
-    return userDoc.blackList;
+    let blackListItems: blackListItem[] = [];
+    for (let blackId of userDoc.blackList) {
+        let placeDoc: dbPlaceItem;
+        try { // 避免ObjectId建構失敗
+            placeDoc = await placeCol.findOne({_id: new ObjectId(blackId)});
+        } catch (error) {
+            continue;
+        }
+        if (!placeDoc) continue;
+        blackListItems.push({
+            updateTime: placeDoc.updateTime,
+            place_id: blackId,
+            status: placeDoc.status,
+            name: placeDoc.name,
+            photos: placeDoc.photos,
+            rating: placeDoc.rating,
+            address: placeDoc.address,
+            location: placeDoc.location,
+            icon: placeDoc.icon,
+            types: placeDoc.types,
+            opening_hours: placeDoc.opening_hours,
+
+        });
+    }
+    return {placeCount: blackListItems.length, placeList: blackListItems}
 }
 
 export default {

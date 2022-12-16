@@ -54,4 +54,16 @@ router.post('/draw_card', async function (req: any, res: any, next: any) {
     return res.send(response);
 });
 
+router.post('/get_photo', async function (req: any, res: any, next: any) {
+    let response = new apiResponseBase();
+    try {
+        let {userId, accessKey, photoId, detail} = req.body;
+        await response.verifyUser(userId, accessKey);
+        response.result = await placeMgr.get_photo(photoId, detail);
+    } catch (error: apiError | any) {
+        response.errorHandle(error);
+    }
+    return res.send(response);
+});
+
 export default router;

@@ -2,18 +2,16 @@ import {responseLocationItem} from "./publicItem/responseLocationItem";
 import {placeOpeningHours} from "../mongodb/originalGooglePlaceData";
 import {baseResponses} from "./baseResponse";
 
-export interface placeResponses extends baseResponses{
-    result: responsePlaceResult;
+export interface blackListResponses extends baseResponses{
+    result: blackListResult;
 }
 
-export interface responsePlaceResult {
-    updated: boolean;
-    dbStatus?: any;
+export interface blackListResult {
     placeCount: number;
-    placeList: responsePlaceItem[];
+    placeList: blackListItem[];
 }
 
-export interface responsePlaceItem {
+export interface blackListItem {
     updateTime: Date;
     place_id: string;
     status: string;
@@ -32,6 +30,4 @@ export interface responsePlaceItem {
     };
     types: string[];
     opening_hours: placeOpeningHours;
-    distance: number;
-    isFavorite: boolean;
 }

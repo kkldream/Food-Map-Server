@@ -1,29 +1,64 @@
-import {dbPhotoItem} from "../dataStruct/mongodb/googlePlaceDocument";
 import config from "../../config";
 import {googlePhotosItem} from "../dataStruct/mongodb/originalGooglePlaceData";
+import {photoDocument, photoItem} from "../dataStruct/mongodb/photoDocument";
 
 const imageToBase64 = require('image-to-base64');
 const Canvas = require('canvas');
 
-export async function googleImageListConvertDb(photoReference: googlePhotosItem[], maxWidth: number = config.image.maxWidth, rate: number = config.image.compressRate): Promise<dbPhotoItem[]> {
+interface insertPhotoItemInput {
+    updateTime: Date;
+    photo_reference: string;
+    uploadUser: {
+        name: string;
+        url: string;
+    };
+    photoItem: photoItem;
+}
+
+export async function googleImageListConvertPhotoId(photoReference: googlePhotosItem[]): Promise<string[]> {
     if (!photoReference) return [];
-    return await Promise.all(photoReference.map(async (googlePhoto: googlePhotosItem): Promise<dbPhotoItem> => {
+    return await Promise.all(photoReference.map(async (googlePhoto: googlePhotosItem): Promise<string> => {
         let imageUrl = "https://maps.googleapis.com/maps/api/place/photo?"
-            + `&maxwidth=${maxWidth}&`
-            + `photoreference=${googlePhoto.photo_reference}`
+            + `&maxwidth=${config.image.maxWidth}`
+            + `&photoreference=${googlePhoto.photo_reference}`
             + `&key=${process.env.GOOGLE_API_KEY}`;
-        return await compressUrlImageToBase64(imageUrl, rate);
+        let photo: photoItem = await compressUrlImageToBase64(imageUrl, config.image.compressRate);
+        let responseTime = new Date();
+        return await insertPhotoItem({
+            updateTime: responseTime,
+            photo_reference: googlePhoto.photo_reference,
+            uploadUser: {
+                name: googlePhoto.html_attributions[0].split("\"")[2].slice(1, -4),
+                url: googlePhoto.html_attributions[0].split("\"")[1]
+            },
+            photoItem: photo
+        });
     }));
 }
 
-async function compressUrlImageToBase64(url: string, rate: number = 0.5): Promise<dbPhotoItem> {
-    let base64 = await imageToBase64(url);
-    let buff = Buffer.from(base64, 'base64');
-    return await compress(buff, rate);
+export async function insertPhotoItem(req: insertPhotoItemInput): Promise<string> {
+    let nowTime = new Date();
+    const photoCol = global.mongodbClient.foodMapDb.photoCol;
+    let photoDoc: photoDocument = await photoCol.findOne({photo_reference: req.photo_reference});
+    if (photoDoc) {
+        await photoCol.updateOne({_id: photoDoc._id}, {$set: {updateTime: req.updateTime, ...req.photoItem}});
+        return (photoDoc._id ?? "").toString();
+    }
+    let insertDoc: photoDocument = {
+        creatTime: nowTime,
+        updateTime: nowTime,
+        photo_reference: req.photo_reference,
+        uploadUser: req.uploadUser,
+        ...req.photoItem
+    }
+    let insertResult = await photoCol.insertOne(insertDoc);
+    return insertResult.insertedId.toString();
 }
 
-async function compress(buff: Buffer, rate: number): Promise<dbPhotoItem> {
-    // console.log(buff.length);
+async function compressUrlImageToBase64(url: string, rate: number = 0.5): Promise<photoItem> {
+    let base64 = await imageToBase64(url);
+    let buff = Buffer.from(base64, 'base64');
+
     // 将文件绘制成图片对象
     let image = new Canvas.Image();
     image.src = buff;

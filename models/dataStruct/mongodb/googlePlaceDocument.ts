@@ -26,7 +26,7 @@ export interface dbPlaceItem {
     place_id: string;
     status: string;
     name: string;
-    photos: dbPhotoItem[];
+    photos: string[];
     rating: {
         star: number;
         total: number;
@@ -40,12 +40,4 @@ export interface dbPlaceItem {
     };
     types: string[];
     opening_hours: placeOpeningHours;
-}
-
-export interface dbPhotoItem {
-    width: number;
-    height: number;
-    data: string;
-    length: number;
-    format: string;
 }
