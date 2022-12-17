@@ -4,8 +4,25 @@ import placeRoute from './api/placeRoute';
 import googleApiRoute from './api/googleApiRoute';
 import userRoute from './api/userRoute';
 import rootRoute from "./api/rootRoute";
+import {routeApiLogDocument} from "../models/dataStruct/mongodb/routeApiLogDocument";
 
 const router = Router()
+
+router.use('/', function (req: any, res: any, next: any) {
+    const routeApiLogCol = global.mongodbClient.foodMapDb.routeApiLogCol;
+    let routeApiLogDoc: routeApiLogDocument = {
+        createTime: new Date(),
+        method: req.method,
+        apiUrl: req.originalUrl,
+        apiUrlPath: req.originalUrl.split("/").splice(2),
+        request: {},
+        userId: req.body.userId
+    };
+    if (Object.keys(req.params).length !== 0)routeApiLogDoc.request.params = req.params;
+    if (Object.keys(req.body).length !== 0)routeApiLogDoc.request.body = req.body;
+    routeApiLogCol.insertOne(routeApiLogDoc);
+    next();
+});
 
 router.use('/place', placeRoute);
 router.use('/google_api', googleApiRoute);

@@ -10,6 +10,7 @@ export default class MongodbClient {
         userLogCol?: any,
         photoCol?: any,
         googleApiLogCol?: any,
+        routeApiLogCol?: any,
     } = {};
 
     initDbColList(client: MongoClient) {
@@ -21,6 +22,7 @@ export default class MongodbClient {
         this.foodMapDb.userLogCol = foodMapDb.collection('userLog');
         this.foodMapDb.photoCol = foodMapDb.collection('photo');
         this.foodMapDb.googleApiLogCol = foodMapDb.collection('googleApiLog');
+        this.foodMapDb.routeApiLogCol = foodMapDb.collection('routeApiLog');
     }
 
     constructor(url: string, callback: (() => void)) {
