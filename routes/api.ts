@@ -15,11 +15,11 @@ router.use('/', function (req: any, res: any, next: any) {
         method: req.method,
         apiUrl: req.originalUrl,
         apiUrlPath: req.originalUrl.split("/").splice(2),
-        request: {},
-        userId: req.body.userId
+        request: {}
     };
-    if (Object.keys(req.params).length !== 0)routeApiLogDoc.request.params = req.params;
-    if (Object.keys(req.body).length !== 0)routeApiLogDoc.request.body = req.body;
+    if (req.body.userId) routeApiLogDoc.userId = req.body.userId;
+    if (Object.keys(req.params).length !== 0) routeApiLogDoc.request.params = req.params;
+    if (Object.keys(req.body).length !== 0) routeApiLogDoc.request.body = req.body;
     routeApiLogCol.insertOne(routeApiLogDoc);
     next();
 });
