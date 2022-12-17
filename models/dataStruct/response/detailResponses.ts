@@ -1,7 +1,6 @@
 import {placeReview} from "../mongodb/originalGooglePlaceData";
 import {baseResponses} from "./baseResponse";
 import {responseLocationItem} from "./publicItem/responseLocationItem";
-import {dbPhotoItem} from "../mongodb/googlePlaceDocument";
 
 export interface detailResponses extends baseResponses{
     result: responseDetailItem;
@@ -25,7 +24,7 @@ export interface responseDetailItem {
     phone: string;
     location: responseLocationItem;
     name: string;
-    photos: dbPhotoItem[];
+    photos: string[];
     place_id: string;
     price_level: number;
     rating: number;
