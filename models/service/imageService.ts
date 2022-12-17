@@ -2,14 +2,15 @@ import config from "../../config";
 import {googlePhotosItem} from "../dataStruct/mongodb/originalGooglePlaceData";
 import {photoDocument, photoItem} from "../dataStruct/mongodb/photoDocument";
 import {insertGoogleApiPhotoLog} from "./googleApiLogService";
+import {errorCodes, throwError} from "../dataStruct/throwError";
 
 const imageToBase64 = require('image-to-base64');
 const Canvas = require('canvas');
 
 interface insertPhotoItemInput {
     updateTime: Date;
-    photo_reference: string;
-    uploadUser: {
+    photo_reference?: string;
+    uploadUser?: {
         name: string;
         url: string;
     };
@@ -26,7 +27,7 @@ export async function googleImageListConvertPhotoId(photoReference: googlePhotos
         let photo: photoItem = await compressUrlImageToBase64(imageUrl, config.image.compressRate);
         let responseTime = new Date();
         let uploadUserTemp = googlePhoto.html_attributions[0];
-        let photoId = await getPhotoId({
+        let {updated, photoId} = await getPhotoId({
             updateTime: responseTime,
             photo_reference: googlePhoto.photo_reference,
             uploadUser: {
@@ -40,13 +41,23 @@ export async function googleImageListConvertPhotoId(photoReference: googlePhotos
     }));
 }
 
-export async function getPhotoId(req: insertPhotoItemInput): Promise<string> {
+interface getPhotoIdResponse {
+    updated: boolean;
+    photoId: string;
+}
+
+export async function getPhotoId(req: insertPhotoItemInput): Promise<getPhotoIdResponse> {
     let nowTime = new Date();
     const photoCol = global.mongodbClient.foodMapDb.photoCol;
-    let photoDoc: photoDocument = await photoCol.findOne({photo_reference: req.photo_reference});
+    let photoDoc: photoDocument = req.photo_reference
+        ? await photoCol.findOne({photo_reference: req.photo_reference})
+        : await photoCol.findOne({data: req.photoItem.data});
     if (photoDoc) {
         await photoCol.updateOne({_id: photoDoc._id}, {$set: {updateTime: req.updateTime, ...req.photoItem}});
-        return (photoDoc._id ?? "").toString();
+        return {
+            updated: false,
+            photoId: (photoDoc._id ?? "").toString()
+        };
     }
     let insertDoc: photoDocument = {
         creatTime: nowTime,
@@ -56,11 +67,19 @@ export async function getPhotoId(req: insertPhotoItemInput): Promise<string> {
         ...req.photoItem
     }
     let insertResult = await photoCol.insertOne(insertDoc);
-    return insertResult.insertedId.toString();
+    return {
+        updated: true,
+        photoId: insertResult.insertedId.toString()
+    };
 }
 
-async function compressUrlImageToBase64(url: string, rate: number = 0.5): Promise<photoItem> {
-    let base64 = await imageToBase64(url);
+export async function compressUrlImageToBase64(url: string, rate: number = 0.5): Promise<photoItem> {
+    let base64: string = "";
+    try {
+        base64 = await imageToBase64(url);
+    } catch (error) {
+        throwError(errorCodes.photoUrlError);
+    }
     let buff = Buffer.from(base64, 'base64');
 
     // 将文件绘制成图片对象

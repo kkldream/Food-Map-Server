@@ -3,6 +3,7 @@ import placeMgr from '../../models/placeMgr';
 import apiResponseBase from "../../models/dataStruct/apiResponseUserBase";
 import googleMapsMgr from "../../models/googleMapsMgr";
 import {apiError} from "../../models/dataStruct/response/baseResponse";
+import config from "../../config";
 
 const router = Router()
 
@@ -59,11 +60,29 @@ router.post('/get_photo', async function (req: any, res: any, next: any) {
     try {
         let {userId, accessKey, photoId, detail} = req.body;
         await response.verifyUser(userId, accessKey);
-        response.result = await placeMgr.get_photo(photoId, detail);
+        response.result = await placeMgr.getPhoto(photoId, detail);
     } catch (error: apiError | any) {
         response.errorHandle(error);
     }
     return res.send(response);
+});
+
+router.post('/get_html_photo', async function (req: any, res: any, next: any) {
+    let response = new apiResponseBase();
+    try {
+        let {userId, accessKey, photoId} = req.body;
+        await response.verifyUser(userId, accessKey);
+        let base64Img = await placeMgr.getHtmlPhoto(photoId);
+        return res.render('photo', {base64Img});
+    } catch (error1: apiError | any) {
+        try {
+            let base64Img = await placeMgr.getHtmlPhoto(config.image.defaultId);
+            return res.render('photo', {base64Img});
+        } catch (error2: apiError | any) {
+            response.errorHandle(error2);
+            return res.send(response);
+        }
+    }
 });
 
 export default router;

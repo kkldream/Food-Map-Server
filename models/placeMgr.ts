@@ -150,7 +150,7 @@ async function drawCard(userId: string, latitude: number, longitude: number, mod
     return {updated, placeCount: responsePlaceList.length, placeList: responsePlaceList}
 }
 
-async function get_photo(photoId: string, detail: boolean = false): Promise<photoResult> {
+async function getPhoto(photoId: string, detail: boolean = false): Promise<photoResult> {
     if (isUndefined([photoId])) throwError(errorCodes.requestDataError);
     const photoCol = global.mongodbClient.foodMapDb.photoCol;
     let photoDoc: photoDocument = await photoCol.findOne({_id: new ObjectId(photoId)});
@@ -167,9 +167,18 @@ async function get_photo(photoId: string, detail: boolean = false): Promise<phot
     };
 }
 
+async function getHtmlPhoto(photoId: string): Promise<string> {
+    if (isUndefined([photoId])) throwError(errorCodes.requestDataError);
+    const photoCol = global.mongodbClient.foodMapDb.photoCol;
+    let photoDoc: photoDocument = await photoCol.findOne({_id: new ObjectId(photoId)});
+    if (!photoDoc) throwError(errorCodes.photoNotFound);
+    return photoDoc.data;
+}
+
 export default {
     searchByDistance,
     searchByKeyword,
     drawCard,
-    get_photo,
+    getPhoto,
+    getHtmlPhoto,
 };

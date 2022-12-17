@@ -4,8 +4,8 @@ export interface photoDocument extends photoItem{
     _id?: ObjectId;
     creatTime: Date;
     updateTime: Date;
-    photo_reference: string;
-    uploadUser: {
+    photo_reference?: string;
+    uploadUser?: {
         name: string;
         url: string;
     };

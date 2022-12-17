@@ -12,12 +12,13 @@ export default {
   drawCard: {
     maxDistance: 1000,
     ratingStar: 4,
-    ratingTotal: 100
+    ratingTotal: 100,
   },
   detailUpdateRangeSecond: 10,
   image: {
     maxWidth: 400,
-    compressRate: 0.5
+    compressRate: 0.5,
+    defaultId: "639d6ed9eb340eb22b49cfe5",
   },
   root: {
     userId: "6397e9ee54d1a2bf6c2d6869"

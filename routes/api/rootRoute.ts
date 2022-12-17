@@ -41,4 +41,16 @@ router.post('/get_black_list', async function (req: any, res: any, next: any) {
     return res.send(response);
 });
 
+router.post('/push_url_photo', async function (req: any, res: any, next: any) {
+    let response = new apiResponseBase();
+    try {
+        let {accessKey, url} = req.body;
+        await response.verifyRoot(accessKey);
+        response.result = await rootMgr.pushUrlPhoto(url);
+    } catch (error: apiError | any) {
+        response.errorHandle(error);
+    }
+    return res.send(response);
+});
+
 export default router;
