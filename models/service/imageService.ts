@@ -1,6 +1,7 @@
 import config from "../../config";
 import {googlePhotosItem} from "../dataStruct/mongodb/originalGooglePlaceData";
 import {photoDocument, photoItem} from "../dataStruct/mongodb/photoDocument";
+import {insertGoogleApiPhotoLog} from "./googleApiLogService";
 
 const imageToBase64 = require('image-to-base64');
 const Canvas = require('canvas');
@@ -25,7 +26,7 @@ export async function googleImageListConvertPhotoId(photoReference: googlePhotos
         let photo: photoItem = await compressUrlImageToBase64(imageUrl, config.image.compressRate);
         let responseTime = new Date();
         let uploadUserTemp = googlePhoto.html_attributions[0];
-        return await getPhotoId({
+        let photoId = await getPhotoId({
             updateTime: responseTime,
             photo_reference: googlePhoto.photo_reference,
             uploadUser: {
@@ -34,6 +35,8 @@ export async function googleImageListConvertPhotoId(photoReference: googlePhotos
             },
             photoItem: photo
         });
+        await insertGoogleApiPhotoLog({photoReference: googlePhoto, response: photo})
+        return photoId;
     }));
 }
 

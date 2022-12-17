@@ -7,10 +7,9 @@ export default class MongodbClient {
     public foodMapDb: {
         placeCol?: any,
         userCol?: any,
-        loginLogCol?: any,
-        updateLogCol?: any,
-        drawCardLogCol?: any,
+        userLogCol?: any,
         photoCol?: any,
+        googleApiLogCol?: any,
     } = {};
 
     initDbColList(client: MongoClient) {
@@ -19,9 +18,9 @@ export default class MongodbClient {
         // Collection List
         this.foodMapDb.placeCol = foodMapDb.collection('place');
         this.foodMapDb.userCol = foodMapDb.collection('user');
-        this.foodMapDb.loginLogCol = foodMapDb.collection('userLog');
-        this.foodMapDb.updateLogCol = foodMapDb.collection('searchLog');
+        this.foodMapDb.userLogCol = foodMapDb.collection('userLog');
         this.foodMapDb.photoCol = foodMapDb.collection('photo');
+        this.foodMapDb.googleApiLogCol = foodMapDb.collection('googleApiLog');
     }
 
     constructor(url: string) {

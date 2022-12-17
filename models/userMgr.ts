@@ -3,15 +3,21 @@ import {generateUUID} from './utils';
 import {errorCodes, isUndefined, throwError} from "./dataStruct/throwError";
 import {userDocument} from "./dataStruct/mongodb/userDocument";
 import {favoriteItem} from "./dataStruct/response/favoriteResponse";
-import {dbPlaceDocument, dbPlaceItem} from "./dataStruct/mongodb/googlePlaceDocument";
+import {dbPlaceDocument} from "./dataStruct/mongodb/googlePlaceDocument";
 import {callGoogleApiDetail} from "./service/googleApiService";
 import {googleDetailResponse} from "./dataStruct/mongodb/originalGooglePlaceData";
 import {blackListItem, blackListResult} from "./dataStruct/response/blackListResponses";
+import {
+    userLogAddFcmToken,
+    userLogDeleteAccount,
+    userLogLogIn,
+    userLogLogOut,
+    userLogRegister
+} from "./service/userLogService";
 
 async function register(username: string, password: string, deviceId: string) {
     if (isUndefined([username, password, deviceId])) throwError(errorCodes.requestDataError);
     const userCol = global.mongodbClient.foodMapDb.userCol;
-    const loginLogCol = global.mongodbClient.foodMapDb.loginLogCol;
 
     let userDoc: userDocument = await userCol.findOne({username});
     if (userDoc) throwError(errorCodes.accountRegistered);
@@ -30,15 +36,7 @@ async function register(username: string, password: string, deviceId: string) {
     let insertResult = await userCol.insertOne(insertDoc);
 
     // insert login log
-    await loginLogCol.insertOne({
-        userId: insertResult.insertedId,
-        username,
-        deviceId,
-        createTime: new Date(),
-        status: 'signin'
-    });
-
-    // response
+    await userLogRegister({userId: insertResult.insertedId, username, password, accessKey, deviceId});
     return {
         msg: '註冊成功',
         userId: insertResult.insertedId,
@@ -49,18 +47,10 @@ async function register(username: string, password: string, deviceId: string) {
 async function loginByDevice(username: string, password: string, deviceId: string) {
     if (isUndefined([username, password, deviceId])) throwError(errorCodes.requestDataError);
     const userCol = global.mongodbClient.foodMapDb.userCol;
-    const loginLogCol = global.mongodbClient.foodMapDb.loginLogCol;
     let userDoc = await userCol.findOne({username});
     if (!userDoc) throwError(errorCodes.accountNotFound);
     if (password !== userDoc.password) throwError(errorCodes.accountPasswordError);
-    // insert login log
-    await loginLogCol.insertOne({
-        userId: userDoc._id,
-        username,
-        deviceId,
-        createTime: new Date(),
-        status: 'login'
-    });
+
     // update user document
     let deviceDoc = userDoc.devices.find((item: any) => item.deviceId === deviceId);
     if (deviceDoc) {
@@ -75,7 +65,9 @@ async function loginByDevice(username: string, password: string, deviceId: strin
             {$push: {devices: {deviceId, fcmToken: "", isUse: true}}}
         );
     }
-    // response
+
+    // insert login log
+    await userLogLogIn({userId: userDoc._id.toString(), deviceId});
     return {
         msg: '登入成功',
         userId: userDoc._id,
@@ -96,37 +88,32 @@ async function addFcmToken(userId: string, deviceId: string, fcmToken: string) {
         {$set: {"devices.$[item].fcmToken": fcmToken}},
         {arrayFilters: [{"item.deviceId": deviceId}]}
     );
+    // insert login log
+    await userLogAddFcmToken({userId: userDoc._id.toString(), deviceId, fcmToken});
     return {msg: '已更新舊fcmToken'};
 }
 
 async function logoutByDevice(userId: string, deviceId: string) {
     const userCol = global.mongodbClient.foodMapDb.userCol;
-    const loginLogCol = global.mongodbClient.foodMapDb.loginLogCol;
     let userDoc = await userCol.findOne({_id: new ObjectId(userId)});
     if (!userDoc.devices.find((doc: any) => doc.deviceId === deviceId && doc.isUse === true))
         throwError(errorCodes.loginDeviceNotFound);
-    // insert logout log
-    await loginLogCol.insertOne({
-        userId,
-        username: userDoc.username,
-        deviceId,
-        createTime: new Date(),
-        status: 'logout'
-    });
     // update user document
     await userCol.updateOne(
         {_id: new ObjectId(userId)},
         {$set: {"devices.$[item].isUse": false}},
         {arrayFilters: [{"item.deviceId": deviceId}]}
     );
+    // insert login log
+    await userLogLogOut({userId, deviceId});
     return {msg: '登出成功'};
 }
 
 async function deleteAccount(userId: string) {
     const userCol = global.mongodbClient.foodMapDb.userCol;
-    const loginLogCol = global.mongodbClient.foodMapDb.loginLogCol;
-    await loginLogCol.updateMany({_id: new ObjectId(userId), isUse: true}, {$set: {isUse: false}});
-    await userCol.deleteMany({_id: new ObjectId(userId)})
+    await userCol.deleteMany({_id: new ObjectId(userId)});
+    // insert login log
+    await userLogDeleteAccount({userId});
     return {msg: '刪除帳號成功'};
 }
 

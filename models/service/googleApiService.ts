@@ -5,8 +5,8 @@ import {
 } from "../dataStruct/mongodb/originalGooglePlaceData";
 import axios from "axios";
 import {responseLocationItem} from "../dataStruct/response/publicItem/responseLocationItem";
-
-const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+import {responseLocationConvertDb} from "../utils";
+import {insertGoogleApiDetailLog, insertGoogleApiPlaceLog} from "./googleApiLogService";
 
 export async function callGoogleApiNearBySearch(searchPageNum: number, location: responseLocationItem, type: string, keyword: string, radius: number): Promise<googlePlaceResult[]> {
     let originalDataList: googlePlaceResult[] = [];
@@ -16,7 +16,7 @@ export async function callGoogleApiNearBySearch(searchPageNum: number, location:
         if (requestCount > 1) await new Promise((r) => setTimeout(r, 1000));
         let url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?'
             + `&language=zh-TW`
-            + `&key=${GOOGLE_API_KEY}`
+            + `&key=${process.env.GOOGLE_API_KEY}`
             + `&pagetoken=${next_page_token}`
             + `&location=${location.lat},${location.lng}`
             + `&type=${type}`;
@@ -33,6 +33,11 @@ export async function callGoogleApiNearBySearch(searchPageNum: number, location:
         console.log(`update ${type}: +${response.results.length}/${originalDataList.length}, next_page = ${next_page_token !== undefined}`)
         if (!next_page_token) break;
     }
+    await insertGoogleApiPlaceLog({
+        searchPageNum, type, keyword, radius,
+        location: responseLocationConvertDb(location),
+        response: originalDataList
+    });
     return originalDataList;
 }
 
@@ -40,6 +45,8 @@ export async function callGoogleApiDetail(place_id: string): Promise<googleDetai
     let url = 'https://maps.googleapis.com/maps/api/place/details/json?'
         + `&language=zh-TW`
         + `&place_id=${place_id}`
-        + `&key=${GOOGLE_API_KEY}`;
-    return (await axios({method: 'get', url})).data;
+        + `&key=${process.env.GOOGLE_API_KEY}`;
+    let response: googleDetailResponse = (await axios({method: 'get', url})).data;
+    await insertGoogleApiDetailLog({place_id, response: response.result});
+    return response;
 }
