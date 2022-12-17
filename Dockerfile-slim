@@ -9,7 +9,7 @@ WORKDIR /root/app
 COPY package.json yarn.lock /root/app/
 RUN yarn install --production --frozen-lockfile && yarn cache clean
 COPY --from=builder /root/app/dist /root/app/dist
-COPY views /root/app/
+COPY views /root/app/views
 VOLUME /root/app/.env
 EXPOSE 3000
 CMD [ "yarn", "run", "start:dist" ]
