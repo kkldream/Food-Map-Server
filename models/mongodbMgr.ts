@@ -23,12 +23,12 @@ export default class MongodbClient {
         this.foodMapDb.googleApiLogCol = foodMapDb.collection('googleApiLog');
     }
 
-    constructor(url: string) {
+    constructor(url: string, callback: (() => void)) {
         this.client = new MongoClient(url);
         this.client.connect().then(async client => {
             this.client = client;
-            console.log('mongo client is connected');
             this.initDbColList(client);
+            callback();
         })
     }
 

@@ -8,18 +8,21 @@ import MongodbClient from "./models/mongodbMgr";
 
 dotenv.config();
 
-// Mongodb Init
-const MONGODB_URL = process.env.MONGODB_URL || 'mongodb://localhost:27017';
-declare global { var mongodbClient: MongodbClient; }
-global.mongodbClient = new MongodbClient(MONGODB_URL);
-
-// start express listen
+// init express
 const app = express();
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
-    console.log(`server is running on http://localhost:${port}/`);
-});
 app.use(express.json());
+
+// mongodb init
+const MONGODB_URL = process.env.MONGODB_URL || 'mongodb://localhost:27017';
+declare global { var mongodbClient: MongodbClient; }
+global.mongodbClient = new MongodbClient(MONGODB_URL, () => {
+    console.log('mongo client is connected');
+    // start express listen
+    app.listen(port, () => {
+        console.log(`server is running on http://localhost:${port}/`);
+    });
+});
 
 // view engine setup
 app.set('views', './views');
