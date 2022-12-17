@@ -67,21 +67,14 @@ router.post('/get_photo', async function (req: any, res: any, next: any) {
     return res.send(response);
 });
 
-router.post('/get_html_photo', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+router.get('/get_html_photo/:photoId', async function (req: any, res: any, next: any) {
     try {
-        let {userId, accessKey, photoId} = req.body;
-        await response.verifyUser(userId, accessKey);
+        let photoId = req.params.photoId;
         let base64Img = await placeMgr.getHtmlPhoto(photoId);
         return res.render('photo', {base64Img});
-    } catch (error1: apiError | any) {
-        try {
-            let base64Img = await placeMgr.getHtmlPhoto(config.image.defaultId);
-            return res.render('photo', {base64Img});
-        } catch (error2: apiError | any) {
-            response.errorHandle(error2);
-            return res.send(response);
-        }
+    } catch (error: apiError | any) {
+        let base64Img = await placeMgr.getHtmlPhoto(config.image.defaultId);
+        return res.render('photo', {base64Img});
     }
 });
 
