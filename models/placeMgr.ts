@@ -105,7 +105,7 @@ async function drawCard(userId: string, latitude: number, longitude: number, mod
     if (isUndefined([userId, latitude, longitude, mode, num])) throwError(errorCodes.requestDataError);
     const userCol = global.mongodbClient.foodMapDb.userCol;
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
-    let placeList: dbPlaceDocumentWithDistance[];
+    let placeList: dbPlaceDocumentWithDistance[] = [];
     let updated = false;
     let dbStatus: any;
     switch (mode) {
@@ -139,7 +139,7 @@ async function drawCard(userId: string, latitude: number, longitude: number, mod
             break;
         case drawCardModeEnum.favorite:
             let favoriteIdList: string[] = (await userCol.findOne({_id: new ObjectId(userId)})).favoriteList;
-            if (favoriteIdList.length === 0) throwError(errorCodes.favoriteNotFound);
+            if (favoriteIdList.length === 0) break;
             placeList = await placeCol.aggregate([
                 {$match: {$and: [{place_id: {$in: favoriteIdList}}, {types: {$in: config.foodTypeList}}]}},
                 {$sample: {size: num}}
@@ -147,7 +147,7 @@ async function drawCard(userId: string, latitude: number, longitude: number, mod
             break;
     }
     let responsePlaceList: responsePlaceItem[] = await dbPlaceListConvertResponse(placeList, userId);
-    return {updated, placeCount: responsePlaceList.length, placeList: responsePlaceList}
+    return {updated, placeCount: responsePlaceList.length, placeList: responsePlaceList};
 }
 
 async function getPhoto(photoId: string, detail: boolean = false): Promise<photoResult> {

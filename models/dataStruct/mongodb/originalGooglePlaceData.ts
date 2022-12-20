@@ -19,7 +19,7 @@ export interface googlePlaceResult {
     icon_background_color: string;
     icon_mask_base_uri: string;
     name: string;
-    opening_hours: placeOpeningHours;
+    opening_hours?: placeOpeningHours;
     photos: googlePhotosItem[];
     place_id: string;
     plus_code: {
@@ -57,7 +57,7 @@ export interface googleDetailItem {
     adr_address: string;
     business_status: string;
     curbside_pickup: boolean;
-    current_opening_hours: placeOpeningHours;
+    current_opening_hours?: placeOpeningHours;
     delivery: boolean;
     dine_in: boolean;
     editorial_summary: {
@@ -78,7 +78,7 @@ export interface googleDetailItem {
     icon_mask_base_uri: string;
     international_phone_number: string;
     name: string;
-    opening_hours: placeOpeningHours;
+    opening_hours?: placeOpeningHours;
     permanently_closed?: boolean; // deprecated
     photos: googlePhotosItem[];
     place_id: string;
@@ -92,7 +92,7 @@ export interface googleDetailItem {
     reservable: boolean;
     reviews: placeReview[];
     scope?: string; // deprecated
-    secondary_opening_hours: placeOpeningHours;
+    secondary_opening_hours?: placeOpeningHours;
     serves_beer: boolean;
     serves_dinner: boolean;
     serves_lunch: boolean;

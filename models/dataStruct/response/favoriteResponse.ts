@@ -5,6 +5,11 @@ export interface favoriteResponse extends baseResponses {
     result: favoriteItem;
 }
 
+export interface favoriteResult {
+    placeCount: number;
+    placeList: favoriteItem[];
+}
+
 export interface favoriteItem {
     updateTime: Date;
     place_id: string;

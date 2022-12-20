@@ -8,6 +8,8 @@ import {responseLocationItem} from "./dataStruct/response/publicItem/responseLoc
 import {responseDetailResult} from "./dataStruct/response/detailResponses";
 import {isFavoriteByUserId} from "./service/placeService";
 import {googleImageListConvertPhotoId} from "./service/imageService";
+import {userDocument} from "./dataStruct/mongodb/userDocument";
+import {ObjectId} from "mongodb";
 
 async function updateCustom(latitude: number, longitude: number, radius: number, keyword: string) {
     if (!latitude || !longitude || !radius || !keyword) throwError(errorCodes.requestDataError);
@@ -99,7 +101,7 @@ async function nearBySearch(searchPageNum: number, request: { location: response
                 mask_base_uri: googlePlace.icon_mask_base_uri,
             },
             types: googlePlace.types,
-            opening_hours: googlePlace.opening_hours
+            opening_hours: googlePlace.opening_hours ?? {}
         };
         googlePlace.updateTime = requestTime;
         let findResult = await placeCol.findOne({"place.place_id": googlePlace.place_id});
@@ -145,6 +147,7 @@ async function detailsByPlaceId(userId: string, place_id: string): Promise<respo
     if (isUndefined([place_id])) throwError(errorCodes.requestDataError);
     let requestTime: Date = new Date();
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
+    const userCol = global.mongodbClient.foodMapDb.userCol;
     let findResult: dbPlaceDocument = await placeCol.findOne({place_id});
     if (!findResult) throwError(errorCodes.placeNotFound)
     let updated = false;
@@ -169,7 +172,7 @@ async function detailsByPlaceId(userId: string, place_id: string): Promise<respo
                 mask_base_uri: findResult.originalDetail.icon_mask_base_uri,
             },
             types: findResult.originalDetail.types,
-            opening_hours: findResult.originalDetail.opening_hours
+            opening_hours: findResult.originalDetail.opening_hours ?? {}
         };
         await placeCol.updateOne({place_id}, {
             $set: {
@@ -179,14 +182,15 @@ async function detailsByPlaceId(userId: string, place_id: string): Promise<respo
         });
         updated = true;
     }
+    let userDoc: userDocument = await userCol.findOne({_id: new ObjectId(userId)});
     return {
         updated,
         isFavorite: await isFavoriteByUserId(userId, place_id),
         updateTime: findResult.originalDetail.updateTime ?? requestTime,
         place: {
             opening_hours: {
-                open_now: findResult.originalDetail.current_opening_hours.open_now ?? false,
-                weekday_text: findResult.originalDetail.current_opening_hours.weekday_text ?? []
+                open_now: findResult.originalDetail.current_opening_hours?.open_now ?? false,
+                weekday_text: findResult.originalDetail.current_opening_hours?.weekday_text ?? []
             },
             delivery: findResult.originalDetail.delivery,
             dine_in: findResult.originalDetail.dine_in,
@@ -204,7 +208,8 @@ async function detailsByPlaceId(userId: string, place_id: string): Promise<respo
             ratings_total: findResult.originalDetail.user_ratings_total,
             vicinity: findResult.originalDetail.vicinity,
             website: findResult.originalDetail.website
-        }
+        },
+        isBlackList: userDoc.blackList.includes(place_id)
     };
 }
 

@@ -11,6 +11,7 @@ export interface responseDetailResult {
     isFavorite: boolean;
     updateTime: Date;
     place: responseDetailItem;
+    isBlackList: boolean;
 }
 
 export interface responseDetailItem {

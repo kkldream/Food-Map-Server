@@ -180,7 +180,7 @@ async function getFavorite(userId: string): Promise<favoriteItem[]> {
             photos: dbPlace.content.photos,
             name: dbPlace.content.name,
             vicinity: dbPlace.originalDetail.vicinity ?? "",
-            workDay: dbPlace.originalDetail.opening_hours.weekday_text ?? [],
+            workDay: dbPlace.originalDetail.opening_hours?.weekday_text ?? [],
             dine_in: dbPlace.originalDetail.dine_in ?? false,
             takeout: dbPlace.originalDetail.takeout ?? false,
             delivery: dbPlace.originalDetail.delivery ?? false,
