@@ -141,19 +141,33 @@ async function setPassword(userId: string, password: string) {
 async function pushFavorite(userId: string, favoriteIdList: string[]) {
     if (isUndefined([favoriteIdList])) throwError(errorCodes.requestDataError);
     const userCol = global.mongodbClient.foodMapDb.userCol;
+    const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let userDoc: userDocument = await userCol.findOne({_id: new ObjectId(userId)});
-    let outputFavoriteIdList: string[] = [...new Set(favoriteIdList.concat(userDoc.favoriteList))];
-    await userCol.updateOne({_id: new ObjectId(userId)}, {$set: {favoriteList: outputFavoriteIdList}});
-    return {msg: '添加最愛成功'};
+    let info = {successCount: 0, placeNotFoundCount: 0, favoriteExistCount: 0};
+    for (let favoriteId of favoriteIdList) {
+        if (!await placeCol.findOne({place_id: favoriteId})) info.placeNotFoundCount += 1;
+        else if (userDoc.favoriteList.includes(favoriteId)) info.favoriteExistCount += 1;
+        else {
+            info.successCount += 1;
+            userDoc.favoriteList.push(favoriteId);
+        }
+    }
+    await userCol.updateOne({_id: new ObjectId(userId)}, {$set: {favoriteList: userDoc.favoriteList}});
+    return {msg: '添加最愛成功', info};
 }
 
 async function pullFavorite(userId: string, favoriteIdList: string[]) {
     if (isUndefined([favoriteIdList])) throwError(errorCodes.requestDataError);
     const userCol = global.mongodbClient.foodMapDb.userCol;
     let userDoc: userDocument = await userCol.findOne({_id: new ObjectId(userId)});
-    let outputFavoriteIdList = userDoc.favoriteList.filter((favoriteId: string) => !favoriteIdList.includes(favoriteId));
+    let info = {deleteCount: 0};
+    let outputFavoriteIdList = userDoc.favoriteList.filter((favoriteId: string) => {
+        let result = favoriteIdList.includes(favoriteId);
+        if (result) info.deleteCount += 1;
+        return !result;
+    });
     await userCol.updateOne({_id: new ObjectId(userId)}, {$set: {favoriteList: outputFavoriteIdList}});
-    return {msg: '移除最愛成功'};
+    return {msg: '移除最愛成功', info};
 }
 
 async function getFavorite(userId: string): Promise<favoriteResult> {
@@ -197,21 +211,37 @@ async function getFavorite(userId: string): Promise<favoriteResult> {
 }
 
 async function pushBlackList(userId: string, placeIdList: string[]) {
+    if (isUndefined([placeIdList])) throwError(errorCodes.requestDataError);
     const userCol = global.mongodbClient.foodMapDb.userCol;
+    const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let userQuery = {_id: new ObjectId(userId)};
     let userDoc: userDocument = await userCol.findOne(userQuery);
-    let newBlackList: string[] = [...new Set(userDoc.blackList.concat(placeIdList))];
-    await userCol.updateOne(userQuery, {$set: {blackList: newBlackList}});
-    return {msg: '添加黑名單成功'};
+    let info = {successCount: 0, placeNotFoundCount: 0, favoriteExistCount: 0};
+    for (let placeId of placeIdList) {
+        if (!await placeCol.findOne({place_id: placeId})) info.placeNotFoundCount += 1;
+        else if (userDoc.blackList.includes(placeId)) info.favoriteExistCount += 1;
+        else {
+            info.successCount += 1;
+            userDoc.blackList.push(placeId);
+        }
+    }
+    await userCol.updateOne(userQuery, {$set: {blackList: userDoc.blackList}});
+    return {msg: '添加黑名單成功', info};
 }
 
 async function pullBlackList(userId: string, placeIdList: string[]) {
+    if (isUndefined([placeIdList])) throwError(errorCodes.requestDataError);
     const userCol = global.mongodbClient.foodMapDb.userCol;
     let userQuery = {_id: new ObjectId(userId)};
     let userDoc: userDocument = await userCol.findOne(userQuery);
-    let newBlackList: string[] = userDoc.blackList.filter((blackId: string) => !placeIdList.includes(blackId));
+    let info = {deleteCount: 0};
+    let newBlackList: string[] = userDoc.blackList.filter((blackId: string) => {
+        let result = placeIdList.includes(blackId);
+        if (result) info.deleteCount += 1;
+        return !result;
+    });
     await userCol.updateOne(userQuery, {$set: {blackList: newBlackList}});
-    return {msg: '移除黑名單成功'};
+    return {msg: '移除黑名單成功', info};
 }
 
 async function getBlackList(userId: string): Promise<blackListResult> {
