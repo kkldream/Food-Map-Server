@@ -106,13 +106,16 @@ export async function compressUrlImageToBase64(url: string, rate: number = 0.5):
     }
 
     // 用 canvas 重绘
-    let canvas = new Canvas.createCanvas(drawHeight, drawWidth);
+    // let canvas = new Canvas.createCanvas(drawHeight, drawWidth);
+    let canvas = new Canvas.createCanvas(drawWidth, drawHeight);
     let context = canvas.getContext('2d');
-    context.drawImage(image, 0, 0, drawHeight, drawWidth);
+    context.drawImage(image, 0, 0, drawWidth, drawHeight);
     let data: string = canvas.toDataURL('image/jpeg', rate).slice(23);
     return {
-        width: drawHeight,
-        height: drawWidth,
+        // width: drawHeight,
+        // height: drawWidth,
+        width: drawWidth,
+        height: drawHeight,
         data: data,
         length: data.length,
         format: "jpeg"
