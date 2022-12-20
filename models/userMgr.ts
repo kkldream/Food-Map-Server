@@ -2,7 +2,7 @@ import {ObjectId} from 'mongodb';
 import {generateUUID} from './utils';
 import {errorCodes, isUndefined, throwError} from "./dataStruct/throwError";
 import {userDocument} from "./dataStruct/mongodb/userDocument";
-import {favoriteItem} from "./dataStruct/response/favoriteResponse";
+import {favoriteItem, favoriteResult} from "./dataStruct/response/favoriteResponse";
 import {dbPlaceDocument} from "./dataStruct/mongodb/googlePlaceDocument";
 import {callGoogleApiDetail} from "./service/googleApiService";
 import {googleDetailResponse} from "./dataStruct/mongodb/originalGooglePlaceData";
@@ -156,11 +156,11 @@ async function pullFavorite(userId: string, favoriteIdList: string[]) {
     return {msg: '移除最愛成功'};
 }
 
-async function getFavorite(userId: string): Promise<favoriteItem[]> {
+async function getFavorite(userId: string): Promise<favoriteResult> {
     const userCol = global.mongodbClient.foodMapDb.userCol;
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let userDoc: userDocument = await userCol.findOne({_id: new ObjectId(userId)});
-    if (!userDoc.favoriteList) return [];
+    if (!userDoc.favoriteList) return {placeCount: 0, placeList: []};
     let output: favoriteItem[] = [];
     for (let favoriteId of userDoc.favoriteList) {
         let dbPlace: dbPlaceDocument;
@@ -193,7 +193,7 @@ async function getFavorite(userId: string): Promise<favoriteItem[]> {
             url: dbPlace.originalDetail.url ?? ""
         });
     }
-    return output;
+    return {placeCount: output.length, placeList: output};
 }
 
 async function pushBlackList(userId: string, placeIdList: string[]) {
