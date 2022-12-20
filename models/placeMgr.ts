@@ -18,8 +18,6 @@ async function dbPlaceListConvertResponse(dbPlaceDocList: dbPlaceDocumentWithDis
     const userCol = global.mongodbClient.foodMapDb.userCol;
     let userDoc: userDocument = await userCol.findOne({_id: new ObjectId(userId)});
     let favoriteIdList: string[] = userDoc.favoriteList;
-    let blackList: string[] = await getBlackList();
-    dbPlaceDocList.filter(dbPlaceDoc => !blackList.includes(dbPlaceDoc.place_id));
     return dbPlaceDocList.map((dbPlaceDoc: dbPlaceDocumentWithDistance): responsePlaceItem => ({
         updateTime: dbPlaceDoc.content.updateTime,
         place_id: dbPlaceDoc.place_id,
@@ -49,7 +47,12 @@ async function searchByDistance(userId: string, latitude: number, longitude: num
                 "distanceField": "distance",
                 "spherical": true,
                 "maxDistance": distance,
-                "query": {"types": {"$in": config.foodTypeList}}
+                "query": {
+                    "$and": [
+                        {"types": {"$in": config.foodTypeList}},
+                        {"place_id": {"$nin": await getBlackList()}}
+                    ]
+                }
             }
         },
         {"$sort": {"distance": 1}},
@@ -64,7 +67,7 @@ async function searchByDistance(userId: string, latitude: number, longitude: num
     }
     let dbPlaceDocList: dbPlaceDocumentWithDistance[] = await placeCol.aggregate(pipeline).toArray();
     let responsePlaceList: responsePlaceItem[] = await dbPlaceListConvertResponse(dbPlaceDocList, userId);
-    return {updated, dbStatus, placeCount, placeList: responsePlaceList}
+    return {updated, dbStatus, placeCount: responsePlaceList.length, placeList: responsePlaceList}
 }
 
 async function searchByKeyword(userId: string, latitude: number, longitude: number, keyword: string, skip: number, limit: number): Promise<responsePlaceResult> {
@@ -81,7 +84,8 @@ async function searchByKeyword(userId: string, latitude: number, longitude: numb
                 "query": {
                     "$and": [
                         {"name": {"$regex": new BSONRegExp(keyword)}},
-                        {"types": {"$in": config.foodTypeList}}
+                        {"types": {"$in": config.foodTypeList}},
+                        {"place_id": {"$nin": await getBlackList()}}
                     ]
                 }
             }
@@ -98,7 +102,7 @@ async function searchByKeyword(userId: string, latitude: number, longitude: numb
     }
     let dbPlaceDocList: dbPlaceDocumentWithDistance[] = await placeCol.aggregate(pipeline).toArray();
     let responsePlaceList: responsePlaceItem[] = await dbPlaceListConvertResponse(dbPlaceDocList, userId);
-    return {updated, dbStatus, placeCount, placeList: responsePlaceList}
+    return {updated, dbStatus, placeCount: responsePlaceList.length, placeList: responsePlaceList}
 }
 
 async function drawCard(userId: string, latitude: number, longitude: number, mode: drawCardModeEnum, num: number): Promise<responsePlaceResult> {
@@ -121,7 +125,8 @@ async function drawCard(userId: string, latitude: number, longitude: number, mod
                             "$and": [
                                 {"types": {"$in": config.foodTypeList}},
                                 {"content.rating.star": {"$gte": config.drawCard.ratingStar}},
-                                {"content.rating.total": {"$gte": config.drawCard.ratingTotal}}
+                                {"content.rating.total": {"$gte": config.drawCard.ratingTotal}},
+                                {"place_id": {"$nin": await getBlackList()}}
                             ]
                         }
                     }
