@@ -68,13 +68,16 @@ router.post('/get_photo', async function (req: any, res: any, next: any) {
 });
 
 router.get('/get_html_photo/:photoId', async function (req: any, res: any, next: any) {
+    res.setHeader('Content-Type', 'image/jpeg');
     try {
         let photoId = req.params.photoId;
         let base64Img = await placeMgr.getHtmlPhoto(photoId);
-        return res.render('photo', {base64Img});
+        let buff = Buffer.from(base64Img, 'base64');
+        return res.send(buff);
     } catch (error: apiError | any) {
         let base64Img = await placeMgr.getHtmlPhoto(config.image.defaultId);
-        return res.render('photo', {base64Img});
+        let buff = Buffer.from(base64Img, 'base64');
+        return res.send(buff);
     }
 });
 
