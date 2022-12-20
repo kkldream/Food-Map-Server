@@ -67,7 +67,7 @@ async function searchByDistance(userId: string, latitude: number, longitude: num
     }
     let dbPlaceDocList: dbPlaceDocumentWithDistance[] = await placeCol.aggregate(pipeline).toArray();
     let responsePlaceList: responsePlaceItem[] = await dbPlaceListConvertResponse(dbPlaceDocList, userId);
-    return {updated, dbStatus, placeCount: responsePlaceList.length, placeList: responsePlaceList}
+    return {updated, dbStatus, placeCount, placeList: responsePlaceList}
 }
 
 async function searchByKeyword(userId: string, latitude: number, longitude: number, keyword: string, skip: number, limit: number): Promise<responsePlaceResult> {
@@ -102,7 +102,7 @@ async function searchByKeyword(userId: string, latitude: number, longitude: numb
     }
     let dbPlaceDocList: dbPlaceDocumentWithDistance[] = await placeCol.aggregate(pipeline).toArray();
     let responsePlaceList: responsePlaceItem[] = await dbPlaceListConvertResponse(dbPlaceDocList, userId);
-    return {updated, dbStatus, placeCount: responsePlaceList.length, placeList: responsePlaceList}
+    return {updated, dbStatus, placeCount, placeList: responsePlaceList}
 }
 
 async function drawCard(userId: string, latitude: number, longitude: number, mode: drawCardModeEnum, num: number): Promise<responsePlaceResult> {
