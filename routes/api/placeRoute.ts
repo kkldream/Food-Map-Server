@@ -58,6 +58,7 @@ router.post('/draw_card', async function (req: any, res: any, next: any) {
 router.get('/get_html_photo/:photoId', async function (req: any, res: any, next: any) {
     res.setHeader('Content-Type', 'image/jpeg');
     try {
+        // let userId = req.query.userId;
         let photoId = req.params.photoId;
         let base64Img = await placeMgr.getHtmlPhoto(photoId);
         let buff = Buffer.from(base64Img, 'base64');

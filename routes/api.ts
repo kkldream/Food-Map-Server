@@ -19,6 +19,7 @@ router.use('/', function (req: any, res: any, next: any) {
     };
     if (req.body.userId) routeApiLogDoc.userId = req.body.userId;
     if (Object.keys(req.params).length !== 0) routeApiLogDoc.request.params = req.params;
+    if (Object.keys(req.query).length !== 0) routeApiLogDoc.request.query = req.query;
     if (Object.keys(req.body).length !== 0) routeApiLogDoc.request.body = req.body;
     routeApiLogCol.insertOne(routeApiLogDoc);
     next();

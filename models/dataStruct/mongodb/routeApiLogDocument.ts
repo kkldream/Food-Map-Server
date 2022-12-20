@@ -8,6 +8,7 @@ export interface routeApiLogDocument {
     apiUrlPath: string[];
     request: {
         params?: any;
+        query?: any;
         body?: any;
     };
     userId?: string;
