@@ -216,10 +216,10 @@ async function pushBlackList(userId: string, placeIdList: string[]) {
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let userQuery = {_id: new ObjectId(userId)};
     let userDoc: userDocument = await userCol.findOne(userQuery);
-    let info = {successCount: 0, placeNotFoundCount: 0, favoriteExistCount: 0};
+    let info = {successCount: 0, placeNotFoundCount: 0, blackListExistCount: 0};
     for (let placeId of placeIdList) {
         if (!await placeCol.findOne({place_id: placeId})) info.placeNotFoundCount += 1;
-        else if (userDoc.blackList.includes(placeId)) info.favoriteExistCount += 1;
+        else if (userDoc.blackList.includes(placeId)) info.blackListExistCount += 1;
         else {
             info.successCount += 1;
             userDoc.blackList.push(placeId);
