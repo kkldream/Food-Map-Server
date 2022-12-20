@@ -55,18 +55,6 @@ router.post('/draw_card', async function (req: any, res: any, next: any) {
     return res.send(response);
 });
 
-router.post('/get_photo', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
-    try {
-        let {userId, accessKey, photoId, detail} = req.body;
-        await response.verifyUser(userId, accessKey);
-        response.result = await placeMgr.getPhoto(photoId, detail);
-    } catch (error: apiError | any) {
-        response.errorHandle(error);
-    }
-    return res.send(response);
-});
-
 router.get('/get_html_photo/:photoId', async function (req: any, res: any, next: any) {
     res.setHeader('Content-Type', 'image/jpeg');
     try {
