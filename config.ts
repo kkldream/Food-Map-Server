@@ -4,9 +4,9 @@ export default {
   // https://developers.google.com/maps/documentation/places/web-service/supported_types
   foodTypeList: [
     foodTypeEnum.food,
-    foodTypeEnum.meal_delivery,
-    foodTypeEnum.meal_takeaway,
-    foodTypeEnum.restaurant,
+    // foodTypeEnum.meal_delivery,
+    // foodTypeEnum.meal_takeaway,
+    // foodTypeEnum.restaurant,
   ],
   minResponseCount: 1,
   drawCard: {
