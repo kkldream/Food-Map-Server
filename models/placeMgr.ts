@@ -50,7 +50,7 @@ async function searchByDistance(userId: string, latitude: number, longitude: num
                 "query": {
                     "$and": [
                         {"types": {"$in": config.foodTypeList}},
-                        {"place_id": {"$nin": await getBlackList()}}
+                        {"place_id": {"$nin": await getBlackList(userId)}}
                     ]
                 }
             }
@@ -85,7 +85,7 @@ async function searchByKeyword(userId: string, latitude: number, longitude: numb
                     "$and": [
                         {"name": {"$regex": new BSONRegExp(keyword)}},
                         {"types": {"$in": config.foodTypeList}},
-                        {"place_id": {"$nin": await getBlackList()}}
+                        {"place_id": {"$nin": await getBlackList(userId)}}
                     ]
                 }
             }
@@ -126,7 +126,7 @@ async function drawCard(userId: string, latitude: number, longitude: number, mod
                                 {"types": {"$in": config.foodTypeList}},
                                 {"content.rating.star": {"$gte": config.drawCard.ratingStar}},
                                 {"content.rating.total": {"$gte": config.drawCard.ratingTotal}},
-                                {"place_id": {"$nin": await getBlackList()}}
+                                {"place_id": {"$nin": await getBlackList(userId)}}
                             ]
                         }
                     }
