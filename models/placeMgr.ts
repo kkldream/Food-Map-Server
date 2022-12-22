@@ -184,15 +184,12 @@ async function getHtmlPhoto(photoId: string): Promise<string> {
     return photoDoc.data;
 }
 
-async function autocomplete(userId: string, latitude: number, longitude: number, input: string): Promise<responseAutocompleteItem[]> {
+async function autocomplete(userId: string, latitude: number, longitude: number, input: string, radius: number | string = 10000): Promise<responseAutocompleteItem[]> {
     if (isUndefined([latitude, longitude, input])) throwError(errorCodes.requestDataError);
     let outputList: responseAutocompleteItem[] = [];
     await Promise.all(config.foodTypeList.map(async (type: foodTypeEnum) => {
         let response: googleAutocompleteResponse = await callGoogleApiAutocomplete(
-            input,
-            {lat: latitude, lng: longitude},
-            type,
-            "distance"
+            input, {lat: latitude, lng: longitude}, type, radius
         );
         let output: responseAutocompleteItem[] = response.predictions.map((item: placeAutocompletePrediction): responseAutocompleteItem => ({
             place_id: item.place_id,
