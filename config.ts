@@ -16,7 +16,7 @@ export default {
   },
   detailUpdateRangeSecond: 10,
   image: {
-    maxWidth: 400,
+    maxWidth: 600,
     compressRate: 0.6,
     defaultId: "639d6ed9eb340eb22b49cfe5",
   },
