@@ -1,12 +1,14 @@
 import {
+    googleAutocompleteResponse,
     googleDetailResponse,
     googlePlaceResponse,
-    googlePlaceResult
+    googlePlaceResult,
+    latLngLiteral
 } from "../dataStruct/mongodb/originalGooglePlaceData";
 import axios from "axios";
 import {responseLocationItem} from "../dataStruct/response/publicItem/responseLocationItem";
 import {responseLocationConvertDb} from "../utils";
-import {insertGoogleApiDetailLog, insertGoogleApiPlaceLog} from "./googleApiLogService";
+import {insertGoogleApiAutocompleteLog, insertGoogleApiDetailLog, insertGoogleApiPlaceLog} from "./googleApiLogService";
 
 export async function callGoogleApiNearBySearch(searchPageNum: number, location: responseLocationItem, type: string, keyword: string, radius: number): Promise<googlePlaceResult[]> {
     let originalDataList: googlePlaceResult[] = [];
@@ -48,5 +50,22 @@ export async function callGoogleApiDetail(place_id: string): Promise<googleDetai
         + `&key=${process.env.GOOGLE_API_KEY}`;
     let response: googleDetailResponse = (await axios({method: 'get', url})).data;
     await insertGoogleApiDetailLog({place_id, response: response.result});
+    return response;
+}
+
+export async function callGoogleApiAutocomplete(input: string, location: latLngLiteral, type: string, radius: number | string): Promise<googleAutocompleteResponse> {
+    let url = 'https://maps.googleapis.com/maps/api/place/autocomplete/json?'
+        + `&input=${input}`
+        + `&location=${location.lat},${location.lng}`
+        + `&components=country:tw`
+        + `&radius=${radius}`
+        + `&type=${type}`
+        + `&key=${process.env.GOOGLE_API_KEY}`
+        + `&language=zh-TW`;
+    let response: googleAutocompleteResponse = (await axios({method: 'get', url})).data;
+    await insertGoogleApiAutocompleteLog({
+        input, type, radius, response: response.predictions,
+        location: responseLocationConvertDb(location)
+    });
     return response;
 }

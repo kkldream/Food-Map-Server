@@ -9,6 +9,10 @@ import {userDocument} from "./dataStruct/mongodb/userDocument";
 import {getBlackList} from "./service/blackListService";
 import {photoDocument} from "./dataStruct/mongodb/photoDocument";
 import {photoResult} from "./dataStruct/response/photoResponse";
+import {responseAutocompleteItem} from "./dataStruct/response/autocompleteResponses";
+import {callGoogleApiAutocomplete} from "./service/googleApiService";
+import {googleAutocompleteResponse, placeAutocompletePrediction} from "./dataStruct/mongodb/originalGooglePlaceData";
+import {foodTypeEnum} from "./dataStruct/staticCode/foodTypeEnum";
 
 interface dbPlaceDocumentWithDistance extends dbPlaceDocument {
     distance: number;
@@ -180,10 +184,33 @@ async function getHtmlPhoto(photoId: string): Promise<string> {
     return photoDoc.data;
 }
 
+async function autocomplete(userId: string, latitude: number, longitude: number, input: string): Promise<responseAutocompleteItem[]> {
+    if (isUndefined([latitude, longitude, input])) throwError(errorCodes.requestDataError);
+    let outputList: responseAutocompleteItem[] = [];
+    await Promise.all(config.foodTypeList.map(async (type: foodTypeEnum) => {
+        let response: googleAutocompleteResponse = await callGoogleApiAutocomplete(
+            input,
+            {lat: latitude, lng: longitude},
+            type,
+            "distance"
+        );
+        let output: responseAutocompleteItem[] = response.predictions.map((item: placeAutocompletePrediction): responseAutocompleteItem => ({
+            place_id: item.place_id,
+            name: item.structured_formatting.main_text,
+            address: item.structured_formatting.secondary_text
+        }));
+        outputList = outputList.concat(output);
+    }));
+    let set = new Set();
+    outputList = outputList.filter(item => !set.has(item.place_id) ? set.add(item.place_id) : false);
+    return outputList;
+}
+
 export default {
     searchByDistance,
     searchByKeyword,
     drawCard,
     getPhoto,
     getHtmlPhoto,
+    autocomplete,
 };

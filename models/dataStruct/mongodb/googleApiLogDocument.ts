@@ -1,6 +1,11 @@
 import {ObjectId} from "mongodb";
 import {dbLocationItem} from "./publicItem/dbLocationItem";
-import {googleDetailItem, googlePhotosItem, googlePlaceResult} from "./originalGooglePlaceData";
+import {
+    googleDetailItem,
+    googlePhotosItem,
+    googlePlaceResult,
+    placeAutocompletePrediction
+} from "./originalGooglePlaceData";
 import {photoItem} from "./photoDocument";
 
 export interface googleApiLogDocument {
@@ -13,9 +18,14 @@ export interface googleApiLogDocument {
         type: string;
         keyword: string;
         radius: number;
-    } | { place_id: string; } | { photoReference: googlePhotosItem };
+    } | { place_id: string; } | { photoReference: googlePhotosItem; } | {
+        input: string;
+        type: string;
+        radius: number | string;
+        location: dbLocationItem;
+    };
     response: {
         length: number;
-        data: googlePlaceResult[] | googleDetailItem | photoItem;
+        data: googlePlaceResult[] | googleDetailItem | photoItem | placeAutocompletePrediction[];
     };
 }

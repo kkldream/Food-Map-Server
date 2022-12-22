@@ -1,5 +1,10 @@
 import {dbLocationItem} from "../dataStruct/mongodb/publicItem/dbLocationItem";
-import {googleDetailItem, googlePhotosItem, googlePlaceResult} from "../dataStruct/mongodb/originalGooglePlaceData";
+import {
+    googleDetailItem,
+    googlePhotosItem,
+    googlePlaceResult,
+    placeAutocompletePrediction
+} from "../dataStruct/mongodb/originalGooglePlaceData";
 import {googleApiLogDocument} from "../dataStruct/mongodb/googleApiLogDocument";
 import {photoItem} from "../dataStruct/mongodb/photoDocument";
 
@@ -60,6 +65,30 @@ export async function insertGoogleApiPhotoLog(req: googleApiPhotoLogRequest) {
         mode: "photo",
         request: {photoReference: req.photoReference},
         response: {length: 1, data: req.response}
+    };
+    return await googleApiLogCol.insertOne(googleApiLogDoc);
+}
+
+interface googleApiAutocompleteLogRequest {
+    input: string;
+    type: string;
+    radius: number | string;
+    location: dbLocationItem;
+    response: placeAutocompletePrediction[];
+}
+
+export async function insertGoogleApiAutocompleteLog(req: googleApiAutocompleteLogRequest) {
+    const googleApiLogCol = global.mongodbClient.foodMapDb.googleApiLogCol;
+    let googleApiLogDoc: googleApiLogDocument = {
+        createTime: new Date(),
+        mode: "autocomplete",
+        request: {
+            input: req.input,
+            type: req.type,
+            radius: req.radius,
+            location: req.location
+        },
+        response: {length: req.response.length, data: req.response}
     };
     return await googleApiLogCol.insertOne(googleApiLogDoc);
 }
