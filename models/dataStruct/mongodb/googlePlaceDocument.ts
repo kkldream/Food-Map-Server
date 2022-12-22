@@ -17,7 +17,7 @@ export interface dbPlaceDocument {
     content: dbPlaceItem;
 
     // google api 的原始資料
-    originalPlace: googlePlaceResult;
+    originalPlace: googlePlaceResult | null;
     originalDetail: googleDetailItem | null;
 }
 

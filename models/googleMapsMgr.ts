@@ -1,7 +1,7 @@
 import {errorCodes, isUndefined, throwError} from "./dataStruct/throwError";
 import {responseLocationConvertDb} from "./utils";
 import config from "../config"
-import {googlePlaceResult} from "./dataStruct/mongodb/originalGooglePlaceData";
+import {googleDetailItem, googlePlaceResult} from "./dataStruct/mongodb/originalGooglePlaceData";
 import {dbPlaceDocument, dbPlaceItem} from "./dataStruct/mongodb/googlePlaceDocument";
 import {callGoogleApiDetail, callGoogleApiNearBySearch} from "./service/googleApiService";
 import {responseLocationItem} from "./dataStruct/response/publicItem/responseLocationItem";
@@ -149,8 +149,43 @@ async function detailsByPlaceId(userId: string, place_id: string): Promise<respo
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     const userCol = global.mongodbClient.foodMapDb.userCol;
     let findResult: dbPlaceDocument = await placeCol.findOne({place_id});
-    if (!findResult) throwError(errorCodes.placeNotFound)
     let updated = false;
+    if (!findResult) {
+        let detailResult: googleDetailItem = (await callGoogleApiDetail(place_id)).result;
+        if (!detailResult) throwError(errorCodes.placeNotFound);
+        findResult = {
+            creatTime: requestTime,
+            updateTime: requestTime,
+            place_id: detailResult.place_id,
+            location: responseLocationConvertDb(detailResult.geometry.location),
+            types: detailResult.types,
+            name: detailResult.name,
+            content: {
+                updateTime: requestTime,
+                place_id: detailResult.place_id,
+                status: detailResult.business_status,
+                name: detailResult.name,
+                photos: await googleImageListConvertPhotoId(detailResult.photos),
+                rating: {
+                    star: detailResult.rating,
+                    total: detailResult.user_ratings_total,
+                },
+                address: detailResult.vicinity,
+                location: detailResult.geometry.location,
+                icon: {
+                    url: detailResult.icon,
+                    background_color: detailResult.icon_background_color,
+                    mask_base_uri: detailResult.icon_mask_base_uri,
+                },
+                types: detailResult.types,
+                opening_hours: detailResult.opening_hours ?? {}
+            },
+            originalPlace: null,
+            originalDetail: detailResult
+        };
+        await placeCol.insertOne(findResult);
+        updated = true;
+    }
     if (findResult.originalDetail === null || requestTime.getTime() - (findResult.originalDetail.updateTime?.getTime() ?? 0) > config.detailUpdateRangeSecond * 1000) {
         findResult.originalDetail = (await callGoogleApiDetail(place_id)).result;
         findResult.originalDetail.updateTime = requestTime;
