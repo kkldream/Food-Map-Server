@@ -3,10 +3,10 @@ import {foodTypeEnum} from "./models/dataStruct/staticCode/foodTypeEnum";
 export default {
   // https://developers.google.com/maps/documentation/places/web-service/supported_types
   foodTypeList: [
-    foodTypeEnum.food,
+    // foodTypeEnum.food,
     // foodTypeEnum.meal_delivery,
     // foodTypeEnum.meal_takeaway,
-    // foodTypeEnum.restaurant,
+    foodTypeEnum.restaurant,
   ],
   minResponseCount: 1,
   drawCard: {
@@ -17,7 +17,7 @@ export default {
   detailUpdateRangeSecond: 10,
   image: {
     maxWidth: 400,
-    compressRate: 0.5,
+    compressRate: 0.6,
     defaultId: "639d6ed9eb340eb22b49cfe5",
   },
   root: {
