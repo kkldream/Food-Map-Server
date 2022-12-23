@@ -19,15 +19,19 @@ interface insertPhotoItemInput {
 
 export async function googleImageListConvertPhotoId(photoReference: googlePhotosItem[]): Promise<string[]> {
     if (!photoReference) return [];
+    const photoCol = global.mongodbClient.foodMapDb.photoCol;
+    let responseTime = new Date();
     return await Promise.all(photoReference.map(async (googlePhoto: googlePhotosItem): Promise<string> => {
+        let existPhoto: photoDocument = await photoCol.findOne({photo_reference: googlePhoto.photo_reference});
+        if (existPhoto) return existPhoto._id?.toString() ?? config.image.defaultId;
         let imageUrl = "https://maps.googleapis.com/maps/api/place/photo?"
             + `&maxwidth=${config.image.maxWidth}`
             + `&photoreference=${googlePhoto.photo_reference}`
             + `&key=${process.env.GOOGLE_API_KEY}`;
         let photo: photoItem = await compressUrlImageToBase64(imageUrl, config.image.compressRate);
-        let responseTime = new Date();
+        await insertGoogleApiPhotoLog({photoReference: googlePhoto, response: photo})
         let uploadUserTemp = googlePhoto.html_attributions[0];
-        let {updated, photoId} = await getPhotoId({
+        let {photoId} = await getPhotoId({
             updateTime: responseTime,
             photo_reference: googlePhoto.photo_reference,
             uploadUser: {
@@ -36,7 +40,6 @@ export async function googleImageListConvertPhotoId(photoReference: googlePhotos
             },
             photoItem: photo
         });
-        await insertGoogleApiPhotoLog({photoReference: googlePhoto, response: photo})
         return photoId;
     }));
 }
