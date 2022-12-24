@@ -94,7 +94,7 @@ async function searchByKeyword(userId: string, latitude: number, longitude: numb
     if (distance === -1) query["request.rankby"] = "distance";
     else query["request.radius"] = distance;
     let findResult: googleApiLogDocument[] = await googleApiLogCol.find(query).sort({createTime: -1}).limit(1).toArray();
-    if (findResult.length === 0 || requestTime.getTime() - findResult[0].createTime.getTime() > config.keyworkUpdateRangeSecond * 1000) {
+    if (findResult.length === 0 || requestTime.getTime() - findResult[0].createTime.getTime() > config.keywordUpdateRangeSecond * 1000) {
         dbStatus = await googleMapsMgr.updatePlaceByKeyword(latitude, longitude, keyword, distance);
         updated = true;
         findResult = await googleApiLogCol.find(query).sort({createTime: -1}).limit(1).toArray();

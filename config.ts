@@ -15,7 +15,7 @@ export default {
         ratingTotal: 100,
     },
     detailUpdateRangeSecond: 24 * 60 * 60,
-    keyworkUpdateRangeSecond: 24 * 60 * 60,
+    keywordUpdateRangeSecond: 24 * 60 * 60,
     image: {
         maxWidth: 600,
         compressRate: 0.6,
