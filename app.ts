@@ -5,6 +5,7 @@ import {getDateFormat} from './models/utils';
 import indexRoute from './routes/index';
 import apiRoute from './routes/api';
 import MongodbClient from "./models/mongodbMgr";
+import path from "path";
 
 dotenv.config();
 
@@ -33,8 +34,8 @@ app.use('/', function (req: any, res: any, next: any) {
     console.log(`[${getDateFormat()}] ${req.method}: ${req.originalUrl}`);
     next();
 });
-app.use('/', indexRoute);
 app.use('/api', apiRoute);
+app.use('/', indexRoute);
 
 // catch 404 and forward to error handler
 app.use(function (req: any, res: any, next: any) {
