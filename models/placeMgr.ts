@@ -50,13 +50,12 @@ async function searchByDistance(userId: string, latitude: number, longitude: num
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let updated = false;
     let dbStatus: any;
-    let pipeline = [
+    let pipeline: any = [
         {
             "$geoNear": {
                 "near": {"type": "Point", "coordinates": [longitude, latitude]},
                 "distanceField": "distance",
                 "spherical": true,
-                "maxDistance": distance,
                 "query": {
                     "$and": [
                         {"types": {"$in": config.foodTypeList}},
@@ -69,6 +68,7 @@ async function searchByDistance(userId: string, latitude: number, longitude: num
         {"$skip": skip},
         {"$limit": limit}
     ];
+    if (distance !== -1) pipeline[0]["$geoNear"]["maxDistance"] = distance;
     let placeCountResult = await placeCol.aggregate([pipeline[0], {"$count": "count"}]).toArray();
     let placeCount = placeCountResult.length !== 0 ? placeCountResult[0].count : 0;
     if (placeCount < config.minResponseCount) {
@@ -105,7 +105,11 @@ async function searchByKeyword(userId: string, latitude: number, longitude: numb
     let dbPlaceDocWithDistanceList: dbPlaceDocumentWithDistance[] = dbPlaceDocList.map((dbPlaceDoc: dbPlaceDocument): dbPlaceDocumentWithDistance => ({
         ...dbPlaceDoc,
         distance: twoLocateDistance({lat: latitude, lng: longitude}, dbPlaceDoc.content.location)
-    }));
+    })).sort((a: dbPlaceDocumentWithDistance, b: dbPlaceDocumentWithDistance) => {
+        if (a.distance > b.distance) return 1;
+        if (a.distance < b.distance) return -1;
+        return 0;
+    });
     let responsePlaceList: responsePlaceItem[] = await dbPlaceListConvertResponse(dbPlaceDocWithDistanceList, userId);
     return {updated, dbStatus, placeCount: responsePlaceList.length, placeList: responsePlaceList};
 }
