@@ -22,9 +22,9 @@ router.post('/search_by_distance', async function (req: any, res: any, next: any
 router.post('/search_by_keyword', async function (req: any, res: any, next: any) {
     let response = new apiResponseBase();
     try {
-        let {userId, accessKey, latitude, longitude, keyword, skip, limit} = req.body;
+        let {userId, accessKey, latitude, longitude, distance, keyword, skip, limit} = req.body;
         await response.verifyUser(userId, accessKey);
-        response.result = await placeMgr.searchByKeyword(userId, latitude, longitude, keyword, skip, limit);
+        response.result = await placeMgr.searchByKeyword(userId, latitude, longitude, distance, keyword, skip, limit);
     } catch (error: apiError | any) {
         response.errorHandle(error);
     }

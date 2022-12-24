@@ -3,7 +3,7 @@ import {responseLocationConvertDb} from "./utils";
 import config from "../config"
 import {googleDetailItem, googlePlaceResult} from "./dataStruct/mongodb/originalGooglePlaceData";
 import {dbPlaceDocument, dbPlaceItem} from "./dataStruct/mongodb/googlePlaceDocument";
-import {callGoogleApiDetail, callGoogleApiNearBySearch} from "./service/googleApiService";
+import {callGoogleApiDetail, callGoogleApiKeywordBySearch, callGoogleApiNearBySearch} from "./service/googleApiService";
 import {responseLocationItem} from "./dataStruct/response/publicItem/responseLocationItem";
 import {responseDetailResult} from "./dataStruct/response/detailResponses";
 import {isFavoriteByUserId} from "./service/placeService";
@@ -23,7 +23,7 @@ async function updateCustom(latitude: number, longitude: number, radius: number,
             location: {lat: latitude, lng: longitude},
             type,
             keyword,
-            radius
+            distance: radius
         }, "custom");
         resultStatus.upsertCount += result.upsertCount;
         resultStatus.matchCount += result.matchCount;
@@ -44,7 +44,7 @@ async function updatePlaceByDistance(latitude: number, longitude: number, search
                 location: {lat: latitude, lng: longitude},
                 type,
                 keyword: "",
-                radius: -1
+                distance: -1
             }, "search_by_near"
         );
         resultStatus.upsertCount += result.upsertCount;
@@ -54,8 +54,8 @@ async function updatePlaceByDistance(latitude: number, longitude: number, search
     return resultStatus;
 }
 
-async function updatePlaceByKeyword(latitude: number, longitude: number, keyword: string, searchPageNum: number = 1) {
-    if (!latitude || !longitude || !keyword) throwError(errorCodes.requestDataError);
+async function updatePlaceByKeyword(latitude: number, longitude: number, keyword: string, distance: number, searchPageNum: number = 1) {
+    if (!latitude || !longitude || !keyword || !distance) throwError(errorCodes.requestDataError);
     let resultStatus = {
         upsertCount: 0,
         matchCount: 0,
@@ -66,7 +66,7 @@ async function updatePlaceByKeyword(latitude: number, longitude: number, keyword
                 location: {lat: latitude, lng: longitude},
                 type,
                 keyword,
-                radius: -1
+                distance
             }, "search_by_keyword"
         );
         resultStatus.upsertCount += result.upsertCount;
@@ -77,11 +77,13 @@ async function updatePlaceByKeyword(latitude: number, longitude: number, keyword
 }
 
 // https://developers.google.com/maps/documentation/places/web-service/search-nearby
-async function nearBySearch(searchPageNum: number, request: { location: responseLocationItem; type: string; keyword: string; radius: number; }, msg: string = "") {
+async function nearBySearch(searchPageNum: number, request: { location: responseLocationItem; type: string; keyword: string; distance: number; }, msg: string = "") {
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let requestTime: Date = new Date();
-    let {location, type, keyword, radius} = request;
-    let googlePlaceList: googlePlaceResult[] = await callGoogleApiNearBySearch(searchPageNum, location, type, keyword, radius);
+    let {location, type, keyword, distance} = request;
+    let googlePlaceList: googlePlaceResult[] = keyword === "" ?
+        await callGoogleApiNearBySearch(searchPageNum, location, type, distance) :
+        await callGoogleApiKeywordBySearch(searchPageNum, location, type, keyword, distance);
     let dbPlaceDocumentList: dbPlaceDocument[] = await Promise.all(googlePlaceList.map(async (googlePlace: googlePlaceResult): Promise<dbPlaceDocument> => {
         let dbPlace: dbPlaceItem = {
             updateTime: new Date(),

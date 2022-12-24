@@ -16,8 +16,9 @@ export interface googleApiLogDocument {
         searchPageNum: number;
         location: dbLocationItem;
         type: string;
-        keyword: string;
-        radius: number;
+        keyword?: string;
+        rankby?: string;
+        radius?: number;
     } | { place_id: string; } | { photoReference: googlePhotosItem; } | {
         input: string;
         type: string;

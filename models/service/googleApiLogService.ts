@@ -12,8 +12,8 @@ interface googleApiPlaceLogRequest {
     searchPageNum: number;
     location: dbLocationItem;
     type: string;
-    keyword: string;
-    radius: number;
+    keyword?: string;
+    distance: number;
     response: googlePlaceResult[];
 }
 
@@ -27,7 +27,8 @@ export async function insertGoogleApiPlaceLog(req: googleApiPlaceLogRequest) {
             location: req.location,
             type: req.type,
             keyword: req.keyword,
-            radius: req.radius
+            rankby: req.distance === -1 ? "distance" : undefined,
+            radius: req.distance !== -1 ? req.distance : undefined
         },
         response: {
             length: req.response.length,

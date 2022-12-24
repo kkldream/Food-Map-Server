@@ -10,7 +10,7 @@ import {responseLocationItem} from "../dataStruct/response/publicItem/responseLo
 import {responseLocationConvertDb} from "../utils";
 import {insertGoogleApiAutocompleteLog, insertGoogleApiDetailLog, insertGoogleApiPlaceLog} from "./googleApiLogService";
 
-export async function callGoogleApiNearBySearch(searchPageNum: number, location: responseLocationItem, type: string, keyword: string, radius: number): Promise<googlePlaceResult[]> {
+export async function callGoogleApiNearBySearch(searchPageNum: number, location: responseLocationItem, type: string, distance: number): Promise<googlePlaceResult[]> {
     let originalDataList: googlePlaceResult[] = [];
     let next_page_token: string = "";
     let requestCount: number;
@@ -21,14 +21,9 @@ export async function callGoogleApiNearBySearch(searchPageNum: number, location:
             + `&key=${process.env.GOOGLE_API_KEY}`
             + `&pagetoken=${next_page_token}`
             + `&location=${location.lat},${location.lng}`
-            + `&type=${type}`;
-        if (keyword !== "") {
-            url += `&keyword=${keyword}`;
-            url += `&rankby=distance`;
-        } else {
-            if (radius === -1) url += `&rankby=distance`;
-            else url += `&radius=${radius}`;
-        }
+            + `&type=${type}`
+            + (distance === -1 ? "&rankby=distance" : `&radius=${distance}`)
+            + "&components=country:tw";
         let response: googlePlaceResponse = (await axios({method: 'get', url})).data;
         originalDataList = originalDataList.concat(response.results);
         next_page_token = response.next_page_token;
@@ -36,7 +31,48 @@ export async function callGoogleApiNearBySearch(searchPageNum: number, location:
         if (!next_page_token) break;
     }
     await insertGoogleApiPlaceLog({
-        searchPageNum, type, keyword, radius,
+        searchPageNum, type, distance,
+        location: responseLocationConvertDb(location),
+        response: originalDataList
+    });
+    return originalDataList;
+}
+
+export async function callGoogleApiKeywordBySearch(searchPageNum: number, location: responseLocationItem, type: string, keyword: string, distance: number): Promise<googlePlaceResult[]> {
+    let url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?'
+        + `&language=zh-TW`
+        + `&key=${process.env.GOOGLE_API_KEY}`
+        + `&location=${location.lat},${location.lng}`
+        + `&type=${type}`
+        + `&keyword=${keyword}`
+        + (distance === -1 ? "&rankby=distance" : `&radius=${distance}`)
+        + "&components=country:tw";
+    let response: googlePlaceResponse = (await axios({method: 'get', url})).data;
+    let originalDataList: googlePlaceResult[] = response.results;
+    let next_page_token: string | undefined = response.next_page_token;
+    console.log(`update ${type}: +${response.results.length}/${originalDataList.length}, next_page = ${next_page_token !== undefined}`);
+    new Promise(async () => {
+        if (!next_page_token) return;
+        for (let requestCount = 0; requestCount < 2; requestCount++) {
+            await new Promise((r) => setTimeout(r, 1000));
+            let url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?'
+                + `&language=zh-TW`
+                + `&key=${process.env.GOOGLE_API_KEY}`
+                + `&pagetoken=${next_page_token}`
+                + `&location=${location.lat},${location.lng}`
+                + `&type=${type}`
+                + `&keyword=${keyword}`
+                + (distance === -1 ? "&rankby=distance" : `&radius=${distance}`)
+                + "&components=country:tw";
+            let response: googlePlaceResponse = (await axios({method: 'get', url})).data;
+            originalDataList = originalDataList.concat(response.results);
+            next_page_token = response.next_page_token;
+            console.log(`update ${type}: +${response.results.length}/${originalDataList.length}, next_page = ${next_page_token !== undefined}`)
+            if (!next_page_token) break;
+        }
+    })
+    await insertGoogleApiPlaceLog({
+        searchPageNum, type, keyword, distance,
         location: responseLocationConvertDb(location),
         response: originalDataList
     });

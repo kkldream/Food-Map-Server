@@ -1,5 +1,6 @@
 import {responseLocationItem} from "./dataStruct/response/publicItem/responseLocationItem";
 import {dbLocationItem} from "./dataStruct/mongodb/publicItem/dbLocationItem";
+import {latLngLiteral} from "./dataStruct/mongodb/originalGooglePlaceData";
 
 export function generateUUID() {
     let d = new Date().getTime();
@@ -41,9 +42,9 @@ export function twoPointDistance(p1: { x: number, y: number }, p2: { x: number, 
     return distance;
 }
 
-export function twoLocateDistance(point1: any, point2: any) {
-    let [y1, x1] = point1;
-    let [y2, x2] = point2;
+export function twoLocateDistance(point1: latLngLiteral, point2: latLngLiteral) {
+    let [y1, x1] = [point1.lng, point1.lat];
+    let [y2, x2] = [point2.lng, point2.lat];
     let Lat1 = rad(x1); // 纬度
     let Lat2 = rad(x2);
     let a = Lat1 - Lat2;//	两点纬度之差
