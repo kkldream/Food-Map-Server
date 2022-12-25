@@ -1,24 +1,10 @@
 # vue
 
-## Project setup
-```
-yarn install
-```
+## 常用
 
-### Compiles and hot-reloads for development
-```
-yarn serve
-```
+- [Bootstrap/Components](https://getbootstrap.com/docs/5.1/components)
 
-### Compiles and minifies for production
-```
-yarn build
-```
+## 記錄
 
-### Lints and fixes files
-```
-yarn lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+- 基於 Vue 3 建置。
+- [BootstrapVue](https://bootstrap-vue.org/) 對於 Vue 3 的支援尚未完整，因此採用原生的 [Bootstrap](https://getbootstrap.com/)。

@@ -15,3 +15,10 @@ GOOGLE_API_KEY="abcdefg................." // Google地圖API的Key
 另外還有一個參數設定檔 `config.ts` 內可調整此 API Server 的設定。
 
 此專案僅包含 API Server 的部分，資料庫需要另外架設，目前資料庫是使用 MongoDB v5.0.6。
+
+# Vue
+
+將 Vue 部屬在 Express 上的方法是採用 [Vue 官方推薦的方案](https://router.vuejs.org/zh/guide/essentials/history-mode.html#express-node-js)，使用套件 [connect-history-api-fallback](https://github.com/bripkens/connect-history-api-fallback) 作為 Middleware。
+
+參考：https://zhuanlan.zhihu.com/p/116749549
+
