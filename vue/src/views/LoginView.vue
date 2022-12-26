@@ -20,15 +20,19 @@
           </div>
           <div v-if="showMode === 'signup'" class="mb-3">
             <label for="loginInputPasswordAgain" class="form-label">Password again</label>
-            <input v-model="loginInputPasswordAgainText" type="password" id="loginInputPasswordAgain" class="form-control"
+            <input v-model="loginInputPasswordAgainText" type="password" id="loginInputPasswordAgain"
+                   class="form-control"
                    aria-describedby="passwordHelpBlock">
           </div>
         </div>
         <div class="modal-footer">
           <span class="text-center text-danger me-auto">{{ loginInputText }}</span>
           <button @click="loginEvent('clear')" type="button" class="btn btn-secondary">Clear</button>
-          <button v-if="showMode === 'login'" @click="loginEvent('login')" type="button" class="btn btn-primary">Login</button>
-          <button v-if="showMode === 'signup'" @click="loginEvent('signup')" type="button" class="btn btn-primary">Sign-up</button>
+          <button v-if="showMode === 'login'" @click="loginEvent('login')" type="button" class="btn btn-primary">Login
+          </button>
+          <button v-if="showMode === 'signup'" @click="loginEvent('signup')" type="button" class="btn btn-primary">
+            Sign-up
+          </button>
         </div>
       </div>
     </div>
@@ -38,6 +42,7 @@
 <script setup>
 import {defineEmits, defineProps, onMounted, ref, toRefs, watch} from "vue";
 import {Modal} from 'bootstrap'
+import axios from 'axios';
 
 const emit = defineEmits(['eventListener'])
 const props = defineProps({
@@ -51,17 +56,39 @@ const loginInputPasswordText = ref("");
 const loginInputPasswordAgainText = ref("");
 
 function loginEvent(event) {
+  console.log(document.cookie)
   switch (event) {
     case "clear":
       loginInputUsernameText.value = "";
       loginInputPasswordText.value = "";
       loginInputPasswordAgainText.value = "";
+      loginInputText.value = "";
       break;
-    case "login":
-      if (loginInputUsernameText.value !== "root" || loginInputPasswordText.value !== "aaa123") {
-        loginInputText.value = "登入失敗"
-      }
+    case "login": {
+      let session_id ="asdasdasda"
+      let config = {
+        method: 'post',
+        url: 'http://kkhomeserver.ddns.net:33000/api/user/login',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        data: {
+          "username": loginInputUsernameText.value,
+          "password": loginInputPasswordText.value,
+          "deviceId": "web"
+        }
+      };
+      axios(config)
+          .then((response) => {
+            loginInputText.value = "登入成功";
+            console.log(JSON.stringify(response.data));
+          })
+          .catch((error) => {
+            loginInputText.value = "登入失敗";
+            console.log(error);
+          });
       break;
+    }
     case "signup":
       if (loginInputUsernameText.value !== "root" || loginInputPasswordText.value !== "aaa123") {
         loginInputText.value = "註冊失敗"
