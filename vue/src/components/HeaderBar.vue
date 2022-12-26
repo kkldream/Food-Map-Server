@@ -40,18 +40,10 @@
       </a>
 
       <ul class="nav nav-pills col-12 col-md-auto mb-3 justify-content-center mb-md-0">
-        <router-link to="./Home" @click="activeNavNum = 0" class="nav-item px-3 nav-link"
-                     :class="{'active': activeNavNum === 0}">Home
-        </router-link>
-        <router-link to="./Features" @click="activeNavNum = 1" class="nav-item px-3 nav-link"
-                     :class="{'active': activeNavNum === 1}">Features
-        </router-link>
-        <router-link to="./Pricing" @click="activeNavNum = 2" class="nav-item px-3 nav-link"
-                     :class="{'active': activeNavNum === 2}">Pricing
-        </router-link>
-        <router-link to="./About" @click="activeNavNum = 4" class="nav-item px-3 nav-link"
-                     :class="{'active': activeNavNum === 4}">About
-        </router-link>
+        <router-link to="./Home" @click="activeNavNum = 0" class="nav-item px-3 nav-link" :class="{'active': activeNavNum === 0}">Home</router-link>
+        <router-link to="./Features" @click="activeNavNum = 1" class="nav-item px-3 nav-link" :class="{'active': activeNavNum === 1}">Features</router-link>
+        <router-link to="./Pricing" @click="activeNavNum = 2" class="nav-item px-3 nav-link" :class="{'active': activeNavNum === 2}">Pricing</router-link>
+        <router-link to="./About" @click="activeNavNum = 4" class="nav-item px-3 nav-link" :class="{'active': activeNavNum === 4}">About</router-link>
         <!--        <router-link to="./Home" class="nav-item nav-link" :class="{'active': location.pathname === '/Home'}">Home</router-link>-->
         <!--        <router-link to="./Features" class="nav-item nav-link" :class="{'active': location.pathname === '/Features'}">Features</router-link>-->
         <!--        <router-link to="./Pricing" class="nav-item nav-link" :class="{'active': location.pathname === '/Pricing'}">Pricing</router-link>-->
