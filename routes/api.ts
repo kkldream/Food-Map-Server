@@ -9,6 +9,12 @@ import {routeApiLogDocument} from "../models/dataStruct/mongodb/routeApiLogDocum
 const router = Router()
 
 router.use('/', function (req: any, res: any, next: any) {
+    if (req.session.userId) req.body.userId = req.session.userId;
+    if (req.session.accessKey) req.body.accessKey = req.session.accessKey;
+    next();
+});
+
+router.use('/', function (req: any, res: any, next: any) {
     const routeApiLogCol = global.mongodbClient.foodMapDb.routeApiLogCol;
     let routeApiLogDoc: routeApiLogDocument = {
         createTime: new Date(),
@@ -40,7 +46,7 @@ router.get('/', function (req: any, res: any, next: any) {
 router.use(function (req: any, res: any, next: any) {
     let response = new apiResponseBase();
     response.status = -1;
-    response.errMsg = new Error(`Not found '${req.url}' api`);
+    response.errorHandle(new Error(`Not found '${req.url}' api`));
     res.send(response);
 });
 
