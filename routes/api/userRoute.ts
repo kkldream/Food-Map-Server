@@ -22,6 +22,8 @@ router.post('/login', async function (req: any, res: any, next: any) {
     try {
         let {username, password, deviceId} = req.body;
         response.result = await userMgr.loginByDevice(username, password, deviceId);
+        req.session.userId = response.result.userId;
+        req.session.accessKey = response.result.accessKey;
     } catch (error: apiError | any) {
         response.errorHandle(error);
     }
