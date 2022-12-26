@@ -15,7 +15,7 @@
 <script setup>
 import {defineExpose, onUpdated, ref} from "vue";
 import {Toast} from "bootstrap";
-import {generateUid} from "@/Service";
+import {generateUid} from "@/service/Utile";
 
 defineExpose({addNotify});
 const toastList = ref({});

@@ -8,11 +8,11 @@
 <script setup>
 import ToastNotify from "@/components/ToastNotify";
 import HeaderBar from "@/components/HeaderBar";
-import LoginView from "@/views/LoginView";
+import LoginView from "@/components/LoginModel";
 import {Toast} from 'bootstrap'
 import {useRoute} from "vue-router";
 import {onMounted, onUpdated, provide, ref} from "vue";
-import {generateUid} from "@/Service";
+import {generateUid} from "@/service/Utile";
 
 const toastNotifyRef = ref();
 const createTime = ref(0);
@@ -22,12 +22,25 @@ provide("addNotify", addNotify);
 function addNotify(context, mode) {
     let backgroundColor;
     switch (mode) {
-        default: case "primary": backgroundColor = "bg-primary"; break;
-        case "secondary": backgroundColor = "bg-secondary"; break;
-        case "success": backgroundColor = "bg-success"; break;
-        case "danger": backgroundColor = "bg-danger"; break;
-        case "warning": backgroundColor = "bg-warning"; break;
-        case "info": backgroundColor = "bg-info"; break;
+        default:
+        case "primary":
+            backgroundColor = "bg-primary";
+            break;
+        case "secondary":
+            backgroundColor = "bg-secondary";
+            break;
+        case "success":
+            backgroundColor = "bg-success";
+            break;
+        case "danger":
+            backgroundColor = "bg-danger";
+            break;
+        case "warning":
+            backgroundColor = "bg-warning";
+            break;
+        case "info":
+            backgroundColor = "bg-info";
+            break;
     }
     toastNotifyRef.value.addNotify(context ?? generateUid(), backgroundColor);
 }
