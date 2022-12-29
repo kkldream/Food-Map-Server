@@ -7,7 +7,7 @@
                     <h1 class="modal-title fs-5" id="staticBackdropLabel">{{
                             showMode === "login" ? "Login" : "Sign-up"
                         }}</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button @click="actionView('hide')" type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div v-if="showMode === 'login'">
@@ -88,7 +88,7 @@ onMounted(() => {
     })
 })
 
-function loginEvent(event) {
+async function loginEvent(event) {
     switch (event) {
         case "clear":
             loginInputUsernameText.value = "";
@@ -97,11 +97,16 @@ function loginEvent(event) {
             loginInputCheck.value = false;
             break;
         case "login":
-            callLoginApi(
-                loginInputUsernameText.value,
-                loginInputPasswordText.value,
-                "web"
-            ).then(res => {
+            if (loginInputUsernameText.value === "" || loginInputPasswordText.value === "") {
+                addNotify("輸入資料有誤", "danger");
+                break;
+            }
+            try {
+                let res = await callLoginApi(
+                    loginInputUsernameText.value,
+                    loginInputPasswordText.value,
+                    "web"
+                );
                 switch (res.status) {
                     case 0:
                         addNotify("登入成功", "success");
@@ -114,10 +119,10 @@ function loginEvent(event) {
                         addNotify("帳號不存在", "danger");
                         break;
                 }
-            }).catch(err => {
+            } catch (err) {
                 console.error(err);
                 addNotify("異常錯誤", "danger");
-            });
+            }
             break;
         case "signup":
             addNotify("註冊功能未實作", "warning");
