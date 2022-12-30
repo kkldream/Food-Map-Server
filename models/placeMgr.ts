@@ -19,6 +19,7 @@ import {
 import {foodTypeEnum} from "./dataStruct/staticCode/foodTypeEnum";
 import {googleApiLogDocument} from "./dataStruct/mongodb/googleApiLogDocument";
 import {twoLocateDistance} from "./utils";
+import {responseAutocompletePlaceItem} from "./dataStruct/response/autocompletePlaceResponses";
 
 interface dbPlaceDocumentWithDistance extends dbPlaceDocument {
     distance: number;
@@ -202,7 +203,7 @@ async function getHtmlPhoto(photoId: string): Promise<string> {
     return photoDoc.data;
 }
 
-async function autocomplete(userId: string, latitude: number, longitude: number, input: string, radius: number | string = 10000): Promise<responseAutocompleteItem[]> {
+async function autocomplete(latitude: number, longitude: number, input: string, radius: number | string = "distance"): Promise<responseAutocompleteItem[]> {
     if (isUndefined([latitude, longitude, input])) throwError(errorCodes.requestDataError);
     let outputList: responseAutocompleteItem[] = [];
     await Promise.all(config.foodTypeList.map(async (type: foodTypeEnum) => {
@@ -220,6 +221,20 @@ async function autocomplete(userId: string, latitude: number, longitude: number,
     let set = new Set();
     outputList = outputList.filter(item => !set.has(item.place_id) ? set.add(item.place_id) : false);
     outputList = [{place_id: "", name: input, address: "", isSearch: true}].concat(outputList); // 前端白癡要求
+    return outputList;
+}
+
+async function autocompletePlaceByKeyword(latitude: number, longitude: number, input: string, radius: number | string = "distance"): Promise<responseAutocompletePlaceItem[]> {
+    if (isUndefined([latitude, longitude, input])) throwError(errorCodes.requestDataError);
+    let response: googleAutocompleteResponse = await callGoogleApiAutocomplete(
+        input, {lat: latitude, lng: longitude}, undefined, radius
+    );
+    let outputList: responseAutocompletePlaceItem[] = response.predictions.map((item: placeAutocompletePrediction): responseAutocompletePlaceItem => ({
+        place_id: item.place_id,
+        name: item.structured_formatting.main_text,
+        address: item.structured_formatting.secondary_text,
+        location: {lat: 0, lng: 0}
+    }));
     return outputList;
 }
 

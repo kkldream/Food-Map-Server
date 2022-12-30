@@ -89,15 +89,15 @@ export async function callGoogleApiDetail(place_id: string): Promise<googleDetai
     return response;
 }
 
-export async function callGoogleApiAutocomplete(input: string, location: latLngLiteral, type: string, radius: number | string): Promise<googleAutocompleteResponse> {
+export async function callGoogleApiAutocomplete(input: string, location: latLngLiteral, type: string | undefined, radius: number | string): Promise<googleAutocompleteResponse> {
     let url = 'https://maps.googleapis.com/maps/api/place/autocomplete/json?'
         + `&input=${input}`
         + `&location=${location.lat},${location.lng}`
         + `&components=country:tw`
         + `&radius=${radius}`
-        + `&type=${type}`
         + `&key=${process.env.GOOGLE_API_KEY}`
         + `&language=zh-TW`;
+    if (type) url += `&type=${type}`
     let response: googleAutocompleteResponse = (await axios({method: 'get', url})).data;
     await insertGoogleApiAutocompleteLog({
         input, type, radius, response: response.predictions,

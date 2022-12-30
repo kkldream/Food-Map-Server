@@ -72,7 +72,7 @@ export async function insertGoogleApiPhotoLog(req: googleApiPhotoLogRequest) {
 
 interface googleApiAutocompleteLogRequest {
     input: string;
-    type: string;
+    type: string | undefined;
     radius: number | string;
     location: dbLocationItem;
     response: placeAutocompletePrediction[];

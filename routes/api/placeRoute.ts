@@ -75,7 +75,7 @@ router.post('/autocomplete', async function (req: any, res: any, next: any) {
     try {
         let {userId, accessKey, latitude, longitude, input, radius} = req.body;
         await response.verifyUser(userId, accessKey);
-        response.result = await placeMgr.autocomplete(userId, latitude, longitude, input, radius);
+        response.result = await placeMgr.autocomplete(latitude, longitude, input, radius);
     } catch (error: apiError | any) {
         response.errorHandle(error);
     }
