@@ -1,7 +1,7 @@
 import {baseResponses} from "./baseResponse";
 import {latLngItem} from "../pubilcItem";
 
-export interface placeListResponses extends baseResponses{
+export interface placeListResponses extends baseResponses {
     result: placeListResult;
 }
 

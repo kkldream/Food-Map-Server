@@ -5,7 +5,7 @@ import {apiError, baseResponses, msgItem} from "./response/baseResponse";
 
 dotenv.config();
 
-export default class apiResponseBase implements baseResponses{
+export default class apiResponseBase implements baseResponses {
     requestTime: Date;
     verify?: boolean;
     status: number;

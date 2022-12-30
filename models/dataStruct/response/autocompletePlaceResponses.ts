@@ -1,7 +1,7 @@
 import {baseResponses} from "./baseResponse";
 import {latLngItem} from "../pubilcItem";
 
-export interface autocompletePlaceResponses extends baseResponses{
+export interface autocompletePlaceResponses extends baseResponses {
     result: responseAutocompletePlaceItem[];
 }
 

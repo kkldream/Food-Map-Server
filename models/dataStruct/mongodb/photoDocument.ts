@@ -1,6 +1,6 @@
 import {ObjectId} from "mongodb";
 
-export interface photoDocument extends photoItem{
+export interface photoDocument extends photoItem {
     _id?: ObjectId;
     creatTime: Date;
     updateTime: Date;
