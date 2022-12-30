@@ -219,6 +219,7 @@ async function autocomplete(userId: string, latitude: number, longitude: number,
     }));
     let set = new Set();
     outputList = outputList.filter(item => !set.has(item.place_id) ? set.add(item.place_id) : false);
+    outputList = [{place_id: "", name: input, address: "", isSearch: true}].concat(outputList); // 前端白癡要求
     return outputList;
 }
 
