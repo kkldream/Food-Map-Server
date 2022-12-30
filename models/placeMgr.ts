@@ -87,17 +87,30 @@ async function searchByKeyword(userId: string, latitude: number, longitude: numb
     const googleApiLogCol = global.mongodbClient.foodMapDb.googleApiLogCol;
     let updated = false;
     let dbStatus: any;
-    let query: any = {
-        mode: "place",
-        "request.keyword": keyword
-    };
-    if (distance === -1) query["request.rankby"] = "distance";
-    else query["request.radius"] = distance;
-    let findResult: googleApiLogDocument[] = await googleApiLogCol.find(query).sort({createTime: -1}).limit(1).toArray();
-    if (findResult.length === 0 || requestTime.getTime() - findResult[0].createTime.getTime() > config.keywordUpdateRangeSecond * 1000) {
+    const options = {allowDiskUse: false};
+    let pipeline: any[] = [
+        {
+            "$geoNear": {
+                "near": {"type": "Point", "coordinates": [longitude, latitude]},
+                "distanceField": "distance",
+                "spherical": true,
+                "maxDistance": 100,
+                "query": {
+                    "mode": "place",
+                    "createTime": {"$gte": new Date(new Date().setSeconds(-config.keywordUpdateRangeSecond))}
+                }
+            }
+        },
+        {"$sort": {"createTime": -1}},
+        {"$limit": 1}
+    ];
+    if (distance === -1) pipeline[0]["$geoNear"].query["request.rankby"] = "distance";
+    else pipeline[0]["$geoNear"].query["request.radius"] = distance;
+    let findResult: googleApiLogDocument[] = await googleApiLogCol.aggregate(pipeline, options).toArray();
+    if (findResult.length === 0) {
         dbStatus = await googleMapsMgr.updatePlaceByKeyword(latitude, longitude, keyword, distance);
         updated = true;
-        findResult = await googleApiLogCol.find(query).sort({createTime: -1}).limit(1).toArray();
+        findResult = await googleApiLogCol.aggregate(pipeline, options).toArray();
     }
     let googlePlaceList: googlePlaceResult[] = findResult[0].response.data as googlePlaceResult[];
     let googlePlaceIdList: string[] = googlePlaceList.map(googlePlace => googlePlace.place_id);
