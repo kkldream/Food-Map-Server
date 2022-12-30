@@ -8,9 +8,9 @@ const router = Router()
 router.post('/update_custom', async function (req: any, res: any, next: any) {
     let response = new apiResponseBase();
     try {
-        let {accessKey, location, radius, keyword} = req.body;
+        let {accessKey, location, distance, keyword} = req.body;
         await response.verifyRoot(accessKey);
-        response.result = await googleMapsMgr.updateCustom(location, radius, keyword);
+        response.result = await googleMapsMgr.updateCustom(location, distance, keyword);
     } catch (error: apiError | any) {
         response.errorHandle(error);
     }

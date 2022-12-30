@@ -5,12 +5,17 @@ import {apiError, baseResponses, msgItem} from "./response/baseResponse";
 
 dotenv.config();
 
-export default class apiResponseBase implements baseResponses {
+interface apiResponseBaseInterface extends baseResponses{
+    verifyRoot(accessKey: string): Promise<msgItem>;
+    verifyUser(userId: string, accessKey: string): Promise<msgItem>;
+}
+
+export default class apiResponseBase implements apiResponseBaseInterface {
     requestTime: Date;
     verify?: boolean;
     status: number;
     errMsg?: apiError;
-    result: any;
+    result?: any;
 
     constructor() {
         this.requestTime = new Date();

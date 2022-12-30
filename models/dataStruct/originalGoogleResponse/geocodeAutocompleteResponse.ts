@@ -20,13 +20,13 @@ interface plusCode {
     global_code: string;
 }
 
-interface addressComponents {
+export interface addressComponents {
     long_name: string;
     short_name: string;
     types: typesEnum[];
 }
 
-enum typesEnum {
+export enum typesEnum {
     street_address = "street_address",
     route = "route",
     intersection = "intersection",

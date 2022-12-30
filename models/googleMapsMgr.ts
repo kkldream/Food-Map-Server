@@ -16,8 +16,8 @@ import {latLngItem} from "./dataStruct/pubilcItem";
 import {googlePlaceResult} from "./dataStruct/originalGoogleResponse/placeResponse";
 import {googleDetailItem} from "./dataStruct/originalGoogleResponse/detailResponse";
 
-async function updateCustom(location: latLngItem, radius: number, keyword: string) {
-    if (isUndefined([location, radius, keyword])) throwError(errorCodes.requestDataError);
+async function updateCustom(location: latLngItem, distance: number, keyword: string) {
+    if (isUndefined([location, distance, keyword])) throwError(errorCodes.requestDataError);
     let resultStatus = {
         upsertCount: 0,
         matchCount: 0,
@@ -25,7 +25,7 @@ async function updateCustom(location: latLngItem, radius: number, keyword: strin
     };
     for (const type of config.foodTypeList) {
         let result = await nearBySearch(3, {
-            location, type, keyword, distance: radius
+            location, type, keyword, distance
         }, "custom");
         resultStatus.upsertCount += result.upsertCount;
         resultStatus.matchCount += result.matchCount;

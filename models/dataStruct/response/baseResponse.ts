@@ -5,10 +5,7 @@ export interface baseResponses {
     verify?: boolean;
     status: number;
     errMsg?: apiError;
-
-    verifyRoot(accessKey: string): Promise<msgItem>;
-
-    verifyUser(userId: string, accessKey: string): Promise<msgItem>;
+    result?: any;
 }
 
 export interface apiError {

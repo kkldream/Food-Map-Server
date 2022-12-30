@@ -1,10 +1,5 @@
-import {baseResponses} from "./baseResponse";
 import {latLngItem} from "../pubilcItem";
 import {placeReview} from "../originalGoogleResponse/detailResponse";
-
-export interface detailResponses extends baseResponses {
-    result: responseDetailItem;
-}
 
 export interface responseDetailResult {
     updated: boolean;

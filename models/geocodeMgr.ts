@@ -7,6 +7,11 @@ import {
     placeAutocompletePrediction
 } from "./dataStruct/originalGoogleResponse/autocompleteResponse";
 import {latLngItem} from "./dataStruct/pubilcItem";
+import {
+    addressComponents,
+    googleGeocodeAutocompleteResponse,
+    typesEnum
+} from "./dataStruct/originalGoogleResponse/geocodeAutocompleteResponse";
 
 async function autocomplete(location: latLngItem, input: string | undefined): Promise<responseAutocompleteItem[]> {
     if (isUndefined([location])) throwError(errorCodes.requestDataError);
@@ -23,14 +28,14 @@ async function autocomplete(location: latLngItem, input: string | undefined): Pr
             };
         });
     } else {
-        let response: any = await callGoogleApiGeocodeAddress(location);
+        let response: googleGeocodeAutocompleteResponse = await callGoogleApiGeocodeAddress(location);
         let item = response.results[0];
         return [{
             place_id: item.place_id,
             name: item.address_components
-                .filter((e: any) => e.types.includes("political") && !e.types.includes("country"))
+                .filter((e: addressComponents) => e.types.includes(typesEnum.political) && !e.types.includes(typesEnum.country))
                 .reverse()
-                .map((e: any) => e.long_name)
+                .map((e: addressComponents) => e.long_name)
                 .join(""),
             address: item.formatted_address,
             description: item.formatted_address,
@@ -40,14 +45,14 @@ async function autocomplete(location: latLngItem, input: string | undefined): Pr
 }
 
 async function getLocationByAddress(address: string): Promise<responseAutocompleteItem> {
-    let response: any = await callGoogleApiGeocodeLocation(address);
+    let response: googleGeocodeAutocompleteResponse = await callGoogleApiGeocodeLocation(address);
     let item = response.results[0];
     return {
         place_id: item.place_id,
         name: item.address_components
-            .filter((e: any) => e.types.includes("political") && !e.types.includes("country"))
+            .filter((e: addressComponents) => e.types.includes(typesEnum.political) && !e.types.includes(typesEnum.country))
             .reverse()
-            .map((e: any) => e.long_name)
+            .map((e: addressComponents) => e.long_name)
             .join(""),
         address: item.formatted_address,
         description: item.formatted_address,
