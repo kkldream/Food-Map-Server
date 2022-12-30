@@ -63,7 +63,6 @@ async function updatePlaceByKeyword(location: latLngItem, keyword: string, dista
     return resultStatus;
 }
 
-// https://developers.google.com/maps/documentation/places/web-service/search-nearby
 async function nearBySearch(searchPageNum: number, request: { location: latLngItem; type: string; keyword: string; distance: number; }, msg: string = "") {
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let requestTime: Date = new Date();

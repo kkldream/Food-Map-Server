@@ -1,5 +1,9 @@
 import {googlePlaceResult,} from "../dataStruct/originalGoogleResponse/placeResponse";
-import {geocodeAutocompleteRequest, googleApiLogDocument} from "../dataStruct/mongodb/googleApiLogDocument";
+import {
+    apiLogModeEnum,
+    geocodeAutocompleteRequest,
+    googleApiLogDocument
+} from "../dataStruct/mongodb/googleApiLogDocument";
 import {photoItem} from "../dataStruct/mongodb/photoDocument";
 import {responseLocationConvertDb} from "../utils";
 import {placeAutocompletePrediction} from "../dataStruct/originalGoogleResponse/autocompleteResponse";
@@ -22,14 +26,14 @@ export async function insertGoogleApiPlaceLog(req: googleApiPlaceLogRequest) {
     const googleApiLogCol = global.mongodbClient.foodMapDb.googleApiLogCol;
     let googleApiLogDoc: googleApiLogDocument = {
         createTime: new Date(),
-        mode: "place",
+        mode: apiLogModeEnum.place,
         request: {
             searchPageNum: req.searchPageNum,
             location: req.location,
             type: req.type,
-            keyword: req.keyword,
-            rankby: req.distance === -1 ? "distance" : undefined,
-            radius: req.distance !== -1 ? req.distance : undefined
+            keyword: req.keyword ?? null,
+            rankby: req.distance === -1 ? "distance" : null,
+            radius: req.distance !== -1 ? req.distance : null
         },
         response: {
             length: req.response.length,
@@ -48,7 +52,7 @@ export async function insertGoogleApiDetailLog(req: googleApiDetailLogRequest) {
     const googleApiLogCol = global.mongodbClient.foodMapDb.googleApiLogCol;
     let googleApiLogDoc: googleApiLogDocument = {
         createTime: new Date(),
-        mode: "detail",
+        mode: apiLogModeEnum.detail,
         request: {place_id: req.place_id},
         response: {length: 1, data: req.response}
     };
@@ -64,7 +68,7 @@ export async function insertGoogleApiPhotoLog(req: googleApiPhotoLogRequest) {
     const googleApiLogCol = global.mongodbClient.foodMapDb.googleApiLogCol;
     let googleApiLogDoc: googleApiLogDocument = {
         createTime: new Date(),
-        mode: "photo",
+        mode: apiLogModeEnum.photo,
         request: {photoReference: req.photoReference},
         response: {length: 1, data: req.response}
     };
@@ -83,10 +87,10 @@ export async function insertGoogleApiAutocompleteLog(req: googleApiAutocompleteL
     const googleApiLogCol = global.mongodbClient.foodMapDb.googleApiLogCol;
     let googleApiLogDoc: googleApiLogDocument = {
         createTime: new Date(),
-        mode: "autocomplete",
+        mode: apiLogModeEnum.autocomplete,
         request: {
             input: req.input,
-            type: req.type,
+            type: req.type ?? null,
             radius: req.radius,
             location: req.location
         },
@@ -104,12 +108,12 @@ interface googleApiGeocodeAutocompleteLogRequest {
 export async function insertGoogleApiGeocodeAutocompleteLog(req: googleApiGeocodeAutocompleteLogRequest) {
     const googleApiLogCol = global.mongodbClient.foodMapDb.googleApiLogCol;
     let request: geocodeAutocompleteRequest = {
-        location: req.location ? responseLocationConvertDb(req.location) : undefined,
-        address: req.address ?? undefined,
+        location: req.location ? responseLocationConvertDb(req.location) : null,
+        address: req.address ?? null,
     }
     let googleApiLogDoc: googleApiLogDocument = {
         createTime: new Date(),
-        mode: "geocode_autocomplete",
+        mode: apiLogModeEnum.geocode_autocomplete,
         request,
         response: {length: req.response.length, data: req.response}
     };

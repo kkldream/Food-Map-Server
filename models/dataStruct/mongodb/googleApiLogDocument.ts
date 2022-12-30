@@ -10,7 +10,7 @@ import {googleGeocodeAutocompleteResult} from "../originalGoogleResponse/geocode
 export interface googleApiLogDocument {
     _id?: ObjectId;
     createTime: Date;
-    mode: string;
+    mode: apiLogModeEnum;
     request:
         placeRequest |
         detailRequest |
@@ -28,13 +28,21 @@ export interface googleApiLogDocument {
     };
 }
 
+export enum apiLogModeEnum {
+    place = "place",
+    detail = "detail",
+    photo = "photo",
+    autocomplete = "autocomplete",
+    geocode_autocomplete = "geocode_autocomplete",
+}
+
 interface placeRequest {
     searchPageNum: number;
     location: dbLocationItem;
     type: string;
-    keyword?: string;
-    rankby?: string;
-    radius?: number;
+    keyword: string | null;
+    rankby: string | null;
+    radius: number | null;
 }
 
 interface detailRequest {
@@ -47,12 +55,12 @@ interface photoRequest {
 
 interface autocompleteRequest {
     input: string;
-    type?: string;
+    type: string | null;
     radius: number | string;
     location: dbLocationItem;
 }
 
 export interface geocodeAutocompleteRequest {
-    location?: dbLocationItem;
-    address?: string;
+    location: dbLocationItem | null;
+    address: string | null;
 }

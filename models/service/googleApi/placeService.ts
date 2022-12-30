@@ -10,6 +10,7 @@ import {googleAutocompleteResponse} from "../../dataStruct/originalGoogleRespons
 import {latLngItem} from "../../dataStruct/pubilcItem";
 import {googleDetailResponse} from "../../dataStruct/originalGoogleResponse/detailResponse";
 
+// https://developers.google.com/maps/documentation/places/web-service/search-nearby
 export async function callGoogleApiNearBySearch(searchPageNum: number, location: latLngItem, type: string, distance: number): Promise<googlePlaceResult[]> {
     let originalDataList: googlePlaceResult[] = [];
     let next_page_token: string = "";
@@ -79,6 +80,7 @@ export async function callGoogleApiKeywordBySearch(searchPageNum: number, locati
     return originalDataList;
 }
 
+// https://developers.google.com/maps/documentation/places/web-service/details
 export async function callGoogleApiDetail(place_id: string): Promise<googleDetailResponse> {
     let url = 'https://maps.googleapis.com/maps/api/place/details/json?'
         + `&language=zh-TW`

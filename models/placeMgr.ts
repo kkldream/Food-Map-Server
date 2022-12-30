@@ -30,6 +30,14 @@ import {responseDetailResult} from "./dataStruct/response/detailResponses";
 import {googleDetailItem} from "./dataStruct/originalGoogleResponse/detailResponse";
 import {googleImageListConvertPhotoId} from "./service/imageService";
 
+/**
+ * 使用經緯度搜尋附近餐廳
+ * @param userId
+ * @param location
+ * @param distance
+ * @param skip
+ * @param limit
+ */
 async function searchByDistance(userId: string, location: latLngItem, distance: number, skip: number, limit: number): Promise<responsePlaceResult> {
     if (isUndefined([userId, location, distance, skip, limit])) throwError(errorCodes.requestDataError);
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
@@ -65,6 +73,15 @@ async function searchByDistance(userId: string, location: latLngItem, distance: 
     return {updated, dbStatus, placeCount, placeList: responsePlaceList}
 }
 
+/**
+ * 使用關鍵字搜尋附近餐廳
+ * @param userId
+ * @param location
+ * @param distance
+ * @param keyword
+ * @param skip
+ * @param limit
+ */
 async function searchByKeyword(userId: string, location: latLngItem, distance: number, keyword: string, skip: number, limit: number): Promise<responsePlaceResult> {
     if (isUndefined([userId, location, distance, keyword, skip, limit])) throwError(errorCodes.requestDataError);
     const requestTime = new Date();
@@ -112,7 +129,11 @@ async function searchByKeyword(userId: string, location: latLngItem, distance: n
     return {updated, dbStatus, placeCount: responsePlaceList.length, placeList: responsePlaceList};
 }
 
-// https://developers.google.com/maps/documentation/places/web-service/details
+/**
+ * 使用place_id取得餐廳詳細資料
+ * @param userId
+ * @param place_id
+ */
 async function detailsByPlaceId(userId: string, place_id: string): Promise<responseDetailResult> {
     if (isUndefined([place_id])) throwError(errorCodes.requestDataError);
     let requestTime: Date = new Date();
