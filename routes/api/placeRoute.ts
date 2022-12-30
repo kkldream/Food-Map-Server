@@ -1,7 +1,6 @@
 import {Router} from "express";
 import placeMgr from '../../models/placeMgr';
 import apiResponseBase from "../../models/dataStruct/apiResponseUserBase";
-import googleMapsMgr from "../../models/googleMapsMgr";
 import {apiError} from "../../models/dataStruct/response/baseResponse";
 import config from "../../config";
 

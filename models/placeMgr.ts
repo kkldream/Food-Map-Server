@@ -3,7 +3,7 @@ import {ObjectId} from 'mongodb';
 import {errorCodes, isUndefined, throwError} from './dataStruct/throwError';
 import config from "../config"
 import {drawCardModeEnum} from "./dataStruct/staticCode/drawCardModeEnum";
-import {dbPlaceDocument, dbPlaceItem} from "./dataStruct/mongodb/googlePlaceDocument";
+import {dbPlaceDocument} from "./dataStruct/mongodb/googlePlaceDocument";
 import {responsePlaceItem, responsePlaceResult} from "./dataStruct/response/placeResponses";
 import {userDocument} from "./dataStruct/mongodb/userDocument";
 import {getBlackList} from "./service/blackListService";
@@ -20,7 +20,12 @@ import {
     placeAutocompletePrediction
 } from "./dataStruct/originalGoogleResponse/autocompleteResponse";
 import {latLngItem} from "./dataStruct/pubilcItem";
-import {dbPlaceDocumentWithDistance, dbPlaceListConvertResponse, isFavoriteByUserId} from "./service/placeService";
+import {
+    dbPlaceDocumentWithDistance,
+    dbPlaceListConvertResponse,
+    detailToDocument,
+    isFavoriteByUserId
+} from "./service/placeService";
 import {responseDetailResult} from "./dataStruct/response/detailResponses";
 import {googleDetailItem} from "./dataStruct/originalGoogleResponse/detailResponse";
 import {googleImageListConvertPhotoId} from "./service/imageService";
@@ -113,101 +118,44 @@ async function detailsByPlaceId(userId: string, place_id: string): Promise<respo
     let requestTime: Date = new Date();
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     const userCol = global.mongodbClient.foodMapDb.userCol;
-    let findResult: dbPlaceDocument = await placeCol.findOne({place_id});
+    let findResult: dbPlaceDocument = await placeCol.findOne({
+        place_id, updateTime: {$gt: new Date(requestTime.setSeconds(-config.detailUpdateRangeSecond))}
+    });
     let updated = false;
     if (!findResult) {
         let detailResult: googleDetailItem = (await callGoogleApiDetail(place_id)).result;
         if (!detailResult) throwError(errorCodes.placeNotFound);
-        findResult = {
-            creatTime: requestTime,
-            updateTime: requestTime,
-            place_id: detailResult.place_id,
-            location: responseLocationConvertDb(detailResult.geometry.location),
-            types: detailResult.types,
-            name: detailResult.name,
-            content: {
-                updateTime: requestTime,
-                place_id: detailResult.place_id,
-                status: detailResult.business_status,
-                name: detailResult.name,
-                photos: await googleImageListConvertPhotoId(detailResult.photos),
-                rating: {
-                    star: detailResult.rating,
-                    total: detailResult.user_ratings_total,
-                },
-                address: detailResult.vicinity,
-                location: detailResult.geometry.location,
-                icon: {
-                    url: detailResult.icon,
-                    background_color: detailResult.icon_background_color,
-                    mask_base_uri: detailResult.icon_mask_base_uri,
-                },
-                types: detailResult.types,
-                opening_hours: detailResult.opening_hours ?? {}
-            },
-            originalPlace: null,
-            originalDetail: detailResult
-        };
-        await placeCol.insertOne(findResult);
-        updated = true;
-    }
-    if (findResult.originalDetail === null || requestTime.getTime() - (findResult.originalDetail.updateTime?.getTime() ?? 0) > config.detailUpdateRangeSecond * 1000) {
-        findResult.originalDetail = (await callGoogleApiDetail(place_id)).result;
-        findResult.originalDetail.updateTime = requestTime;
-        let content: dbPlaceItem = {
-            updateTime: requestTime,
-            place_id: findResult.originalDetail.place_id,
-            status: findResult.originalDetail.business_status,
-            name: findResult.originalDetail.name,
-            photos: await googleImageListConvertPhotoId(findResult.originalDetail.photos),
-            rating: {
-                star: findResult.originalDetail.rating,
-                total: findResult.originalDetail.user_ratings_total,
-            },
-            address: findResult.originalDetail.vicinity,
-            location: findResult.originalDetail.geometry.location,
-            icon: {
-                url: findResult.originalDetail.icon,
-                background_color: findResult.originalDetail.icon_background_color,
-                mask_base_uri: findResult.originalDetail.icon_mask_base_uri,
-            },
-            types: findResult.originalDetail.types,
-            opening_hours: findResult.originalDetail.opening_hours ?? {}
-        };
-        await placeCol.updateOne({place_id}, {
-            $set: {
-                updateTime: requestTime, content,
-                originalDetail: findResult.originalDetail
-            }
-        });
+        findResult = await detailToDocument(requestTime, detailResult);
+        await placeCol.updateOne({place_id}, {$set: findResult}, {upsert: true});
         updated = true;
     }
     let userDoc: userDocument = await userCol.findOne({_id: new ObjectId(userId)});
+    let originalDetail: googleDetailItem = findResult.originalDetail as googleDetailItem;
     return {
         updated,
         isFavorite: await isFavoriteByUserId(userId, place_id),
-        updateTime: findResult.originalDetail.updateTime ?? requestTime,
+        updateTime: findResult.updateTime ?? requestTime,
         place: {
             opening_hours: {
-                open_now: findResult.originalDetail.current_opening_hours?.open_now ?? false,
-                weekday_text: findResult.originalDetail.current_opening_hours?.weekday_text ?? []
+                open_now: originalDetail.current_opening_hours?.open_now ?? false,
+                weekday_text: originalDetail.current_opening_hours?.weekday_text ?? []
             },
-            delivery: findResult.originalDetail.delivery,
-            dine_in: findResult.originalDetail.dine_in,
-            address: findResult.originalDetail.formatted_address,
-            phone: findResult.originalDetail.formatted_phone_number,
-            location: findResult.originalDetail.geometry.location,
-            name: findResult.originalDetail.name,
-            photos: await googleImageListConvertPhotoId(findResult.originalDetail.photos),
-            place_id: findResult.originalDetail.place_id,
-            price_level: findResult.originalDetail.price_level,
-            rating: findResult.originalDetail.rating,
-            reviews: findResult.originalDetail.reviews,
-            takeout: findResult.originalDetail.takeout,
-            url: findResult.originalDetail.url,
-            ratings_total: findResult.originalDetail.user_ratings_total,
-            vicinity: findResult.originalDetail.vicinity,
-            website: findResult.originalDetail.website
+            delivery: originalDetail.delivery,
+            dine_in: originalDetail.dine_in,
+            address: originalDetail.formatted_address,
+            phone: originalDetail.formatted_phone_number,
+            location: originalDetail.geometry.location,
+            name: originalDetail.name,
+            photos: await googleImageListConvertPhotoId(originalDetail.photos),
+            place_id: originalDetail.place_id,
+            price_level: originalDetail.price_level,
+            rating: originalDetail.rating,
+            reviews: originalDetail.reviews,
+            takeout: originalDetail.takeout,
+            url: originalDetail.url,
+            ratings_total: originalDetail.user_ratings_total,
+            vicinity: originalDetail.vicinity,
+            website: originalDetail.website
         },
         isBlackList: userDoc.blackList.includes(place_id)
     };

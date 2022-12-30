@@ -2,19 +2,10 @@ import {errorCodes, isUndefined, throwError} from "./dataStruct/throwError";
 import {responseLocationConvertDb} from "./utils";
 import config from "../config"
 import {dbPlaceDocument, dbPlaceItem} from "./dataStruct/mongodb/googlePlaceDocument";
-import {
-    callGoogleApiDetail,
-    callGoogleApiKeywordBySearch,
-    callGoogleApiNearBySearch
-} from "./service/googleApi/placeService";
-import {responseDetailResult} from "./dataStruct/response/detailResponses";
-import {isFavoriteByUserId} from "./service/placeService";
+import {callGoogleApiKeywordBySearch, callGoogleApiNearBySearch} from "./service/googleApi/placeService";
 import {googleImageListConvertPhotoId} from "./service/imageService";
-import {userDocument} from "./dataStruct/mongodb/userDocument";
-import {ObjectId} from "mongodb";
 import {latLngItem} from "./dataStruct/pubilcItem";
 import {googlePlaceResult} from "./dataStruct/originalGoogleResponse/placeResponse";
-import {googleDetailItem} from "./dataStruct/originalGoogleResponse/detailResponse";
 
 async function updateCustom(location: latLngItem, distance: number, keyword: string) {
     if (isUndefined([location, distance, keyword])) throwError(errorCodes.requestDataError);

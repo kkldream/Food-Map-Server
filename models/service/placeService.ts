@@ -2,6 +2,9 @@ import {ObjectId} from "mongodb";
 import {userDocument} from "../dataStruct/mongodb/userDocument";
 import {responsePlaceItem} from "../dataStruct/response/placeResponses";
 import {dbPlaceDocument} from "../dataStruct/mongodb/googlePlaceDocument";
+import {googleDetailItem} from "../dataStruct/originalGoogleResponse/detailResponse";
+import {responseLocationConvertDb} from "../utils";
+import {googleImageListConvertPhotoId} from "./imageService";
 
 export async function isFavoriteByUserId(userId: string, place_id: string) {
     const userCol = global.mongodbClient.foodMapDb.userCol;
@@ -33,4 +36,39 @@ export async function dbPlaceListConvertResponse(dbPlaceDocList: dbPlaceDocument
         distance: dbPlaceDoc.distance,
         isFavorite: favoriteIdList.includes(dbPlaceDoc.place_id)
     }));
+}
+
+export async function detailToDocument(requestTime: Date, detailItem: googleDetailItem): Promise<dbPlaceDocument> {
+    const placeCol = global.mongodbClient.foodMapDb.placeCol;
+    let findResult: dbPlaceDocument = await placeCol.findOne({place_id: detailItem.place_id});
+    return {
+        creatTime: findResult ? findResult.creatTime : requestTime,
+        updateTime: requestTime,
+        place_id: detailItem.place_id,
+        location: responseLocationConvertDb(detailItem.geometry.location),
+        types: detailItem.types,
+        name: detailItem.name,
+        content: {
+            updateTime: requestTime,
+            place_id: detailItem.place_id,
+            status: detailItem.business_status,
+            name: detailItem.name,
+            photos: await googleImageListConvertPhotoId(detailItem.photos),
+            rating: {
+                star: detailItem.rating,
+                total: detailItem.user_ratings_total,
+            },
+            address: detailItem.vicinity,
+            location: detailItem.geometry.location,
+            icon: {
+                url: detailItem.icon,
+                background_color: detailItem.icon_background_color,
+                mask_base_uri: detailItem.icon_mask_base_uri,
+            },
+            types: detailItem.types,
+            opening_hours: detailItem.opening_hours ?? findResult.content.opening_hours ?? {}
+        },
+        originalPlace: findResult ? findResult.originalPlace : null,
+        originalDetail: detailItem
+    };
 }
