@@ -1,14 +1,14 @@
 import {errorCodes, isUndefined, throwError} from './dataStruct/throwError';
 import {responseAutocompleteItem} from "./dataStruct/response/autocompleteResponses";
 import {callGoogleApiAutocomplete} from "./service/googleApi/placeService";
+import {callGoogleApiGeocodeAddress, callGoogleApiGeocodeLocation} from "./service/googleApi/geocodeService";
 import {
     googleAutocompleteResponse,
-    latLngLiteral,
     placeAutocompletePrediction
-} from "./dataStruct/mongodb/originalGooglePlaceData";
-import {callGoogleApiGeocodeAddress, callGoogleApiGeocodeLocation} from "./service/googleApi/geocodeService";
+} from "./dataStruct/originalGoogleResponse/autocompleteResponse";
+import {latLngItem} from "./dataStruct/pubilcItem";
 
-async function autocomplete(location: latLngLiteral, input: string | undefined): Promise<responseAutocompleteItem[]> {
+async function autocomplete(location: latLngItem, input: string | undefined): Promise<responseAutocompleteItem[]> {
     if (isUndefined([location])) throwError(errorCodes.requestDataError);
     if (input) {
         let response: googleAutocompleteResponse = await callGoogleApiAutocomplete(

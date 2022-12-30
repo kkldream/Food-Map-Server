@@ -1,5 +1,5 @@
 import {baseResponses} from "./baseResponse";
-import {responseLocationItem} from "./publicItem/responseLocationItem";
+import {latLngItem} from "../pubilcItem";
 
 export interface autocompleteResponses extends baseResponses{
     result: responseAutocompleteItem[];
@@ -10,6 +10,6 @@ export interface responseAutocompleteItem {
     name: string;
     address: string;
     description: string;
-    location?: responseLocationItem;
+    location?: latLngItem;
     isSearch?: boolean; // 前端白癡要求
 }

@@ -1,21 +1,22 @@
 import {errorCodes, isUndefined, throwError} from "./dataStruct/throwError";
 import {responseLocationConvertDb} from "./utils";
 import config from "../config"
-import {googleDetailItem, googlePlaceResult, latLngLiteral} from "./dataStruct/mongodb/originalGooglePlaceData";
 import {dbPlaceDocument, dbPlaceItem} from "./dataStruct/mongodb/googlePlaceDocument";
 import {
     callGoogleApiDetail,
     callGoogleApiKeywordBySearch,
     callGoogleApiNearBySearch
 } from "./service/googleApi/placeService";
-import {responseLocationItem} from "./dataStruct/response/publicItem/responseLocationItem";
 import {responseDetailResult} from "./dataStruct/response/detailResponses";
 import {isFavoriteByUserId} from "./service/placeService";
 import {googleImageListConvertPhotoId} from "./service/imageService";
 import {userDocument} from "./dataStruct/mongodb/userDocument";
 import {ObjectId} from "mongodb";
+import {latLngItem} from "./dataStruct/pubilcItem";
+import {googlePlaceResult} from "./dataStruct/originalGoogleResponse/originalGooglePlaceData";
+import {googleDetailItem} from "./dataStruct/originalGoogleResponse/detailResponse";
 
-async function updateCustom(location: latLngLiteral, radius: number, keyword: string) {
+async function updateCustom(location: latLngItem, radius: number, keyword: string) {
     if (isUndefined([location, radius, keyword])) throwError(errorCodes.requestDataError);
     let resultStatus = {
         upsertCount: 0,
@@ -33,7 +34,7 @@ async function updateCustom(location: latLngLiteral, radius: number, keyword: st
     return resultStatus;
 }
 
-async function updatePlaceByDistance(location: latLngLiteral, searchPageNum: number = 1) {
+async function updatePlaceByDistance(location: latLngItem, searchPageNum: number = 1) {
     if (isUndefined([location])) throwError(errorCodes.requestDataError);
     let resultStatus = {
         upsertCount: 0,
@@ -52,7 +53,7 @@ async function updatePlaceByDistance(location: latLngLiteral, searchPageNum: num
     return resultStatus;
 }
 
-async function updatePlaceByKeyword(location: latLngLiteral, keyword: string, distance: number, searchPageNum: number = 1) {
+async function updatePlaceByKeyword(location: latLngItem, keyword: string, distance: number, searchPageNum: number = 1) {
     if (isUndefined([location, keyword, distance])) throwError(errorCodes.requestDataError);
     let resultStatus = {
         upsertCount: 0,
@@ -72,7 +73,7 @@ async function updatePlaceByKeyword(location: latLngLiteral, keyword: string, di
 }
 
 // https://developers.google.com/maps/documentation/places/web-service/search-nearby
-async function nearBySearch(searchPageNum: number, request: { location: responseLocationItem; type: string; keyword: string; distance: number; }, msg: string = "") {
+async function nearBySearch(searchPageNum: number, request: { location: latLngItem; type: string; keyword: string; distance: number; }, msg: string = "") {
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let requestTime: Date = new Date();
     let {location, type, keyword, distance} = request;

@@ -1,5 +1,5 @@
 import {baseResponses} from "./baseResponse";
-import {responseLocationItem} from "./publicItem/responseLocationItem";
+import {latLngItem} from "../pubilcItem";
 
 export interface autocompletePlaceResponses extends baseResponses{
     result: responseAutocompletePlaceItem[];
@@ -10,5 +10,5 @@ export interface responseAutocompletePlaceItem {
     name: string;
     address: string;
     description: string;
-    location: responseLocationItem;
+    location: latLngItem;
 }

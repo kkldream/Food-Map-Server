@@ -1,6 +1,6 @@
-import {placeReview} from "../mongodb/originalGooglePlaceData";
 import {baseResponses} from "./baseResponse";
-import {responseLocationItem} from "./publicItem/responseLocationItem";
+import {latLngItem} from "../pubilcItem";
+import {placeReview} from "../originalGoogleResponse/detailResponse";
 
 export interface detailResponses extends baseResponses{
     result: responseDetailItem;
@@ -23,7 +23,7 @@ export interface responseDetailItem {
     dine_in: boolean;
     address: string;
     phone: string;
-    location: responseLocationItem;
+    location: latLngItem;
     name: string;
     photos: string[];
     place_id: string;

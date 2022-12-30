@@ -1,6 +1,6 @@
-import {responseLocationItem} from "./publicItem/responseLocationItem";
-import {placeOpeningHours} from "../mongodb/originalGooglePlaceData";
 import {baseResponses} from "./baseResponse";
+import {latLngItem} from "../pubilcItem";
+import {placeOpeningHours} from "../originalGoogleResponse/pubilcItem";
 
 export interface blackListResponses extends baseResponses{
     result: blackListResult;
@@ -22,7 +22,7 @@ export interface blackListItem {
         total: number;
     };
     address: string;
-    location: responseLocationItem;
+    location: latLngItem;
     icon: {
         url: string;
         background_color: string;

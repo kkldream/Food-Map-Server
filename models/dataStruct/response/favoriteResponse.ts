@@ -1,5 +1,5 @@
 import {baseResponses} from "./baseResponse";
-import {responseLocationItem} from "./publicItem/responseLocationItem";
+import {latLngItem} from "../pubilcItem";
 
 export interface favoriteResponse extends baseResponses {
     result: favoriteItem;
@@ -25,6 +25,6 @@ export interface favoriteItem {
     rating: number;
     ratings_total: number;
     price_level: number;
-    location: responseLocationItem;
+    location: latLngItem;
     url: string;
 }

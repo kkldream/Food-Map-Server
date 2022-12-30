@@ -1,12 +1,12 @@
-import {dbLocationItem} from "../dataStruct/mongodb/publicItem/dbLocationItem";
-import {
-    googleDetailItem,
-    googlePhotosItem,
-    googlePlaceResult,
-    placeAutocompletePrediction
-} from "../dataStruct/mongodb/originalGooglePlaceData";
-import {googleApiLogDocument} from "../dataStruct/mongodb/googleApiLogDocument";
+import {googlePlaceResult,} from "../dataStruct/originalGoogleResponse/originalGooglePlaceData";
+import {geocodeAutocompleteRequest, googleApiLogDocument} from "../dataStruct/mongodb/googleApiLogDocument";
 import {photoItem} from "../dataStruct/mongodb/photoDocument";
+import {responseLocationConvertDb} from "../utils";
+import {placeAutocompletePrediction} from "../dataStruct/originalGoogleResponse/autocompleteResponse";
+import {dbLocationItem} from "../dataStruct/mongodb/pubilcItem";
+import {googleDetailItem} from "../dataStruct/originalGoogleResponse/detailResponse";
+import {googlePhotosItem} from "../dataStruct/originalGoogleResponse/pubilcItem";
+import {latLngItem} from "../dataStruct/pubilcItem";
 
 interface googleApiPlaceLogRequest {
     searchPageNum: number;
@@ -89,6 +89,27 @@ export async function insertGoogleApiAutocompleteLog(req: googleApiAutocompleteL
             radius: req.radius,
             location: req.location
         },
+        response: {length: req.response.length, data: req.response}
+    };
+    return await googleApiLogCol.insertOne(googleApiLogDoc);
+}
+
+interface googleApiGeocodeAutocompleteLogRequest {
+    location?: latLngItem;
+    address?: string;
+    response: any;
+}
+
+export async function insertGoogleApiGeocodeAutocompleteLog(req: googleApiGeocodeAutocompleteLogRequest) {
+    const googleApiLogCol = global.mongodbClient.foodMapDb.googleApiLogCol;
+    let request: geocodeAutocompleteRequest = {
+        location: req.location ? responseLocationConvertDb(req.location) : undefined,
+        address: req.address ?? undefined,
+    }
+    let googleApiLogDoc: googleApiLogDocument = {
+        createTime: new Date(),
+        mode: "geocode_autocomplete",
+        request,
         response: {length: req.response.length, data: req.response}
     };
     return await googleApiLogCol.insertOne(googleApiLogDoc);

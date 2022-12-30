@@ -11,15 +11,15 @@ import {photoDocument} from "./dataStruct/mongodb/photoDocument";
 import {photoResult} from "./dataStruct/response/photoResponse";
 import {responseAutocompleteItem} from "./dataStruct/response/autocompleteResponses";
 import {callGoogleApiAutocomplete} from "./service/googleApi/placeService";
-import {
-    googleAutocompleteResponse,
-    googlePlaceResult,
-    latLngLiteral,
-    placeAutocompletePrediction
-} from "./dataStruct/mongodb/originalGooglePlaceData";
+import {googlePlaceResult} from "./dataStruct/originalGoogleResponse/originalGooglePlaceData";
 import {foodTypeEnum} from "./dataStruct/staticCode/foodTypeEnum";
 import {googleApiLogDocument} from "./dataStruct/mongodb/googleApiLogDocument";
 import {twoLocateDistance} from "./utils";
+import {
+    googleAutocompleteResponse,
+    placeAutocompletePrediction
+} from "./dataStruct/originalGoogleResponse/autocompleteResponse";
+import {latLngItem} from "./dataStruct/pubilcItem";
 
 interface dbPlaceDocumentWithDistance extends dbPlaceDocument {
     distance: number;
@@ -46,7 +46,7 @@ async function dbPlaceListConvertResponse(dbPlaceDocList: dbPlaceDocumentWithDis
     }));
 }
 
-async function searchByDistance(userId: string, location: latLngLiteral, distance: number, skip: number, limit: number): Promise<responsePlaceResult> {
+async function searchByDistance(userId: string, location: latLngItem, distance: number, skip: number, limit: number): Promise<responsePlaceResult> {
     if (isUndefined([userId, location, distance, skip, limit])) throwError(errorCodes.requestDataError);
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let updated = false;
@@ -81,7 +81,7 @@ async function searchByDistance(userId: string, location: latLngLiteral, distanc
     return {updated, dbStatus, placeCount, placeList: responsePlaceList}
 }
 
-async function searchByKeyword(userId: string, location: latLngLiteral, distance: number, keyword: string, skip: number, limit: number): Promise<responsePlaceResult> {
+async function searchByKeyword(userId: string, location: latLngItem, distance: number, keyword: string, skip: number, limit: number): Promise<responsePlaceResult> {
     if (isUndefined([userId, location, distance, keyword, skip, limit])) throwError(errorCodes.requestDataError);
     const requestTime = new Date();
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
@@ -128,7 +128,7 @@ async function searchByKeyword(userId: string, location: latLngLiteral, distance
     return {updated, dbStatus, placeCount: responsePlaceList.length, placeList: responsePlaceList};
 }
 
-async function drawCard(userId: string, location: latLngLiteral, mode: drawCardModeEnum, num: number): Promise<responsePlaceResult> {
+async function drawCard(userId: string, location: latLngItem, mode: drawCardModeEnum, num: number): Promise<responsePlaceResult> {
     if (isUndefined([userId, location, mode, num])) throwError(errorCodes.requestDataError);
     const userCol = global.mongodbClient.foodMapDb.userCol;
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
@@ -203,7 +203,7 @@ async function getHtmlPhoto(photoId: string): Promise<string> {
     return photoDoc.data;
 }
 
-async function autocomplete(location: latLngLiteral, input: string, distance: number = -1): Promise<responseAutocompleteItem[]> {
+async function autocomplete(location: latLngItem, input: string, distance: number = -1): Promise<responseAutocompleteItem[]> {
     if (isUndefined([location, input])) throwError(errorCodes.requestDataError);
     let outputList: responseAutocompleteItem[] = [];
     await Promise.all(config.foodTypeList.map(async (type: foodTypeEnum) => {

@@ -1,7 +1,9 @@
 import {ObjectId} from "mongodb";
-import {googleDetailItem, googlePlaceResult, placeOpeningHours} from "./originalGooglePlaceData";
-import {dbLocationItem} from "./publicItem/dbLocationItem";
-import {responseLocationItem} from "../response/publicItem/responseLocationItem";
+import {googlePlaceResult} from "../originalGoogleResponse/originalGooglePlaceData";
+import {googleDetailItem} from "../originalGoogleResponse/detailResponse";
+import {dbLocationItem} from "./pubilcItem";
+import {latLngItem} from "../pubilcItem";
+import {placeOpeningHours} from "../originalGoogleResponse/pubilcItem";
 
 export interface dbPlaceDocument {
     _id?: ObjectId;
@@ -32,7 +34,7 @@ export interface dbPlaceItem {
         total: number;
     };
     address: string;
-    location: responseLocationItem;
+    location: latLngItem;
     icon: {
         url: string;
         background_color: string;

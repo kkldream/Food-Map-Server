@@ -1,6 +1,6 @@
-import {responseLocationItem} from "./publicItem/responseLocationItem";
-import {placeOpeningHours} from "../mongodb/originalGooglePlaceData";
 import {baseResponses} from "./baseResponse";
+import {latLngItem} from "../pubilcItem";
+import {placeOpeningHours} from "../originalGoogleResponse/pubilcItem";
 
 export interface placeResponses extends baseResponses{
     result: responsePlaceResult;
@@ -24,7 +24,7 @@ export interface responsePlaceItem {
         total: number;
     };
     address: string;
-    location: responseLocationItem;
+    location: latLngItem;
     icon: {
         url: string;
         background_color: string;

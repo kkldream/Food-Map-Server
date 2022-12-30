@@ -1,5 +1,5 @@
-import {responseLocationItem} from "./publicItem/responseLocationItem";
 import {baseResponses} from "./baseResponse";
+import {latLngItem} from "../pubilcItem";
 
 export interface placeListResponses extends baseResponses{
     result: placeListResult;
@@ -14,5 +14,5 @@ export interface placeListItem {
     place_id: string;
     name: string;
     address: string;
-    location: responseLocationItem;
+    location: latLngItem;
 }

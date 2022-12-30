@@ -1,20 +1,16 @@
-import {
-    googleAutocompleteResponse,
-    googleDetailResponse,
-    googlePlaceResponse,
-    googlePlaceResult,
-    latLngLiteral
-} from "../../dataStruct/mongodb/originalGooglePlaceData";
+import {googlePlaceResponse, googlePlaceResult} from "../../dataStruct/originalGoogleResponse/originalGooglePlaceData";
 import axios from "axios";
-import {responseLocationItem} from "../../dataStruct/response/publicItem/responseLocationItem";
 import {responseLocationConvertDb} from "../../utils";
 import {
     insertGoogleApiAutocompleteLog,
     insertGoogleApiDetailLog,
     insertGoogleApiPlaceLog
 } from "../googleApiLogService";
+import {googleAutocompleteResponse} from "../../dataStruct/originalGoogleResponse/autocompleteResponse";
+import {latLngItem} from "../../dataStruct/pubilcItem";
+import {googleDetailResponse} from "../../dataStruct/originalGoogleResponse/detailResponse";
 
-export async function callGoogleApiNearBySearch(searchPageNum: number, location: responseLocationItem, type: string, distance: number): Promise<googlePlaceResult[]> {
+export async function callGoogleApiNearBySearch(searchPageNum: number, location: latLngItem, type: string, distance: number): Promise<googlePlaceResult[]> {
     let originalDataList: googlePlaceResult[] = [];
     let next_page_token: string = "";
     let requestCount: number;
@@ -42,7 +38,7 @@ export async function callGoogleApiNearBySearch(searchPageNum: number, location:
     return originalDataList;
 }
 
-export async function callGoogleApiKeywordBySearch(searchPageNum: number, location: responseLocationItem, type: string, keyword: string, distance: number): Promise<googlePlaceResult[]> {
+export async function callGoogleApiKeywordBySearch(searchPageNum: number, location: latLngItem, type: string, keyword: string, distance: number): Promise<googlePlaceResult[]> {
     let url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json?'
         + `&language=zh-TW`
         + `&key=${process.env.GOOGLE_API_KEY}`
@@ -93,7 +89,7 @@ export async function callGoogleApiDetail(place_id: string): Promise<googleDetai
     return response;
 }
 
-export async function callGoogleApiAutocomplete(input: string, location: latLngLiteral, type: string | undefined, radius: number | string): Promise<googleAutocompleteResponse> {
+export async function callGoogleApiAutocomplete(input: string, location: latLngItem, type: string | undefined, radius: number | string): Promise<googleAutocompleteResponse> {
     let url = 'https://maps.googleapis.com/maps/api/place/autocomplete/json?'
         + `&input=${input}`
         + `&location=${location.lat},${location.lng}`

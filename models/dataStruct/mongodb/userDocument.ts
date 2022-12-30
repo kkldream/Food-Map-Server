@@ -1,5 +1,5 @@
 import {ObjectId} from "mongodb";
-import {dbLocationItem} from "./publicItem/dbLocationItem";
+import {dbLocationItem} from "./pubilcItem";
 
 export interface userDocument {
     _id?: ObjectId;

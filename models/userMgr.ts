@@ -5,7 +5,6 @@ import {placeItem, userDocument} from "./dataStruct/mongodb/userDocument";
 import {favoriteItem, favoriteResult} from "./dataStruct/response/favoriteResponse";
 import {dbPlaceDocument} from "./dataStruct/mongodb/googlePlaceDocument";
 import {callGoogleApiDetail} from "./service/googleApi/placeService";
-import {googleDetailResponse, latLngLiteral} from "./dataStruct/mongodb/originalGooglePlaceData";
 import {blackListItem, blackListResult} from "./dataStruct/response/blackListResponses";
 import {
     userLogAddFcmToken,
@@ -15,6 +14,8 @@ import {
     userLogRegister
 } from "./service/userLogService";
 import {placeListItem, placeListResult} from "./dataStruct/response/placeListResponses";
+import {googleDetailResponse} from "./dataStruct/originalGoogleResponse/detailResponse";
+import {latLngItem} from "./dataStruct/pubilcItem";
 
 async function register(username: string, password: string, deviceId: string) {
     if (isUndefined([username, password, deviceId])) throwError(errorCodes.requestDataError);
@@ -277,7 +278,7 @@ async function getBlackList(userId: string): Promise<blackListResult> {
     return {placeCount: blackListItems.length, placeList: blackListItems}
 }
 
-async function pushPlaceList(userId: string, place_id: string, name: string, address: string, location: latLngLiteral) {
+async function pushPlaceList(userId: string, place_id: string, name: string, address: string, location: latLngItem) {
     if (isUndefined([place_id, name, address, location])) throwError(errorCodes.requestDataError);
     const userCol = global.mongodbClient.foodMapDb.userCol;
     let userQuery = {_id: new ObjectId(userId)};

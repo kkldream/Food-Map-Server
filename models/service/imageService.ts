@@ -1,8 +1,8 @@
 import config from "../../config";
-import {googlePhotosItem} from "../dataStruct/mongodb/originalGooglePlaceData";
 import {photoDocument, photoItem} from "../dataStruct/mongodb/photoDocument";
 import {insertGoogleApiPhotoLog} from "./googleApiLogService";
 import {errorCodes, throwError} from "../dataStruct/throwError";
+import {googlePhotosItem} from "../dataStruct/originalGoogleResponse/pubilcItem";
 
 const imageToBase64 = require('image-to-base64');
 const Canvas = require('canvas');

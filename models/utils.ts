@@ -1,6 +1,6 @@
-import {responseLocationItem} from "./dataStruct/response/publicItem/responseLocationItem";
-import {dbLocationItem} from "./dataStruct/mongodb/publicItem/dbLocationItem";
-import {latLngLiteral} from "./dataStruct/mongodb/originalGooglePlaceData";
+import {dbLocationItem} from "./dataStruct/mongodb/pubilcItem";
+import {latLngItem} from "./dataStruct/pubilcItem";
+
 
 export function generateUUID() {
     let d = new Date().getTime();
@@ -12,14 +12,14 @@ export function generateUUID() {
     return uuid;
 }
 
-export function dbLocationConvertResponse(dbLocation: dbLocationItem): responseLocationItem {
+export function dbLocationConvertResponse(dbLocation: dbLocationItem): latLngItem {
     return {
         lat: dbLocation.coordinates[1],
         lng: dbLocation.coordinates[0]
     }
 }
 
-export function responseLocationConvertDb(responseLocation: responseLocationItem): dbLocationItem {
+export function responseLocationConvertDb(responseLocation: latLngItem): dbLocationItem {
     return {
         type: "Point",
         coordinates: [responseLocation.lng, responseLocation.lat]
@@ -42,7 +42,7 @@ export function twoPointDistance(p1: { x: number, y: number }, p2: { x: number, 
     return distance;
 }
 
-export function twoLocateDistance(point1: latLngLiteral, point2: latLngLiteral) {
+export function twoLocateDistance(point1: latLngItem, point2: latLngItem) {
     let [y1, x1] = [point1.lng, point1.lat];
     let [y2, x2] = [point2.lng, point2.lat];
     let Lat1 = rad(x1); // 纬度
