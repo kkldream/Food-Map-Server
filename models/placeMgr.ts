@@ -212,7 +212,8 @@ async function autocomplete(userId: string, latitude: number, longitude: number,
         let output: responseAutocompleteItem[] = response.predictions.map((item: placeAutocompletePrediction): responseAutocompleteItem => ({
             place_id: item.place_id,
             name: item.structured_formatting.main_text,
-            address: item.structured_formatting.secondary_text
+            address: item.structured_formatting.secondary_text,
+            isSearch: true
         }));
         outputList = outputList.concat(output);
     }));

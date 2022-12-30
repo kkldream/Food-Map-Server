@@ -8,4 +8,5 @@ export interface responseAutocompleteItem {
     place_id: string;
     name: string;
     address: string;
+    isSearch: boolean;
 }
