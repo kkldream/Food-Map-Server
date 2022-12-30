@@ -1,7 +1,6 @@
 import {dbLocationItem} from "./dataStruct/mongodb/pubilcItem";
 import {latLngItem} from "./dataStruct/pubilcItem";
 
-
 export function generateUUID() {
     let d = new Date().getTime();
     const uuid = 'xxxxxxxxxxxxxxxyxxxxxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
