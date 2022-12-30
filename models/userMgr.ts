@@ -14,9 +14,7 @@ import {
     userLogLogOut,
     userLogRegister
 } from "./service/userLogService";
-import {dbLocationItem} from "./dataStruct/mongodb/publicItem/dbLocationItem";
 import {placeListItem, placeListResult} from "./dataStruct/response/placeListResponses";
-import {responseLocationItem} from "./dataStruct/response/publicItem/responseLocationItem";
 
 async function register(username: string, password: string, deviceId: string) {
     if (isUndefined([username, password, deviceId])) throwError(errorCodes.requestDataError);

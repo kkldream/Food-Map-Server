@@ -1,4 +1,4 @@
-import {googleAutocompleteResponse, latLngLiteral} from "../../dataStruct/mongodb/originalGooglePlaceData";
+import {latLngLiteral} from "../../dataStruct/mongodb/originalGooglePlaceData";
 import axios from "axios";
 
 export async function callGoogleApiGeocodeAddress(location: latLngLiteral): Promise<any> {

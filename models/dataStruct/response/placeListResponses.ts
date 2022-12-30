@@ -1,7 +1,5 @@
 import {responseLocationItem} from "./publicItem/responseLocationItem";
-import {placeOpeningHours} from "../mongodb/originalGooglePlaceData";
 import {baseResponses} from "./baseResponse";
-import {dbLocationItem} from "../mongodb/publicItem/dbLocationItem";
 
 export interface placeListResponses extends baseResponses{
     result: placeListResult;

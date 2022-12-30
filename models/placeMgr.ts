@@ -19,7 +19,6 @@ import {
 import {foodTypeEnum} from "./dataStruct/staticCode/foodTypeEnum";
 import {googleApiLogDocument} from "./dataStruct/mongodb/googleApiLogDocument";
 import {twoLocateDistance} from "./utils";
-import {callGoogleApiGeocodeAddress} from "./service/googleApi/geocodeService";
 
 interface dbPlaceDocumentWithDistance extends dbPlaceDocument {
     distance: number;
