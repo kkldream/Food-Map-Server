@@ -177,9 +177,9 @@ router.post('/get_black_list', async function (req: any, res: any, next: any) {
 router.post('/push_place_list', async function (req: any, res: any, next: any) {
     let response = new apiResponseBase();
     try {
-        let {userId, accessKey, place_id, name, address, latitude, longitude} = req.body;
+        let {userId, accessKey, place_id, name, address, location} = req.body;
         await response.verifyUser(userId, accessKey);
-        response.result = await userMgr.pushPlaceList(userId, place_id, name, address, latitude, longitude);
+        response.result = await userMgr.pushPlaceList(userId, place_id, name, address, location);
     } catch (error: apiError | any) {
         response.errorHandle(error);
     }

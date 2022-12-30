@@ -14,12 +14,12 @@ import {callGoogleApiAutocomplete} from "./service/googleApi/placeService";
 import {
     googleAutocompleteResponse,
     googlePlaceResult,
+    latLngLiteral,
     placeAutocompletePrediction
 } from "./dataStruct/mongodb/originalGooglePlaceData";
 import {foodTypeEnum} from "./dataStruct/staticCode/foodTypeEnum";
 import {googleApiLogDocument} from "./dataStruct/mongodb/googleApiLogDocument";
 import {twoLocateDistance} from "./utils";
-import {callGoogleApiGeocodeAddress} from "./service/googleApi/geocodeService";
 
 interface dbPlaceDocumentWithDistance extends dbPlaceDocument {
     distance: number;
@@ -46,15 +46,15 @@ async function dbPlaceListConvertResponse(dbPlaceDocList: dbPlaceDocumentWithDis
     }));
 }
 
-async function searchByDistance(userId: string, latitude: number, longitude: number, distance: number, skip: number, limit: number): Promise<responsePlaceResult> {
-    if (isUndefined([userId, latitude, longitude, distance, skip, limit])) throwError(errorCodes.requestDataError);
+async function searchByDistance(userId: string, location: latLngLiteral, distance: number, skip: number, limit: number): Promise<responsePlaceResult> {
+    if (isUndefined([userId, location, distance, skip, limit])) throwError(errorCodes.requestDataError);
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let updated = false;
     let dbStatus: any;
     let pipeline: any = [
         {
             "$geoNear": {
-                "near": {"type": "Point", "coordinates": [longitude, latitude]},
+                "near": {"type": "Point", "coordinates": [location.lng, location.lat]},
                 "distanceField": "distance",
                 "spherical": true,
                 "query": {
@@ -73,7 +73,7 @@ async function searchByDistance(userId: string, latitude: number, longitude: num
     let placeCountResult = await placeCol.aggregate([pipeline[0], {"$count": "count"}]).toArray();
     let placeCount = placeCountResult.length !== 0 ? placeCountResult[0].count : 0;
     if (placeCount < config.minResponseCount) {
-        dbStatus = await googleMapsMgr.updatePlaceByDistance(latitude, longitude);
+        dbStatus = await googleMapsMgr.updatePlaceByDistance(location);
         updated = true;
     }
     let dbPlaceDocList: dbPlaceDocumentWithDistance[] = await placeCol.aggregate(pipeline).toArray();
@@ -81,8 +81,8 @@ async function searchByDistance(userId: string, latitude: number, longitude: num
     return {updated, dbStatus, placeCount, placeList: responsePlaceList}
 }
 
-async function searchByKeyword(userId: string, latitude: number, longitude: number, distance: number, keyword: string, skip: number, limit: number): Promise<responsePlaceResult> {
-    if (isUndefined([userId, latitude, longitude, distance, keyword, skip, limit])) throwError(errorCodes.requestDataError);
+async function searchByKeyword(userId: string, location: latLngLiteral, distance: number, keyword: string, skip: number, limit: number): Promise<responsePlaceResult> {
+    if (isUndefined([userId, location, distance, keyword, skip, limit])) throwError(errorCodes.requestDataError);
     const requestTime = new Date();
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     const googleApiLogCol = global.mongodbClient.foodMapDb.googleApiLogCol;
@@ -92,7 +92,7 @@ async function searchByKeyword(userId: string, latitude: number, longitude: numb
     let pipeline: any[] = [
         {
             "$geoNear": {
-                "near": {"type": "Point", "coordinates": [longitude, latitude]},
+                "near": {"type": "Point", "coordinates": [location.lng, location.lat]},
                 "distanceField": "distance",
                 "spherical": true,
                 "maxDistance": 100,
@@ -109,7 +109,7 @@ async function searchByKeyword(userId: string, latitude: number, longitude: numb
     else pipeline[0]["$geoNear"].query["request.radius"] = distance;
     let findResult: googleApiLogDocument[] = await googleApiLogCol.aggregate(pipeline, options).toArray();
     if (findResult.length === 0) {
-        dbStatus = await googleMapsMgr.updatePlaceByKeyword(latitude, longitude, keyword, distance);
+        dbStatus = await googleMapsMgr.updatePlaceByKeyword(location, keyword, distance);
         updated = true;
         findResult = await googleApiLogCol.aggregate(pipeline, options).toArray();
     }
@@ -118,7 +118,7 @@ async function searchByKeyword(userId: string, latitude: number, longitude: numb
     let dbPlaceDocList: dbPlaceDocument[] = await placeCol.find({place_id: {$in: googlePlaceIdList}}).toArray();
     let dbPlaceDocWithDistanceList: dbPlaceDocumentWithDistance[] = dbPlaceDocList.map((dbPlaceDoc: dbPlaceDocument): dbPlaceDocumentWithDistance => ({
         ...dbPlaceDoc,
-        distance: twoLocateDistance({lat: latitude, lng: longitude}, dbPlaceDoc.content.location)
+        distance: twoLocateDistance(location, dbPlaceDoc.content.location)
     })).sort((a: dbPlaceDocumentWithDistance, b: dbPlaceDocumentWithDistance) => {
         if (a.distance > b.distance) return 1;
         if (a.distance < b.distance) return -1;
@@ -128,8 +128,8 @@ async function searchByKeyword(userId: string, latitude: number, longitude: numb
     return {updated, dbStatus, placeCount: responsePlaceList.length, placeList: responsePlaceList};
 }
 
-async function drawCard(userId: string, latitude: number, longitude: number, mode: drawCardModeEnum, num: number): Promise<responsePlaceResult> {
-    if (isUndefined([userId, latitude, longitude, mode, num])) throwError(errorCodes.requestDataError);
+async function drawCard(userId: string, location: latLngLiteral, mode: drawCardModeEnum, num: number): Promise<responsePlaceResult> {
+    if (isUndefined([userId, location, mode, num])) throwError(errorCodes.requestDataError);
     const userCol = global.mongodbClient.foodMapDb.userCol;
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let placeList: dbPlaceDocumentWithDistance[] = [];
@@ -140,7 +140,7 @@ async function drawCard(userId: string, latitude: number, longitude: number, mod
             let pipeline = [
                 {
                     "$geoNear": {
-                        "near": {"type": "Point", "coordinates": [longitude, latitude]},
+                        "near": {"type": "Point", "coordinates": [location.lng, location.lat]},
                         "distanceField": "distance",
                         "spherical": true,
                         "maxDistance": config.drawCard.maxDistance,
@@ -160,7 +160,7 @@ async function drawCard(userId: string, latitude: number, longitude: number, mod
             let placeCountResult = await placeCol.aggregate([pipeline[0], {"$count": "count"}]).toArray();
             let placeCount = placeCountResult.length !== 0 ? placeCountResult[0].count : 0;
             if (placeCount < config.minResponseCount) {
-                dbStatus = await googleMapsMgr.updatePlaceByDistance(latitude, longitude);
+                dbStatus = await googleMapsMgr.updatePlaceByDistance(location);
                 updated = true;
             }
             placeList = await placeCol.aggregate(pipeline).toArray();
@@ -203,12 +203,12 @@ async function getHtmlPhoto(photoId: string): Promise<string> {
     return photoDoc.data;
 }
 
-async function autocomplete(latitude: number, longitude: number, input: string, distance: number = -1): Promise<responseAutocompleteItem[]> {
-    if (isUndefined([latitude, longitude, input])) throwError(errorCodes.requestDataError);
+async function autocomplete(location: latLngLiteral, input: string, distance: number = -1): Promise<responseAutocompleteItem[]> {
+    if (isUndefined([location, input])) throwError(errorCodes.requestDataError);
     let outputList: responseAutocompleteItem[] = [];
     await Promise.all(config.foodTypeList.map(async (type: foodTypeEnum) => {
         let response: googleAutocompleteResponse = await callGoogleApiAutocomplete(
-            input, {lat: latitude, lng: longitude}, type, distance === -1 ? "distance" : distance
+            input, location, type, distance === -1 ? "distance" : distance
         );
         let output: responseAutocompleteItem[] = response.predictions.map((item: placeAutocompletePrediction): responseAutocompleteItem => ({
             place_id: item.place_id,

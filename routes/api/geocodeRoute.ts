@@ -1,9 +1,6 @@
 import {Router} from "express";
-import placeMgr from '../../models/placeMgr';
 import apiResponseBase from "../../models/dataStruct/apiResponseUserBase";
-import googleMapsMgr from "../../models/googleMapsMgr";
 import {apiError} from "../../models/dataStruct/response/baseResponse";
-import config from "../../config";
 import geocodeMgr from "../../models/geocodeMgr";
 
 const router = Router()
@@ -11,9 +8,9 @@ const router = Router()
 router.post('/autocomplete', async function (req: any, res: any, next: any) {
     let response = new apiResponseBase();
     try {
-        let {userId, accessKey, latitude, longitude, input} = req.body;
+        let {userId, accessKey, location, input} = req.body;
         await response.verifyUser(userId, accessKey);
-        response.result = await geocodeMgr.autocomplete(latitude, longitude, input);
+        response.result = await geocodeMgr.autocomplete(location, input);
     } catch (error: apiError | any) {
         response.errorHandle(error);
     }

@@ -5,7 +5,7 @@ import {placeItem, userDocument} from "./dataStruct/mongodb/userDocument";
 import {favoriteItem, favoriteResult} from "./dataStruct/response/favoriteResponse";
 import {dbPlaceDocument} from "./dataStruct/mongodb/googlePlaceDocument";
 import {callGoogleApiDetail} from "./service/googleApi/placeService";
-import {googleDetailResponse} from "./dataStruct/mongodb/originalGooglePlaceData";
+import {googleDetailResponse, latLngLiteral} from "./dataStruct/mongodb/originalGooglePlaceData";
 import {blackListItem, blackListResult} from "./dataStruct/response/blackListResponses";
 import {
     userLogAddFcmToken,
@@ -14,9 +14,7 @@ import {
     userLogLogOut,
     userLogRegister
 } from "./service/userLogService";
-import {dbLocationItem} from "./dataStruct/mongodb/publicItem/dbLocationItem";
 import {placeListItem, placeListResult} from "./dataStruct/response/placeListResponses";
-import {responseLocationItem} from "./dataStruct/response/publicItem/responseLocationItem";
 
 async function register(username: string, password: string, deviceId: string) {
     if (isUndefined([username, password, deviceId])) throwError(errorCodes.requestDataError);
@@ -279,8 +277,8 @@ async function getBlackList(userId: string): Promise<blackListResult> {
     return {placeCount: blackListItems.length, placeList: blackListItems}
 }
 
-async function pushPlaceList(userId: string, place_id: string, name: string, address: string, latitude: number, longitude: number) {
-    if (isUndefined([place_id, name, address, latitude, longitude])) throwError(errorCodes.requestDataError);
+async function pushPlaceList(userId: string, place_id: string, name: string, address: string, location: latLngLiteral) {
+    if (isUndefined([place_id, name, address, location])) throwError(errorCodes.requestDataError);
     const userCol = global.mongodbClient.foodMapDb.userCol;
     let userQuery = {_id: new ObjectId(userId)};
     let userDoc: userDocument = await userCol.findOne(userQuery);
@@ -293,7 +291,7 @@ async function pushPlaceList(userId: string, place_id: string, name: string, add
     info.successCount += 1;
     userDoc.placeList.push({
         place_id, name, address,
-        location: responseLocationConvertDb({lat: latitude, lng: longitude})
+        location: responseLocationConvertDb(location)
     });
     await userCol.updateOne(userQuery, {$set: {placeList: userDoc.placeList}});
     return {msg: '添加常用地點成功', info};

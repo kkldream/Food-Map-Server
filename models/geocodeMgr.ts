@@ -1,14 +1,18 @@
 import {errorCodes, isUndefined, throwError} from './dataStruct/throwError';
 import {responseAutocompleteItem} from "./dataStruct/response/autocompleteResponses";
 import {callGoogleApiAutocomplete} from "./service/googleApi/placeService";
-import {googleAutocompleteResponse, placeAutocompletePrediction} from "./dataStruct/mongodb/originalGooglePlaceData";
+import {
+    googleAutocompleteResponse,
+    latLngLiteral,
+    placeAutocompletePrediction
+} from "./dataStruct/mongodb/originalGooglePlaceData";
 import {callGoogleApiGeocodeAddress, callGoogleApiGeocodeLocation} from "./service/googleApi/geocodeService";
 
-async function autocomplete(latitude: number, longitude: number, input: string | undefined): Promise<responseAutocompleteItem[]> {
-    if (isUndefined([latitude, longitude])) throwError(errorCodes.requestDataError);
+async function autocomplete(location: latLngLiteral, input: string | undefined): Promise<responseAutocompleteItem[]> {
+    if (isUndefined([location])) throwError(errorCodes.requestDataError);
     if (input) {
         let response: googleAutocompleteResponse = await callGoogleApiAutocomplete(
-            input, {lat: latitude, lng: longitude}, undefined, "distance"
+            input, location, undefined, "distance"
         );
         return response.predictions.map((item: placeAutocompletePrediction): responseAutocompleteItem => {
             return {
@@ -19,7 +23,7 @@ async function autocomplete(latitude: number, longitude: number, input: string |
             };
         });
     } else {
-        let response: any = await callGoogleApiGeocodeAddress({lat: latitude, lng: longitude});
+        let response: any = await callGoogleApiGeocodeAddress(location);
         let item = response.results[0];
         return [{
             place_id: item.place_id,
@@ -30,7 +34,7 @@ async function autocomplete(latitude: number, longitude: number, input: string |
                 .join(""),
             address: item.formatted_address,
             description: item.formatted_address,
-            location: {lat: latitude, lng: longitude}
+            location
         }];
     }
 }

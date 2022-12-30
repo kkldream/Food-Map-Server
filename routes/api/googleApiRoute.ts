@@ -8,9 +8,9 @@ const router = Router()
 router.post('/update_custom', async function (req: any, res: any, next: any) {
     let response = new apiResponseBase();
     try {
-        let {accessKey, latitude, longitude, radius, keyword} = req.body;
+        let {accessKey, location, radius, keyword} = req.body;
         await response.verifyRoot(accessKey);
-        response.result = await googleMapsMgr.updateCustom(latitude, longitude, radius, keyword);
+        response.result = await googleMapsMgr.updateCustom(location, radius, keyword);
     } catch (error: apiError | any) {
         response.errorHandle(error);
     }
@@ -20,9 +20,9 @@ router.post('/update_custom', async function (req: any, res: any, next: any) {
 router.post('/update_place_by_distance', async function (req: any, res: any, next: any) {
     let response = new apiResponseBase();
     try {
-        let {accessKey, latitude, longitude, searchPageNum} = req.body;
+        let {accessKey, location, searchPageNum} = req.body;
         await response.verifyRoot(accessKey);
-        response.result = await googleMapsMgr.updatePlaceByDistance(latitude, longitude, searchPageNum);
+        response.result = await googleMapsMgr.updatePlaceByDistance(location, searchPageNum);
     } catch (error: apiError | any) {
         response.errorHandle(error);
     }

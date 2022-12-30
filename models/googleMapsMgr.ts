@@ -1,9 +1,13 @@
 import {errorCodes, isUndefined, throwError} from "./dataStruct/throwError";
 import {responseLocationConvertDb} from "./utils";
 import config from "../config"
-import {googleDetailItem, googlePlaceResult} from "./dataStruct/mongodb/originalGooglePlaceData";
+import {googleDetailItem, googlePlaceResult, latLngLiteral} from "./dataStruct/mongodb/originalGooglePlaceData";
 import {dbPlaceDocument, dbPlaceItem} from "./dataStruct/mongodb/googlePlaceDocument";
-import {callGoogleApiDetail, callGoogleApiKeywordBySearch, callGoogleApiNearBySearch} from "./service/googleApi/placeService";
+import {
+    callGoogleApiDetail,
+    callGoogleApiKeywordBySearch,
+    callGoogleApiNearBySearch
+} from "./service/googleApi/placeService";
 import {responseLocationItem} from "./dataStruct/response/publicItem/responseLocationItem";
 import {responseDetailResult} from "./dataStruct/response/detailResponses";
 import {isFavoriteByUserId} from "./service/placeService";
@@ -11,8 +15,8 @@ import {googleImageListConvertPhotoId} from "./service/imageService";
 import {userDocument} from "./dataStruct/mongodb/userDocument";
 import {ObjectId} from "mongodb";
 
-async function updateCustom(latitude: number, longitude: number, radius: number, keyword: string) {
-    if (!latitude || !longitude || !radius || !keyword) throwError(errorCodes.requestDataError);
+async function updateCustom(location: latLngLiteral, radius: number, keyword: string) {
+    if (!location || !radius || !keyword) throwError(errorCodes.requestDataError);
     let resultStatus = {
         upsertCount: 0,
         matchCount: 0,
@@ -20,10 +24,7 @@ async function updateCustom(latitude: number, longitude: number, radius: number,
     };
     for (const type of config.foodTypeList) {
         let result = await nearBySearch(3, {
-            location: {lat: latitude, lng: longitude},
-            type,
-            keyword,
-            distance: radius
+            location, type, keyword, distance: radius
         }, "custom");
         resultStatus.upsertCount += result.upsertCount;
         resultStatus.matchCount += result.matchCount;
@@ -32,8 +33,8 @@ async function updateCustom(latitude: number, longitude: number, radius: number,
     return resultStatus;
 }
 
-async function updatePlaceByDistance(latitude: number, longitude: number, searchPageNum: number = 1) {
-    if (!latitude || !longitude) throwError(errorCodes.requestDataError);
+async function updatePlaceByDistance(location: latLngLiteral, searchPageNum: number = 1) {
+    if (!location) throwError(errorCodes.requestDataError);
     let resultStatus = {
         upsertCount: 0,
         matchCount: 0,
@@ -41,10 +42,7 @@ async function updatePlaceByDistance(latitude: number, longitude: number, search
     };
     for (const type of config.foodTypeList) {
         let result = await nearBySearch(searchPageNum, {
-                location: {lat: latitude, lng: longitude},
-                type,
-                keyword: "",
-                distance: -1
+                location, type, keyword: "", distance: -1
             }, "search_by_near"
         );
         resultStatus.upsertCount += result.upsertCount;
@@ -54,8 +52,8 @@ async function updatePlaceByDistance(latitude: number, longitude: number, search
     return resultStatus;
 }
 
-async function updatePlaceByKeyword(latitude: number, longitude: number, keyword: string, distance: number, searchPageNum: number = 1) {
-    if (!latitude || !longitude || !keyword || !distance) throwError(errorCodes.requestDataError);
+async function updatePlaceByKeyword(location: latLngLiteral, keyword: string, distance: number, searchPageNum: number = 1) {
+    if (!location || !keyword || !distance) throwError(errorCodes.requestDataError);
     let resultStatus = {
         upsertCount: 0,
         matchCount: 0,
@@ -63,10 +61,7 @@ async function updatePlaceByKeyword(latitude: number, longitude: number, keyword
     };
     for (const type of config.foodTypeList) {
         let result = await nearBySearch(searchPageNum, {
-                location: {lat: latitude, lng: longitude},
-                type,
-                keyword,
-                distance
+                location, type, keyword, distance
             }, "search_by_keyword"
         );
         resultStatus.upsertCount += result.upsertCount;
