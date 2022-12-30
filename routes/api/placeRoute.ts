@@ -82,16 +82,4 @@ router.post('/autocomplete', async function (req: any, res: any, next: any) {
     return res.send(response);
 });
 
-router.post('/autocompletePlace', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
-    try {
-        let {userId, accessKey, location, input} = req.body;
-        await response.verifyUser(userId, accessKey);
-        response.result = await placeMgr.autocomplete(location, input);
-    } catch (error: apiError | any) {
-        response.errorHandle(error);
-    }
-    return res.send(response);
-});
-
 export default router;
