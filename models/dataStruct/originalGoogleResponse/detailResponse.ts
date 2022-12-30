@@ -1,9 +1,9 @@
-import {googlePhotosItem, latLngLiteral, placeOpeningHours} from "./pubilcItem";
+import {googlePhotosItem, googleStatusEnum, latLngLiteral, placeOpeningHours} from "./pubilcItem";
 
 export interface googleDetailResponse {
     html_attributions: string[];
     result: googleDetailItem;
-    status: string;
+    status: googleStatusEnum;
 }
 
 export interface googleDetailItem {

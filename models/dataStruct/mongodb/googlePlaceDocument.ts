@@ -1,5 +1,5 @@
 import {ObjectId} from "mongodb";
-import {googlePlaceResult} from "../originalGoogleResponse/originalGooglePlaceData";
+import {googlePlaceResult} from "../originalGoogleResponse/placeResponse";
 import {googleDetailItem} from "../originalGoogleResponse/detailResponse";
 import {dbLocationItem} from "./pubilcItem";
 import {latLngItem} from "../pubilcItem";

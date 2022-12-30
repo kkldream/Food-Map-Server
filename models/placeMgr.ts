@@ -11,7 +11,7 @@ import {photoDocument} from "./dataStruct/mongodb/photoDocument";
 import {photoResult} from "./dataStruct/response/photoResponse";
 import {responseAutocompleteItem} from "./dataStruct/response/autocompleteResponses";
 import {callGoogleApiAutocomplete} from "./service/googleApi/placeService";
-import {googlePlaceResult} from "./dataStruct/originalGoogleResponse/originalGooglePlaceData";
+import {googlePlaceResult} from "./dataStruct/originalGoogleResponse/placeResponse";
 import {foodTypeEnum} from "./dataStruct/staticCode/foodTypeEnum";
 import {googleApiLogDocument} from "./dataStruct/mongodb/googleApiLogDocument";
 import {twoLocateDistance} from "./utils";

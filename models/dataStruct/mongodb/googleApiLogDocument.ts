@@ -1,10 +1,11 @@
 import {ObjectId} from "mongodb";
-import {googlePlaceResult} from "../originalGoogleResponse/originalGooglePlaceData";
+import {googlePlaceResult} from "../originalGoogleResponse/placeResponse";
 import {photoItem} from "./photoDocument";
 import {placeAutocompletePrediction} from "../originalGoogleResponse/autocompleteResponse";
 import {googleDetailItem} from "../originalGoogleResponse/detailResponse";
 import {dbLocationItem} from "./pubilcItem";
 import {googlePhotosItem} from "../originalGoogleResponse/pubilcItem";
+import {googleGeocodeAutocompleteResult} from "../originalGoogleResponse/geocodeAutocompleteResponse";
 
 export interface googleApiLogDocument {
     _id?: ObjectId;
@@ -22,7 +23,8 @@ export interface googleApiLogDocument {
             googlePlaceResult[] |
             googleDetailItem |
             photoItem |
-            placeAutocompletePrediction[];
+            placeAutocompletePrediction[] |
+            googleGeocodeAutocompleteResult[];
     };
 }
 

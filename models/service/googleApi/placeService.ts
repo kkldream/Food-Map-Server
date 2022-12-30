@@ -1,4 +1,4 @@
-import {googlePlaceResponse, googlePlaceResult} from "../../dataStruct/originalGoogleResponse/originalGooglePlaceData";
+import {googlePlaceResponse, googlePlaceResult} from "../../dataStruct/originalGoogleResponse/placeResponse";
 import axios from "axios";
 import {responseLocationConvertDb} from "../../utils";
 import {

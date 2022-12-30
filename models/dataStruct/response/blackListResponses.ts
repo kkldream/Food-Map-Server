@@ -2,7 +2,7 @@ import {baseResponses} from "./baseResponse";
 import {latLngItem} from "../pubilcItem";
 import {placeOpeningHours} from "../originalGoogleResponse/pubilcItem";
 
-export interface blackListResponses extends baseResponses{
+export interface blackListResponses extends baseResponses {
     result: blackListResult;
 }
 

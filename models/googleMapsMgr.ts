@@ -13,7 +13,7 @@ import {googleImageListConvertPhotoId} from "./service/imageService";
 import {userDocument} from "./dataStruct/mongodb/userDocument";
 import {ObjectId} from "mongodb";
 import {latLngItem} from "./dataStruct/pubilcItem";
-import {googlePlaceResult} from "./dataStruct/originalGoogleResponse/originalGooglePlaceData";
+import {googlePlaceResult} from "./dataStruct/originalGoogleResponse/placeResponse";
 import {googleDetailItem} from "./dataStruct/originalGoogleResponse/detailResponse";
 
 async function updateCustom(location: latLngItem, radius: number, keyword: string) {

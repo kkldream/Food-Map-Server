@@ -1,4 +1,4 @@
-import {googlePlaceResult,} from "../dataStruct/originalGoogleResponse/originalGooglePlaceData";
+import {googlePlaceResult,} from "../dataStruct/originalGoogleResponse/placeResponse";
 import {geocodeAutocompleteRequest, googleApiLogDocument} from "../dataStruct/mongodb/googleApiLogDocument";
 import {photoItem} from "../dataStruct/mongodb/photoDocument";
 import {responseLocationConvertDb} from "../utils";
@@ -7,6 +7,7 @@ import {dbLocationItem} from "../dataStruct/mongodb/pubilcItem";
 import {googleDetailItem} from "../dataStruct/originalGoogleResponse/detailResponse";
 import {googlePhotosItem} from "../dataStruct/originalGoogleResponse/pubilcItem";
 import {latLngItem} from "../dataStruct/pubilcItem";
+import {googleGeocodeAutocompleteResult} from "../dataStruct/originalGoogleResponse/geocodeAutocompleteResponse";
 
 interface googleApiPlaceLogRequest {
     searchPageNum: number;
@@ -97,7 +98,7 @@ export async function insertGoogleApiAutocompleteLog(req: googleApiAutocompleteL
 interface googleApiGeocodeAutocompleteLogRequest {
     location?: latLngItem;
     address?: string;
-    response: any;
+    response: googleGeocodeAutocompleteResult[];
 }
 
 export async function insertGoogleApiGeocodeAutocompleteLog(req: googleApiGeocodeAutocompleteLogRequest) {
