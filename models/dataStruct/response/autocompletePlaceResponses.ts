@@ -9,5 +9,6 @@ export interface responseAutocompletePlaceItem {
     place_id: string;
     name: string;
     address: string;
+    description: string;
     location: responseLocationItem;
 }

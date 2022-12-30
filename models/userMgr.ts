@@ -4,7 +4,7 @@ import {errorCodes, isUndefined, throwError} from "./dataStruct/throwError";
 import {placeItem, userDocument} from "./dataStruct/mongodb/userDocument";
 import {favoriteItem, favoriteResult} from "./dataStruct/response/favoriteResponse";
 import {dbPlaceDocument} from "./dataStruct/mongodb/googlePlaceDocument";
-import {callGoogleApiDetail} from "./service/googleApiService";
+import {callGoogleApiDetail} from "./service/googleApi/placeService";
 import {googleDetailResponse} from "./dataStruct/mongodb/originalGooglePlaceData";
 import {blackListItem, blackListResult} from "./dataStruct/response/blackListResponses";
 import {

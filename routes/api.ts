@@ -1,6 +1,7 @@
 import {Router} from 'express';
 import apiResponseBase from '../models/dataStruct/apiResponseUserBase';
 import placeRoute from './api/placeRoute';
+import geocodeRoute from './api/geocodeRoute';
 import googleApiRoute from './api/googleApiRoute';
 import userRoute from './api/userRoute';
 import rootRoute from "./api/rootRoute";
@@ -32,6 +33,7 @@ router.use('/', function (req: any, res: any, next: any) {
 });
 
 router.use('/place', placeRoute);
+router.use('/geocode', geocodeRoute);
 router.use('/google_api', googleApiRoute);
 router.use('/user', userRoute);
 router.use('/root', rootRoute);

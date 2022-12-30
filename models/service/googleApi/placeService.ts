@@ -4,11 +4,11 @@ import {
     googlePlaceResponse,
     googlePlaceResult,
     latLngLiteral
-} from "../dataStruct/mongodb/originalGooglePlaceData";
+} from "../../dataStruct/mongodb/originalGooglePlaceData";
 import axios from "axios";
-import {responseLocationItem} from "../dataStruct/response/publicItem/responseLocationItem";
-import {responseLocationConvertDb} from "../utils";
-import {insertGoogleApiAutocompleteLog, insertGoogleApiDetailLog, insertGoogleApiPlaceLog} from "./googleApiLogService";
+import {responseLocationItem} from "../../dataStruct/response/publicItem/responseLocationItem";
+import {responseLocationConvertDb} from "../../utils";
+import {insertGoogleApiAutocompleteLog, insertGoogleApiDetailLog, insertGoogleApiPlaceLog} from "../googleApiLogService";
 
 export async function callGoogleApiNearBySearch(searchPageNum: number, location: responseLocationItem, type: string, distance: number): Promise<googlePlaceResult[]> {
     let originalDataList: googlePlaceResult[] = [];
