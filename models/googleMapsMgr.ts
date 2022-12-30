@@ -16,7 +16,7 @@ import {userDocument} from "./dataStruct/mongodb/userDocument";
 import {ObjectId} from "mongodb";
 
 async function updateCustom(location: latLngLiteral, radius: number, keyword: string) {
-    if (!location || !radius || !keyword) throwError(errorCodes.requestDataError);
+    if (isUndefined([location, radius, keyword])) throwError(errorCodes.requestDataError);
     let resultStatus = {
         upsertCount: 0,
         matchCount: 0,
@@ -34,7 +34,7 @@ async function updateCustom(location: latLngLiteral, radius: number, keyword: st
 }
 
 async function updatePlaceByDistance(location: latLngLiteral, searchPageNum: number = 1) {
-    if (!location) throwError(errorCodes.requestDataError);
+    if (isUndefined([location])) throwError(errorCodes.requestDataError);
     let resultStatus = {
         upsertCount: 0,
         matchCount: 0,
@@ -53,7 +53,7 @@ async function updatePlaceByDistance(location: latLngLiteral, searchPageNum: num
 }
 
 async function updatePlaceByKeyword(location: latLngLiteral, keyword: string, distance: number, searchPageNum: number = 1) {
-    if (!location || !keyword || !distance) throwError(errorCodes.requestDataError);
+    if (isUndefined([location, keyword, distance])) throwError(errorCodes.requestDataError);
     let resultStatus = {
         upsertCount: 0,
         matchCount: 0,
