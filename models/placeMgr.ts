@@ -97,7 +97,7 @@ async function searchByKeyword(userId: string, latitude: number, longitude: numb
                 "maxDistance": 100,
                 "query": {
                     "mode": "place",
-                    "createTime": {"$gte": new Date(new Date().setSeconds(-config.keywordUpdateRangeSecond))}
+                    "createTime": {"$gte": new Date(requestTime.setSeconds(-config.keywordUpdateRangeSecond))}
                 }
             }
         },
