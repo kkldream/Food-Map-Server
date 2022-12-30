@@ -21,7 +21,7 @@ export interface googleApiLogDocument {
         radius?: number;
     } | { place_id: string; } | { photoReference: googlePhotosItem; } | {
         input: string;
-        type: string;
+        type?: string;
         radius: number | string;
         location: dbLocationItem;
     };

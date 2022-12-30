@@ -1,10 +1,10 @@
 import {ObjectId} from 'mongodb';
-import {generateUUID} from './utils';
+import {dbLocationConvertResponse, generateUUID, responseLocationConvertDb} from './utils';
 import {errorCodes, isUndefined, throwError} from "./dataStruct/throwError";
-import {userDocument} from "./dataStruct/mongodb/userDocument";
+import {placeItem, userDocument} from "./dataStruct/mongodb/userDocument";
 import {favoriteItem, favoriteResult} from "./dataStruct/response/favoriteResponse";
 import {dbPlaceDocument} from "./dataStruct/mongodb/googlePlaceDocument";
-import {callGoogleApiDetail} from "./service/googleApiService";
+import {callGoogleApiDetail} from "./service/googleApi/placeService";
 import {googleDetailResponse} from "./dataStruct/mongodb/originalGooglePlaceData";
 import {blackListItem, blackListResult} from "./dataStruct/response/blackListResponses";
 import {
@@ -14,6 +14,9 @@ import {
     userLogLogOut,
     userLogRegister
 } from "./service/userLogService";
+import {dbLocationItem} from "./dataStruct/mongodb/publicItem/dbLocationItem";
+import {placeListItem, placeListResult} from "./dataStruct/response/placeListResponses";
+import {responseLocationItem} from "./dataStruct/response/publicItem/responseLocationItem";
 
 async function register(username: string, password: string, deviceId: string) {
     if (isUndefined([username, password, deviceId])) throwError(errorCodes.requestDataError);
@@ -276,6 +279,56 @@ async function getBlackList(userId: string): Promise<blackListResult> {
     return {placeCount: blackListItems.length, placeList: blackListItems}
 }
 
+async function pushPlaceList(userId: string, place_id: string, name: string, address: string, latitude: number, longitude: number) {
+    if (isUndefined([place_id, name, address, latitude, longitude])) throwError(errorCodes.requestDataError);
+    const userCol = global.mongodbClient.foodMapDb.userCol;
+    let userQuery = {_id: new ObjectId(userId)};
+    let userDoc: userDocument = await userCol.findOne(userQuery);
+    let info = {successCount: 0, existCount: 0};
+    userDoc.placeList = userDoc.placeList ?? [];
+    if (userDoc.placeList.map(place => place.place_id).includes(place_id)) {
+        info.existCount += 1;
+        return {msg: '添加常用地點失敗', info};
+    }
+    info.successCount += 1;
+    userDoc.placeList.push({
+        place_id, name, address,
+        location: responseLocationConvertDb({lat: latitude, lng: longitude})
+    });
+    await userCol.updateOne(userQuery, {$set: {placeList: userDoc.placeList}});
+    return {msg: '添加常用地點成功', info};
+}
+
+async function pullPlaceList(userId: string, place_id: string) {
+    if (isUndefined([place_id])) throwError(errorCodes.requestDataError);
+    const userCol = global.mongodbClient.foodMapDb.userCol;
+    let userQuery = {_id: new ObjectId(userId)};
+    let userDoc: userDocument = await userCol.findOne(userQuery);
+    let info = {deleteCount: 0};
+    if (!userDoc.placeList) return {msg: '移除常用地點成功', info};
+    let newPlaceList: placeItem[] = userDoc.placeList.filter(place => {
+        let result = place.place_id === place_id;
+        if (result) info.deleteCount += 1;
+        return !result;
+    });
+    await userCol.updateOne(userQuery, {$set: {placeList: newPlaceList}});
+    return {msg: '移除黑名單成功', info};
+}
+
+async function getPlaceList(userId: string): Promise<placeListResult> {
+    const userCol = global.mongodbClient.foodMapDb.userCol;
+    let userQuery = {_id: new ObjectId(userId)};
+    let userDoc: userDocument = await userCol.findOne(userQuery);
+    if (!userDoc.placeList) return {placeCount: 0, placeList: []}
+    let placeList: placeListItem[] = userDoc.placeList.map((place: placeItem): placeListItem => ({
+        place_id: place.place_id,
+        name: place.name,
+        address: place.address,
+        location: dbLocationConvertResponse(place.location),
+    }))
+    return {placeCount: placeList.length, placeList}
+}
+
 export default {
     register,
     loginByDevice,
@@ -291,4 +344,7 @@ export default {
     pushBlackList,
     pullBlackList,
     getBlackList,
+    pushPlaceList,
+    pullPlaceList,
+    getPlaceList,
 };

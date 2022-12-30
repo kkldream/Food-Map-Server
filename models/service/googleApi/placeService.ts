@@ -4,11 +4,11 @@ import {
     googlePlaceResponse,
     googlePlaceResult,
     latLngLiteral
-} from "../dataStruct/mongodb/originalGooglePlaceData";
+} from "../../dataStruct/mongodb/originalGooglePlaceData";
 import axios from "axios";
-import {responseLocationItem} from "../dataStruct/response/publicItem/responseLocationItem";
-import {responseLocationConvertDb} from "../utils";
-import {insertGoogleApiAutocompleteLog, insertGoogleApiDetailLog, insertGoogleApiPlaceLog} from "./googleApiLogService";
+import {responseLocationItem} from "../../dataStruct/response/publicItem/responseLocationItem";
+import {responseLocationConvertDb} from "../../utils";
+import {insertGoogleApiAutocompleteLog, insertGoogleApiDetailLog, insertGoogleApiPlaceLog} from "../googleApiLogService";
 
 export async function callGoogleApiNearBySearch(searchPageNum: number, location: responseLocationItem, type: string, distance: number): Promise<googlePlaceResult[]> {
     let originalDataList: googlePlaceResult[] = [];
@@ -89,15 +89,15 @@ export async function callGoogleApiDetail(place_id: string): Promise<googleDetai
     return response;
 }
 
-export async function callGoogleApiAutocomplete(input: string, location: latLngLiteral, type: string, radius: number | string): Promise<googleAutocompleteResponse> {
+export async function callGoogleApiAutocomplete(input: string, location: latLngLiteral, type: string | undefined, radius: number | string): Promise<googleAutocompleteResponse> {
     let url = 'https://maps.googleapis.com/maps/api/place/autocomplete/json?'
         + `&input=${input}`
         + `&location=${location.lat},${location.lng}`
         + `&components=country:tw`
         + `&radius=${radius}`
-        + `&type=${type}`
         + `&key=${process.env.GOOGLE_API_KEY}`
         + `&language=zh-TW`;
+    if (type) url += `&type=${type}`
     let response: googleAutocompleteResponse = (await axios({method: 'get', url})).data;
     await insertGoogleApiAutocompleteLog({
         input, type, radius, response: response.predictions,

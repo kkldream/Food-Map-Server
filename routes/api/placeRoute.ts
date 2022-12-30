@@ -73,9 +73,21 @@ router.get('/get_html_photo/:photoId', async function (req: any, res: any, next:
 router.post('/autocomplete', async function (req: any, res: any, next: any) {
     let response = new apiResponseBase();
     try {
-        let {userId, accessKey, latitude, longitude, input, radius} = req.body;
+        let {userId, accessKey, latitude, longitude, input, distance} = req.body;
         await response.verifyUser(userId, accessKey);
-        response.result = await placeMgr.autocomplete(userId, latitude, longitude, input, radius);
+        response.result = await placeMgr.autocomplete(latitude, longitude, input, distance);
+    } catch (error: apiError | any) {
+        response.errorHandle(error);
+    }
+    return res.send(response);
+});
+
+router.post('/autocompletePlace', async function (req: any, res: any, next: any) {
+    let response = new apiResponseBase();
+    try {
+        let {userId, accessKey, latitude, longitude, input} = req.body;
+        await response.verifyUser(userId, accessKey);
+        response.result = await placeMgr.autocomplete(latitude, longitude, input);
     } catch (error: apiError | any) {
         response.errorHandle(error);
     }
