@@ -6,6 +6,7 @@ import googleApiRoute from './api/googleApiRoute';
 import userRoute from './api/userRoute';
 import rootRoute from "./api/rootRoute";
 import {routeApiLogDocument} from "../models/dataStruct/mongodb/routeApiLogDocument";
+import {customBodyParser} from "../models/service/customBodyParser";
 
 const router = Router();
 
@@ -14,7 +15,7 @@ router.use(function (req: any, res: any, next: any) {
     next();
 });
 
-// router.use(customBodyParser);
+router.use(customBodyParser);
 // router.use(express.json());
 
 router.use(function (req: any, res: any, next: any) {
