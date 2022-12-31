@@ -9,8 +9,8 @@ const router = Router()
 router.post('/search_by_distance', async function (req: any, res: any, next: any) {
     let response = new apiResponseBase(req);
     try {
-        let {userId, location, distance, skip, limit} = req.body;
         await response.verifyUser();
+        let {userId, location, distance, skip, limit} = req.body;
         response.result = await placeMgr.searchByDistance(userId, location, distance, skip, limit);
     } catch (error: apiError | any) {
         response.errorHandle(error);
@@ -19,10 +19,10 @@ router.post('/search_by_distance', async function (req: any, res: any, next: any
 });
 
 router.post('/search_by_keyword', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+    let response = new apiResponseBase(req);
     try {
-        let {userId, accessKey, location, distance, keyword, skip, limit} = req.body;
-        await response.verifyUser(userId, accessKey);
+        await response.verifyUser();
+        let {userId, location, distance, keyword, skip, limit} = req.body;
         response.result = await placeMgr.searchByKeyword(userId, location, distance, keyword, skip, limit);
     } catch (error: apiError | any) {
         response.errorHandle(error);
@@ -31,10 +31,10 @@ router.post('/search_by_keyword', async function (req: any, res: any, next: any)
 });
 
 router.post('/details_by_place_id', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+    let response = new apiResponseBase(req);
     try {
-        let {userId, accessKey, place_id} = req.body;
-        await response.verifyUser(userId, accessKey);
+        await response.verifyUser();
+        let {userId, place_id} = req.body;
         response.result = await placeMgr.detailsByPlaceId(userId, place_id);
     } catch (error: apiError | any) {
         response.errorHandle(error);
@@ -43,10 +43,10 @@ router.post('/details_by_place_id', async function (req: any, res: any, next: an
 });
 
 router.post('/draw_card', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+    let response = new apiResponseBase(req);
     try {
-        let {userId, accessKey, location, mode, num} = req.body;
-        await response.verifyUser(userId, accessKey);
+        await response.verifyUser();
+        let {userId, location, mode, num} = req.body;
         response.result = await placeMgr.drawCard(userId, location, mode, num);
     } catch (error: apiError | any) {
         response.errorHandle(error);
@@ -57,7 +57,6 @@ router.post('/draw_card', async function (req: any, res: any, next: any) {
 router.get('/get_html_photo/:photoId', async function (req: any, res: any, next: any) {
     res.setHeader('Content-Type', 'image/jpeg');
     try {
-        // let userId = req.query.userId;
         let photoId = req.params.photoId;
         let base64Img = await placeMgr.getHtmlPhoto(photoId);
         let buff = Buffer.from(base64Img, 'base64');
@@ -70,10 +69,10 @@ router.get('/get_html_photo/:photoId', async function (req: any, res: any, next:
 });
 
 router.post('/autocomplete', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+    let response = new apiResponseBase(req);
     try {
-        let {userId, accessKey, location, input, distance, deepSearch} = req.body;
-        await response.verifyUser(userId, accessKey);
+        await response.verifyUser();
+        let {location, input, distance, deepSearch} = req.body;
         response.result = await placeMgr.autocomplete(location, input, distance, deepSearch);
     } catch (error: apiError | any) {
         response.errorHandle(error);

@@ -6,10 +6,10 @@ import geocodeMgr from "../../models/geocodeMgr";
 const router = Router()
 
 router.post('/autocomplete', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+    let response = new apiResponseBase(req);
     try {
-        let {userId, accessKey, location, input} = req.body;
-        await response.verifyUser(userId, accessKey);
+        await response.verifyUser();
+        let {location, input} = req.body;
         response.result = await geocodeMgr.autocomplete(location, input);
     } catch (error: apiError | any) {
         response.errorHandle(error);
@@ -18,10 +18,10 @@ router.post('/autocomplete', async function (req: any, res: any, next: any) {
 });
 
 router.post('/get_location_by_address', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+    let response = new apiResponseBase(req);
     try {
-        let {userId, accessKey, address} = req.body;
-        await response.verifyUser(userId, accessKey);
+        await response.verifyUser();
+        let {address} = req.body;
         response.result = await geocodeMgr.getLocationByAddress(address);
     } catch (error: apiError | any) {
         response.errorHandle(error);

@@ -18,8 +18,9 @@ export default class apiResponseBase implements apiResponseBaseInterface {
     result?: any;
 
     req?: any;
-    constructor(req: any) {
-        this.requestTime = req.requestTime;
+    constructor(req?: any) {
+        this.req = req;
+        this.requestTime = req?.requestTime ?? new Date();
         this.verify = undefined;
         this.status = 0;
     }
