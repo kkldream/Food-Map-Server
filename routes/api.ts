@@ -17,6 +17,11 @@ router.use(function (req: any, res: any, next: any) {
 
 // 實作express.json()方法，改善在json body裡放註解不會抱錯
 router.use(async function (req: any, res: any, next: any) {
+    let contentType = req.headers["content-type"];
+    if (contentType !== "application/json") {
+        req.body = {};
+        return next();
+    }
     let buffers = [];
     for await (let chunk of req) buffers.push(chunk);
     let dataStr = Buffer.concat(buffers).toString();
