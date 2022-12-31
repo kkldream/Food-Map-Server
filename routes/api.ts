@@ -1,4 +1,4 @@
-import express, {Router} from 'express';
+import {Router} from 'express';
 import apiResponseBase from '../models/dataStruct/apiResponseUserBase';
 import placeRoute from './api/placeRoute';
 import geocodeRoute from './api/geocodeRoute';
@@ -16,7 +16,6 @@ router.use(function (req: any, res: any, next: any) {
 });
 
 router.use(customBodyParser);
-// router.use(express.json());
 
 router.use(function (req: any, res: any, next: any) {
     if (req.session.userId) req.body.userId = req.session.userId;
