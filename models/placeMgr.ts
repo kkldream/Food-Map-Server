@@ -143,7 +143,7 @@ async function detailsByPlaceId(userId: string, place_id: string): Promise<respo
         place_id, updateTime: {$gt: new Date(requestTime.setSeconds(-config.detailUpdateRangeSecond))}
     });
     let updated = false;
-    if (!findResult) {
+    if (!findResult || findResult.originalDetail === null) {
         let detailResult: googleDetailItem = (await callGoogleApiDetail(place_id)).result;
         if (!detailResult) throwError(errorCodes.placeNotFound);
         findResult = await detailToDocument(requestTime, detailResult);
