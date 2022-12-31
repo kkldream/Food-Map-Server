@@ -15,7 +15,7 @@ router.use(function (req: any, res: any, next: any) {
 });
 
 // router.use(customBodyParser);
-router.use(express.json());
+// router.use(express.json());
 
 router.use(function (req: any, res: any, next: any) {
     if (req.session.userId) req.body.userId = req.session.userId;

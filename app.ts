@@ -6,6 +6,7 @@ import indexRoute from './routes/index';
 import apiRoute from './routes/api';
 import MongodbClient from "./models/mongodbMgr";
 import session from 'express-session';
+import router from "./routes/api";
 
 dotenv.config();
 
@@ -13,6 +14,7 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 
+app.use(express.json());
 app.use(require('cors')());
 app.use(session({
     secret: 'mySecret',
