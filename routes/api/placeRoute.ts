@@ -7,10 +7,10 @@ import config from "../../config";
 const router = Router()
 
 router.post('/search_by_distance', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+    let response = new apiResponseBase(req);
     try {
-        let {userId, accessKey, location, distance, skip, limit} = req.body;
-        await response.verifyUser(userId, accessKey);
+        let {userId, location, distance, skip, limit} = req.body;
+        await response.verifyUser();
         response.result = await placeMgr.searchByDistance(userId, location, distance, skip, limit);
     } catch (error: apiError | any) {
         response.errorHandle(error);
