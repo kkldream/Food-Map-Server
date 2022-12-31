@@ -8,7 +8,7 @@ import rootRoute from "./api/rootRoute";
 import {routeApiLogDocument} from "../models/dataStruct/mongodb/routeApiLogDocument";
 import {baseResponses} from "../models/dataStruct/response/baseResponse";
 
-const router = Router()
+const router = Router();
 
 router.use(function (req: any, res: any, next: any) {
     req.requestTime = new Date();
