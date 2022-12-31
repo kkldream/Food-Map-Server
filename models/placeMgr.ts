@@ -9,7 +9,7 @@ import {userDocument} from "./dataStruct/mongodb/userDocument";
 import {getBlackList} from "./service/blackListService";
 import {photoDocument} from "./dataStruct/mongodb/photoDocument";
 import {photoResult} from "./dataStruct/response/photoResponse";
-import {responseAutocompleteItem} from "./dataStruct/response/autocompleteResponses";
+import {responseAutocompleteItem, responseAutocompleteResult} from "./dataStruct/response/autocompleteResponses";
 import {callGoogleApiAutocomplete, callGoogleApiDetail} from "./service/googleApi/placeService";
 import {googlePlaceResult} from "./dataStruct/originalGoogleResponse/placeResponse";
 import {foodTypeEnum} from "./dataStruct/staticCode/foodTypeEnum";
@@ -257,7 +257,7 @@ async function getHtmlPhoto(photoId: string): Promise<string> {
     return photoDoc.data;
 }
 
-async function autocomplete(location: latLngItem, input: string, distance: number, deepSearch: boolean = false): Promise<responseAutocompleteItem[]> {
+async function autocomplete(location: latLngItem, input: string, distance: number, deepSearch: boolean = false): Promise<responseAutocompleteResult> {
     if (isUndefined([location, input])) throwError(errorCodes.requestDataError);
     let outputList: responseAutocompleteItem[] = [];
     await Promise.all(config.foodTypeList.map(async (type: foodTypeEnum) => {
@@ -295,7 +295,12 @@ async function autocomplete(location: latLngItem, input: string, distance: numbe
     // 前端白癡要求
     outputList = [{place_id: "", name: input, address: "", description: ""}].concat(outputList);
     outputList[0].isSearch = true;
-    return outputList;
+    return {
+        updated: true,
+        dbStatus: undefined,
+        placeCount: outputList.length,
+        placeList: outputList
+    };
 }
 
 export default {

@@ -1,5 +1,5 @@
 import {errorCodes, isUndefined, throwError} from './dataStruct/throwError';
-import {responseAutocompleteItem} from "./dataStruct/response/autocompleteResponses";
+import {responseAutocompleteItem, responseAutocompleteResult} from "./dataStruct/response/autocompleteResponses";
 import {callGoogleApiAutocomplete} from "./service/googleApi/placeService";
 import {callGoogleApiGeocodeAddress, callGoogleApiGeocodeLocation} from "./service/googleApi/geocodeService";
 import {
@@ -12,14 +12,16 @@ import {
     googleGeocodeAutocompleteResponse,
     typesEnum
 } from "./dataStruct/originalGoogleResponse/geocodeAutocompleteResponse";
+import {getLocationByAddressResult} from "./dataStruct/response/getLocationByAddressResponses";
 
-async function autocomplete(location: latLngItem, input: string | undefined): Promise<responseAutocompleteItem[]> {
+async function autocomplete(location: latLngItem, input: string | undefined): Promise<responseAutocompleteResult> {
     if (isUndefined([location])) throwError(errorCodes.requestDataError);
+    let outputList: responseAutocompleteItem[] = [];
     if (input) {
         let response: googleAutocompleteResponse = await callGoogleApiAutocomplete(
             input, location, undefined, -1
         );
-        return response.predictions.map((item: placeAutocompletePrediction): responseAutocompleteItem => {
+        outputList =  response.predictions.map((item: placeAutocompletePrediction): responseAutocompleteItem => {
             return {
                 place_id: item.place_id,
                 name: item.structured_formatting.main_text,
@@ -30,7 +32,7 @@ async function autocomplete(location: latLngItem, input: string | undefined): Pr
     } else {
         let response: googleGeocodeAutocompleteResponse = await callGoogleApiGeocodeAddress(location);
         let item = response.results[0];
-        return [{
+        outputList = [{
             place_id: item.place_id,
             name: item.address_components
                 .filter((e: addressComponents) => e.types.includes(typesEnum.political) && !e.types.includes(typesEnum.country))
@@ -42,12 +44,18 @@ async function autocomplete(location: latLngItem, input: string | undefined): Pr
             location
         }];
     }
+    return {
+        updated: true,
+        dbStatus: undefined,
+        placeCount: outputList.length,
+        placeList: outputList
+    };
 }
 
-async function getLocationByAddress(address: string): Promise<responseAutocompleteItem> {
+async function getLocationByAddress(address: string): Promise<getLocationByAddressResult> {
     let response: googleGeocodeAutocompleteResponse = await callGoogleApiGeocodeLocation(address);
     let item = response.results[0];
-    return {
+    let output: responseAutocompleteItem = {
         place_id: item.place_id,
         name: item.address_components
             .filter((e: addressComponents) => e.types.includes(typesEnum.political) && !e.types.includes(typesEnum.country))
@@ -57,6 +65,11 @@ async function getLocationByAddress(address: string): Promise<responseAutocomple
         address: item.formatted_address,
         description: item.formatted_address,
         location: item.geometry.location
+    };
+    return {
+        updated: true,
+        dbStatus: undefined,
+        place: output
     };
 }
 
