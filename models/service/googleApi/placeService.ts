@@ -31,8 +31,7 @@ export async function callGoogleApiNearBySearch(searchPageNum: number, location:
         if (!next_page_token) break;
     }
     await insertGoogleApiPlaceLog({
-        searchPageNum, type, distance, location,
-        response: originalDataList
+        searchPageNum, type, distance, location, response: originalDataList
     });
     return originalDataList;
 }
@@ -71,8 +70,7 @@ export async function callGoogleApiKeywordBySearch(searchPageNum: number, locati
         }
     })
     await insertGoogleApiPlaceLog({
-        searchPageNum, type, keyword, distance, location,
-        response: originalDataList
+        searchPageNum, type, keyword, distance, location, response: originalDataList
     });
     return originalDataList;
 }
