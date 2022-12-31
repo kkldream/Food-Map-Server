@@ -26,6 +26,7 @@ export interface googleApiLogDocument {
             placeAutocompletePrediction[] |
             googleGeocodeAutocompleteResult[];
     };
+    version?: number;
 }
 
 export enum apiLogModeEnum {
@@ -36,7 +37,7 @@ export enum apiLogModeEnum {
     geocode_autocomplete = "geocode_autocomplete",
 }
 
-interface placeRequest {
+export interface placeRequest {
     searchPageNum: number;
     location: dbLocationItem;
     type: string;
@@ -45,18 +46,18 @@ interface placeRequest {
     radius: number | null;
 }
 
-interface detailRequest {
+export interface detailRequest {
     place_id: string;
 }
 
-interface photoRequest {
+export interface photoRequest {
     photoReference: googlePhotosItem;
 }
 
-interface autocompleteRequest {
+export interface autocompleteRequest {
     input: string;
     type: string | null;
-    radius: number | string;
+    radius: number | null;
     location: dbLocationItem;
 }
 

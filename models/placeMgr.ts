@@ -262,7 +262,7 @@ async function autocomplete(location: latLngItem, input: string, distance: numbe
     let outputList: responseAutocompleteItem[] = [];
     await Promise.all(config.foodTypeList.map(async (type: foodTypeEnum) => {
         let response: googleAutocompleteResponse = await callGoogleApiAutocomplete(
-            input, location, type, distance === -1 ? "distance" : distance
+            input, location, type, distance
         );
         let output: responseAutocompleteItem[] = response.predictions.map((item: placeAutocompletePrediction): responseAutocompleteItem => ({
             place_id: item.place_id,

@@ -17,7 +17,7 @@ async function autocomplete(location: latLngItem, input: string | undefined): Pr
     if (isUndefined([location])) throwError(errorCodes.requestDataError);
     if (input) {
         let response: googleAutocompleteResponse = await callGoogleApiAutocomplete(
-            input, location, undefined, "distance"
+            input, location, undefined, -1
         );
         return response.predictions.map((item: placeAutocompletePrediction): responseAutocompleteItem => {
             return {
