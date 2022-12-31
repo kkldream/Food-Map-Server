@@ -292,7 +292,7 @@ async function autocomplete(location: latLngItem, input: string, distance: numbe
     }
     let set = new Set();
     outputList = outputList.filter(item => !set.has(item.place_id) ? set.add(item.place_id) : false);
-    // 前端白癡要求
+    // 前端小帥要求
     outputList = [{place_id: "", name: input, address: "", description: ""}].concat(outputList);
     outputList[0].isSearch = true;
     return {

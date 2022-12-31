@@ -12,5 +12,5 @@ export interface responseAutocompleteItem {
     address: string;
     description: string;
     location?: latLngItem;
-    isSearch?: boolean; // 前端白癡要求
+    isSearch?: boolean; // 前端小帥要求
 }
