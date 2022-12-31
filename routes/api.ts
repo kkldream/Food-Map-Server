@@ -1,4 +1,4 @@
-import {Router} from 'express';
+import express, {Router} from 'express';
 import apiResponseBase from '../models/dataStruct/apiResponseUserBase';
 import placeRoute from './api/placeRoute';
 import geocodeRoute from './api/geocodeRoute';
@@ -6,7 +6,6 @@ import googleApiRoute from './api/googleApiRoute';
 import userRoute from './api/userRoute';
 import rootRoute from "./api/rootRoute";
 import {routeApiLogDocument} from "../models/dataStruct/mongodb/routeApiLogDocument";
-import {customBodyParser} from "../models/service/customBodyParser";
 
 const router = Router();
 
@@ -15,7 +14,8 @@ router.use(function (req: any, res: any, next: any) {
     next();
 });
 
-router.use(customBodyParser);
+// router.use(customBodyParser);
+router.use(express.json());
 
 router.use(function (req: any, res: any, next: any) {
     if (req.session.userId) req.body.userId = req.session.userId;
