@@ -7,7 +7,7 @@ const router = Router()
 
 
 router.post('/register', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+    let response = new apiResponseBase(req);
     try {
         let {username, password, deviceId} = req.body;
         response.result = await userMgr.register(username, password, deviceId);
@@ -18,7 +18,7 @@ router.post('/register', async function (req: any, res: any, next: any) {
 });
 
 router.post('/login', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+    let response = new apiResponseBase(req);
     try {
         let {username, password, deviceId} = req.body;
         response.result = await userMgr.loginByDevice(username, password, deviceId);
@@ -31,10 +31,10 @@ router.post('/login', async function (req: any, res: any, next: any) {
 });
 
 router.post('/add_fcm_token', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+    let response = new apiResponseBase(req);
     try {
-        let {userId, accessKey, deviceId, fcmToken} = req.body;
-        await response.verifyUser(userId, accessKey);
+        await response.verifyUser();
+        let {userId, deviceId, fcmToken} = req.body;
         response.result = await userMgr.addFcmToken(userId, deviceId, fcmToken);
     } catch (error: apiError | any) {
         response.errorHandle(error);
@@ -43,10 +43,10 @@ router.post('/add_fcm_token', async function (req: any, res: any, next: any) {
 });
 
 router.post('/logout', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+    let response = new apiResponseBase(req);
     try {
-        let {userId, accessKey, deviceId} = req.body;
-        await response.verifyUser(userId, accessKey);
+        await response.verifyUser();
+        let {userId, deviceId} = req.body;
         response.result = await userMgr.logoutByDevice(userId, deviceId);
     } catch (error: apiError | any) {
         response.errorHandle(error);
@@ -55,10 +55,10 @@ router.post('/logout', async function (req: any, res: any, next: any) {
 });
 
 router.post('/delete_account', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+    let response = new apiResponseBase(req);
     try {
-        let {userId, accessKey} = req.body;
-        await response.verifyUser(userId, accessKey);
+        await response.verifyUser();
+        let {userId} = req.body;
         response.result = await userMgr.deleteAccount(userId);
     } catch (error: apiError | any) {
         response.errorHandle(error);
@@ -67,10 +67,10 @@ router.post('/delete_account', async function (req: any, res: any, next: any) {
 });
 
 router.post('/get_image', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+    let response = new apiResponseBase(req);
     try {
-        let {userId, accessKey} = req.body;
-        await response.verifyUser(userId, accessKey);
+        await response.verifyUser();
+        let {userId} = req.body;
         response.result = await userMgr.getImage(userId);
     } catch (error: apiError | any) {
         response.errorHandle(error);
@@ -79,10 +79,10 @@ router.post('/get_image', async function (req: any, res: any, next: any) {
 });
 
 router.post('/set_image', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+    let response = new apiResponseBase(req);
     try {
-        let {userId, accessKey, userImage} = req.body;
-        await response.verifyUser(userId, accessKey);
+        await response.verifyUser();
+        let {userId, userImage} = req.body;
         response.result = await userMgr.setImage(userId, userImage);
     } catch (error: apiError | any) {
         response.errorHandle(error);
@@ -91,10 +91,10 @@ router.post('/set_image', async function (req: any, res: any, next: any) {
 });
 
 router.post('/set_password', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+    let response = new apiResponseBase(req);
     try {
-        let {userId, accessKey, password} = req.body;
-        await response.verifyUser(userId, accessKey);
+        await response.verifyUser();
+        let {userId, password} = req.body;
         response.result = await userMgr.setPassword(userId, password);
     } catch (error: apiError | any) {
         response.errorHandle(error);
@@ -103,10 +103,10 @@ router.post('/set_password', async function (req: any, res: any, next: any) {
 });
 
 router.post('/push_favorite', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+    let response = new apiResponseBase(req);
     try {
-        let {userId, accessKey, favoriteList} = req.body;
-        await response.verifyUser(userId, accessKey);
+        await response.verifyUser();
+        let {userId, favoriteList} = req.body;
         response.result = await userMgr.pushFavorite(userId, favoriteList);
     } catch (error: apiError | any) {
         response.errorHandle(error);
@@ -115,10 +115,10 @@ router.post('/push_favorite', async function (req: any, res: any, next: any) {
 });
 
 router.post('/pull_favorite', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+    let response = new apiResponseBase(req);
     try {
-        let {userId, accessKey, favoriteIdList} = req.body;
-        await response.verifyUser(userId, accessKey);
+        await response.verifyUser();
+        let {userId, favoriteIdList} = req.body;
         response.result = await userMgr.pullFavorite(userId, favoriteIdList);
     } catch (error: apiError | any) {
         response.errorHandle(error);
@@ -127,10 +127,10 @@ router.post('/pull_favorite', async function (req: any, res: any, next: any) {
 });
 
 router.post('/get_favorite', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+    let response = new apiResponseBase(req);
     try {
-        let {userId, accessKey} = req.body;
-        await response.verifyUser(userId, accessKey);
+        await response.verifyUser();
+        let {userId} = req.body;
         response.result = await userMgr.getFavorite(userId);
     } catch (error: apiError | any) {
         response.errorHandle(error);
@@ -139,10 +139,10 @@ router.post('/get_favorite', async function (req: any, res: any, next: any) {
 });
 
 router.post('/push_black_list', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+    let response = new apiResponseBase(req);
     try {
-        let {userId, accessKey, placeIdList} = req.body;
-        await response.verifyUser(userId, accessKey);
+        await response.verifyUser();
+        let {userId, placeIdList} = req.body;
         response.result = await userMgr.pushBlackList(userId, placeIdList);
     } catch (error: apiError | any) {
         response.errorHandle(error);
@@ -151,10 +151,10 @@ router.post('/push_black_list', async function (req: any, res: any, next: any) {
 });
 
 router.post('/pull_black_list', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+    let response = new apiResponseBase(req);
     try {
-        let {userId, accessKey, placeIdList} = req.body;
-        await response.verifyUser(userId, accessKey);
+        await response.verifyUser();
+        let {userId, placeIdList} = req.body;
         response.result = await userMgr.pullBlackList(userId, placeIdList);
     } catch (error: apiError | any) {
         response.errorHandle(error);
@@ -163,10 +163,10 @@ router.post('/pull_black_list', async function (req: any, res: any, next: any) {
 });
 
 router.post('/get_black_list', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+    let response = new apiResponseBase(req);
     try {
-        let {userId, accessKey} = req.body;
-        await response.verifyUser(userId, accessKey);
+        await response.verifyUser();
+        let {userId} = req.body;
         response.result = await userMgr.getBlackList(userId);
     } catch (error: apiError | any) {
         response.errorHandle(error);
@@ -175,10 +175,10 @@ router.post('/get_black_list', async function (req: any, res: any, next: any) {
 });
 
 router.post('/push_place_list', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+    let response = new apiResponseBase(req);
     try {
-        let {userId, accessKey, place_id, name, address, location} = req.body;
-        await response.verifyUser(userId, accessKey);
+        await response.verifyUser();
+        let {userId, place_id, name, address, location} = req.body;
         response.result = await userMgr.pushPlaceList(userId, place_id, name, address, location);
     } catch (error: apiError | any) {
         response.errorHandle(error);
@@ -187,10 +187,10 @@ router.post('/push_place_list', async function (req: any, res: any, next: any) {
 });
 
 router.post('/pull_place_list', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+    let response = new apiResponseBase(req);
     try {
-        let {userId, accessKey, place_id} = req.body;
-        await response.verifyUser(userId, accessKey);
+        await response.verifyUser();
+        let {userId, place_id} = req.body;
         response.result = await userMgr.pullPlaceList(userId, place_id);
     } catch (error: apiError | any) {
         response.errorHandle(error);
@@ -199,10 +199,10 @@ router.post('/pull_place_list', async function (req: any, res: any, next: any) {
 });
 
 router.post('/get_place_list', async function (req: any, res: any, next: any) {
-    let response = new apiResponseBase();
+    let response = new apiResponseBase(req);
     try {
-        let {userId, accessKey} = req.body;
-        await response.verifyUser(userId, accessKey);
+        await response.verifyUser();
+        let {userId} = req.body;
         response.result = await userMgr.getPlaceList(userId);
     } catch (error: apiError | any) {
         response.errorHandle(error);

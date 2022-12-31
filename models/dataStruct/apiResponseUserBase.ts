@@ -17,8 +17,10 @@ export default class apiResponseBase implements apiResponseBaseInterface {
     errMsg?: apiError;
     result?: any;
 
-    constructor() {
-        this.requestTime = new Date();
+    req?: any;
+    constructor(req?: any) {
+        this.req = req;
+        this.requestTime = req?.requestTime ?? new Date();
         this.verify = undefined;
         this.status = 0;
     }
@@ -28,7 +30,8 @@ export default class apiResponseBase implements apiResponseBaseInterface {
         this.errMsg = error.status ? error.text : {name: error.name, message: error.message, stack: error.stack};
     }
 
-    async verifyRoot(accessKey: string): Promise<msgItem> {
+    async verifyRoot(): Promise<msgItem> {
+        const accessKey = this.req.body.accessKey;
         if (accessKey !== process.env.ROOT_ACCESS_KEY) {
             this.verify = false;
             this.status = 4;
@@ -39,7 +42,9 @@ export default class apiResponseBase implements apiResponseBaseInterface {
         return {msg: '驗證成功'};
     }
 
-    async verifyUser(userId: string, accessKey: string): Promise<msgItem> {
+    async verifyUser(): Promise<msgItem> {
+        const userId = this.req.body.userId;
+        const accessKey = this.req.body.accessKey;
         let userDoc = await global.mongodbClient.foodMapDb.userCol.findOne({_id: new ObjectId(userId)});
         if (!userDoc) {
             this.verify = false;
