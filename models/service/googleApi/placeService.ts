@@ -87,14 +87,14 @@ export async function callGoogleApiDetail(place_id: string): Promise<googleDetai
 }
 
 // https://developers.google.com/maps/documentation/places/web-service/autocomplete
-export async function callGoogleApiAutocomplete(input: string, location: latLngItem, type: string | undefined, distance: number = -1): Promise<googleAutocompleteResponse> {
+export async function callGoogleApiAutocomplete(input: string, location: latLngItem, type: string | undefined, distance: number = 50000): Promise<googleAutocompleteResponse> {
     let url = 'https://maps.googleapis.com/maps/api/place/autocomplete/json?'
         + `&input=${input}`
         + `&location=${location.lat},${location.lng}`
         + `&components=country:tw`
+        + `&radius=${distance}`
         + `&key=${process.env.GOOGLE_API_KEY}`
         + `&language=zh-TW`;
-    if (distance !== -1) url += `&distance=${distance}`;
     if (type) url += `&type=${type}`;
     let response: googleAutocompleteResponse = (await axios({method: 'get', url})).data;
     await insertGoogleApiAutocompleteLog({
