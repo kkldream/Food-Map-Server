@@ -20,6 +20,7 @@ import {dbInsertResponse} from "../dataStruct/mongodb/pubilcItem";
 
 function googleApiLogInsertDoc(doc: googleApiLogDocument): Promise<dbInsertResponse> {
     const googleApiLogCol = global.mongodbClient.foodMapDb.googleApiLogCol;
+    doc.version = "v1.0";
     return googleApiLogCol.insertOne(doc);
 }
 

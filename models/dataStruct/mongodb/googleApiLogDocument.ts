@@ -26,7 +26,7 @@ export interface googleApiLogDocument {
             placeAutocompletePrediction[] |
             googleGeocodeAutocompleteResult[];
     };
-    version?: number;
+    version?: string;
 }
 
 export enum apiLogModeEnum {
