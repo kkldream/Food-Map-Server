@@ -283,17 +283,20 @@ async function pushPlaceList(userId: string, place_id: string, name: string, add
     const userCol = global.mongodbClient.foodMapDb.userCol;
     let userQuery = {_id: new ObjectId(userId)};
     let userDoc: userDocument = await userCol.findOne(userQuery);
-    let info = {successCount: 0, existCount: 0};
+    let info = {successCount: 0, updateCount: 0};
     userDoc.placeList = userDoc.placeList ?? [];
-    if (userDoc.placeList.map(place => place.place_id).includes(place_id)) {
-        info.existCount += 1;
-        return {msg: '添加常用地點失敗', info};
-    }
-    info.successCount += 1;
-    userDoc.placeList.push({
+    let newData = {
         place_id, name, address,
         location: responseLocationConvertDb(location)
-    });
+    };
+    if (userDoc.placeList.map(place => place.place_id).includes(place_id)) {
+        info.updateCount += 1;
+        let index: number = userDoc.placeList.findIndex(place => place.place_id === place_id);
+        userDoc.placeList[index] = newData;
+    } else {
+        info.successCount += 1;
+        userDoc.placeList.push(newData);
+    }
     await userCol.updateOne(userQuery, {$set: {placeList: userDoc.placeList}});
     return {msg: '添加常用地點成功', info};
 }
@@ -304,14 +307,14 @@ async function pullPlaceList(userId: string, place_id: string) {
     let userQuery = {_id: new ObjectId(userId)};
     let userDoc: userDocument = await userCol.findOne(userQuery);
     let info = {deleteCount: 0};
-    if (!userDoc.placeList) return {msg: '移除常用地點成功', info};
+    if (!userDoc.placeList) return {msg: '移除常用地點失敗', info};
     let newPlaceList: placeItem[] = userDoc.placeList.filter(place => {
         let result = place.place_id === place_id;
         if (result) info.deleteCount += 1;
         return !result;
     });
     await userCol.updateOne(userQuery, {$set: {placeList: newPlaceList}});
-    return {msg: '移除黑名單成功', info};
+    return {msg: '移除常用地點成功', info};
 }
 
 async function getPlaceList(userId: string): Promise<placeListResult> {
