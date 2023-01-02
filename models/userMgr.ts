@@ -14,8 +14,9 @@ import {
     userLogRegister
 } from "./service/userLogService";
 import {placeListItem, placeListResult} from "./dataStruct/response/placeListResponses";
-import {googleDetailResponse} from "./dataStruct/originalGoogleResponse/detailResponse";
+import {googleDetailItem, googleDetailResponse} from "./dataStruct/originalGoogleResponse/detailResponse";
 import {latLngItem} from "./dataStruct/pubilcItem";
+import {detailToDocument} from "./service/placeService";
 
 async function register(username: string, password: string, deviceId: string) {
     if (isUndefined([username, password, deviceId])) throwError(errorCodes.requestDataError);
@@ -188,7 +189,9 @@ async function getFavorite(userId: string): Promise<favoriteResult> {
         if (!dbPlace) continue;
         if (dbPlace.originalDetail === null) {
             let response: googleDetailResponse = await callGoogleApiDetail(favoriteId);
-            dbPlace.originalDetail = response.result;
+            dbPlace = await detailToDocument(new Date(), response.result);
+            dbPlace.originalDetail = dbPlace.originalDetail as googleDetailItem;
+            placeCol.updateOne({place_id: favoriteId}, {$set: dbPlace}, {upsert: true}); // 非同步
         }
         output.push({
             updateTime: dbPlace.updateTime,
