@@ -49,7 +49,7 @@ export async function callGoogleApiComputeRoutes(origin: waypoint, destination: 
         data: ({
             origin: origin.place_id !== "" ? ({place_id: origin.place_id} as waypointByPlaceId) :
                 ({location: {latLng: {latitude: origin.lat, longitude: origin.lng}}} as waypointByLocation),
-            destination: origin.place_id !== "" ? ({place_id: destination.place_id} as waypointByPlaceId) :
+            destination: destination.place_id !== "" ? ({place_id: destination.place_id} as waypointByPlaceId) :
                 ({location: {latLng: {latitude: destination.lat, longitude: destination.lat}}} as waypointByLocation),
             travelMode: routeTravelModeEnum.WALK,
             computeAlternativeRoutes: false,
