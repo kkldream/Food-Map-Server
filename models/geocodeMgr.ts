@@ -4,7 +4,8 @@ import {callGoogleApiAutocomplete} from "./service/googleApi/placeService";
 import {
     callGoogleApiComputeRoutes,
     callGoogleApiGeocodeAddress,
-    callGoogleApiGeocodeLocation
+    callGoogleApiGeocodeLocation,
+    waypoint
 } from "./service/googleApi/geocodeService";
 import {
     googleAutocompleteResponse,
@@ -17,7 +18,6 @@ import {
     typesEnum
 } from "./dataStruct/originalGoogleResponse/geocodeAutocompleteResponse";
 import {getLocationByAddressResult} from "./dataStruct/response/getLocationByAddressResponses";
-import {waypointByPlaceId} from "./dataStruct/request/googleRoutesApiRequest";
 import {getRoutePolylineResponse} from "./dataStruct/response/getRoutePolylineResponse";
 import {computeRoutesResponse} from "./dataStruct/originalGoogleResponse/computeRoutesResponse";
 
@@ -80,7 +80,7 @@ async function getLocationByAddress(address: string): Promise<getLocationByAddre
     };
 }
 
-async function getRoutePolyline(origin: latLngItem | waypointByPlaceId, destination: latLngItem | waypointByPlaceId): Promise<getRoutePolylineResponse> {
+async function getRoutePolyline(origin: waypoint, destination: waypoint): Promise<getRoutePolylineResponse> {
     let response: computeRoutesResponse = await callGoogleApiComputeRoutes(origin, destination);
     return {
         distanceMeters: response.routes[0].distanceMeters,

@@ -33,8 +33,11 @@ export async function callGoogleApiGeocodeLocation(address: string): Promise<goo
     return response;
 }
 
+export interface waypoint extends latLngItem, waypointByPlaceId {
+
+}
 // https://developers.google.com/maps/documentation/routes/specify_location
-export async function callGoogleApiComputeRoutes(origin: latLngItem | waypointByPlaceId, destination: latLngItem | waypointByPlaceId): Promise<computeRoutesResponse> {
+export async function callGoogleApiComputeRoutes(origin: waypoint, destination: waypoint): Promise<computeRoutesResponse> {
     let config = {
         method: "post",
         url: "https://routes.googleapis.com/directions/v2:computeRoutes",
@@ -44,9 +47,9 @@ export async function callGoogleApiComputeRoutes(origin: latLngItem | waypointBy
             "Content-Type": "application/json"
         },
         data: ({
-            origin: "place_id" in origin ? ({place_id: origin.place_id} as waypointByPlaceId) :
+            origin: origin.place_id !== "" ? ({place_id: origin.place_id} as waypointByPlaceId) :
                 ({location: {latLng: {latitude: origin.lat, longitude: origin.lng}}} as waypointByLocation),
-            destination: "place_id" in destination ? ({place_id: destination.place_id} as waypointByPlaceId) :
+            destination: origin.place_id !== "" ? ({place_id: destination.place_id} as waypointByPlaceId) :
                 ({location: {latLng: {latitude: destination.lat, longitude: destination.lat}}} as waypointByLocation),
             travelMode: routeTravelModeEnum.WALK,
             computeAlternativeRoutes: false,
