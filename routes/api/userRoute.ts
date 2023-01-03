@@ -24,6 +24,7 @@ router.post('/login', async function (req: any, res: any, next: any) {
         response.result = await userMgr.loginByDevice(username, password, deviceId);
         req.session.userId = response.result.userId;
         req.session.accessKey = response.result.accessKey;
+        req.session.deviceId = response.result.deviceId;
     } catch (error: apiError | any) {
         response.errorHandle(error);
     }

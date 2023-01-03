@@ -17,12 +17,15 @@ router.use(function (req: any, res: any, next: any) {
 
 router.use(customBodyParser);
 
-// router.use(function (req: any, res: any, next: any) {
-//     if (req.session.userId) req.body.userId = req.session.userId;
-//     if (req.session.accessKey) req.body.accessKey = req.session.accessKey;
-//     next();
-// });
+router.use(function (req: any, res: any, next: any) {
+    if (req.session.deviceId === "web") {
+        if (req.session.userId && !req.body.userId) req.body.userId = req.session.userId;
+        if (req.session.accessKey && !req.body.accessKey) req.body.accessKey = req.session.accessKey;
+    }
+    next();
+});
 
+// 紀錄routeApiLogCol
 router.use(function (req: any, res: any, next: any) {
     const routeApiLogCol = global.mongodbClient.foodMapDb.routeApiLogCol;
     let routeApiLogDoc: routeApiLogDocument = {
