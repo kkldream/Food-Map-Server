@@ -29,4 +29,16 @@ router.post('/get_location_by_address', async function (req: any, res: any, next
     return res.send(response);
 });
 
+router.post('/get_route_polyline', async function (req: any, res: any, next: any) {
+    let response = new apiResponseBase();
+    try {
+        let {userId, accessKey, origin, destination} = req.body;
+        await response.verifyUser(userId, accessKey);
+        response.result = await geocodeMgr.getRoutePolyline(origin, destination);
+    } catch (error: apiError | any) {
+        response.errorHandle(error);
+    }
+    return res.send(response);
+});
+
 export default router;

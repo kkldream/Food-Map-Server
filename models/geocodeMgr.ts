@@ -1,7 +1,11 @@
 import {errorCodes, isUndefined, throwError} from './dataStruct/throwError';
 import {responseAutocompleteItem, responseAutocompleteResult} from "./dataStruct/response/autocompleteResponses";
 import {callGoogleApiAutocomplete} from "./service/googleApi/placeService";
-import {callGoogleApiGeocodeAddress, callGoogleApiGeocodeLocation} from "./service/googleApi/geocodeService";
+import {
+    callGoogleApiComputeRoutes,
+    callGoogleApiGeocodeAddress,
+    callGoogleApiGeocodeLocation
+} from "./service/googleApi/geocodeService";
 import {
     googleAutocompleteResponse,
     placeAutocompletePrediction
@@ -13,6 +17,9 @@ import {
     typesEnum
 } from "./dataStruct/originalGoogleResponse/geocodeAutocompleteResponse";
 import {getLocationByAddressResult} from "./dataStruct/response/getLocationByAddressResponses";
+import {waypointByPlaceId} from "./dataStruct/request/googleRoutesApiRequest";
+import {getRoutePolylineResponse} from "./dataStruct/response/getRoutePolylineResponse";
+import {computeRoutesResponse} from "./dataStruct/originalGoogleResponse/computeRoutesResponse";
 
 async function autocomplete(location: latLngItem, input: string | undefined): Promise<responseAutocompleteResult> {
     if (isUndefined([location])) throwError(errorCodes.requestDataError);
@@ -21,7 +28,7 @@ async function autocomplete(location: latLngItem, input: string | undefined): Pr
         let response: googleAutocompleteResponse = await callGoogleApiAutocomplete(
             input, location, undefined, -1
         );
-        outputList =  response.predictions.map((item: placeAutocompletePrediction): responseAutocompleteItem => {
+        outputList = response.predictions.map((item: placeAutocompletePrediction): responseAutocompleteItem => {
             return {
                 place_id: item.place_id,
                 name: item.structured_formatting.main_text,
@@ -73,7 +80,17 @@ async function getLocationByAddress(address: string): Promise<getLocationByAddre
     };
 }
 
+async function getRoutePolyline(origin: latLngItem | waypointByPlaceId, destination: latLngItem | waypointByPlaceId): Promise<getRoutePolylineResponse> {
+    let response: computeRoutesResponse = await callGoogleApiComputeRoutes(origin, destination);
+    return {
+        distanceMeters: response.routes[0].distanceMeters,
+        duration: parseInt(response.routes[0].duration.replace("s", "")),
+        polyline: response.routes[0].polyline.encodedPolyline
+    }
+}
+
 export default {
     autocomplete,
     getLocationByAddress,
+    getRoutePolyline,
 };

@@ -2,6 +2,12 @@ import axios from "axios";
 import {insertGoogleApiGeocodeAutocompleteLog} from "../googleApiLogService";
 import {latLngItem} from "../../dataStruct/pubilcItem";
 import {googleGeocodeAutocompleteResponse} from "../../dataStruct/originalGoogleResponse/geocodeAutocompleteResponse";
+import {computeRoutesResponse} from "../../dataStruct/originalGoogleResponse/computeRoutesResponse";
+import {
+    routeTravelModeEnum,
+    waypointByLocation,
+    waypointByPlaceId
+} from "../../dataStruct/request/googleRoutesApiRequest";
 
 // https://developers.google.com/maps/documentation/geocoding/start#reverse
 export async function callGoogleApiGeocodeAddress(location: latLngItem): Promise<googleGeocodeAutocompleteResponse> {
@@ -23,5 +29,31 @@ export async function callGoogleApiGeocodeLocation(address: string): Promise<goo
         + `&language=zh-TW`;
     let response: googleGeocodeAutocompleteResponse = (await axios({method: 'get', url})).data;
     insertGoogleApiGeocodeAutocompleteLog({address, response: response.results});
+    return response;
+}
+
+// https://developers.google.com/maps/documentation/routes/specify_location
+export async function callGoogleApiComputeRoutes(origin: latLngItem | waypointByPlaceId, destination: latLngItem | waypointByPlaceId): Promise<computeRoutesResponse> {
+    let config = {
+        method: "post",
+        url: "https://routes.googleapis.com/directions/v2:computeRoutes",
+        headers: {
+            "X-Goog-Api-Key": process.env.GOOGLE_API_KEY,
+            "X-Goog-FieldMask": "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline",
+            "Content-Type": "application/json"
+        },
+        data: {
+            origin: "place_id" in origin ? ({place_id: origin.place_id} as waypointByPlaceId) :
+                ({location: {latLng: {latitude: origin.lat, longitude: origin.lng}}} as waypointByLocation),
+            destination: "place_id" in destination ? ({place_id: destination.place_id} as waypointByPlaceId) :
+                ({location: {latLng: {latitude: destination.lat, longitude: destination.lat}}} as waypointByLocation),
+            travelMode: routeTravelModeEnum.WALK,
+            computeAlternativeRoutes: false,
+            routeModifiers: {avoidIndoor: false},
+            languageCode: "zh-TW"
+        }
+    };
+    let response: computeRoutesResponse = (await axios(config)).data;
+    // insertGoogleApiGeocodeAutocompleteLog({address, response: response.results});
     return response;
 }
