@@ -6,6 +6,8 @@ import {googleDetailItem} from "../originalGoogleResponse/detailResponse";
 import {dbLocationItem} from "./pubilcItem";
 import {googlePhotosItem} from "../originalGoogleResponse/pubilcItem";
 import {googleGeocodeAutocompleteResult} from "../originalGoogleResponse/geocodeAutocompleteResponse";
+import {googleRoutesApiRequest} from "../request/googleRoutesApiRequest";
+import {computeRoutesResponse} from "../originalGoogleResponse/computeRoutesResponse";
 
 export interface googleApiLogDocument {
     _id?: ObjectId;
@@ -16,7 +18,8 @@ export interface googleApiLogDocument {
         detailRequest |
         photoRequest |
         autocompleteRequest |
-        geocodeAutocompleteRequest;
+        geocodeAutocompleteRequest |
+        googleRoutesApiRequest;
     response: {
         length: number;
         data:
@@ -24,7 +27,8 @@ export interface googleApiLogDocument {
             googleDetailItem |
             photoItem |
             placeAutocompletePrediction[] |
-            googleGeocodeAutocompleteResult[];
+            googleGeocodeAutocompleteResult[] |
+            computeRoutesResponse;
     };
     version?: string;
 }

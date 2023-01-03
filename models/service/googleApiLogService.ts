@@ -16,7 +16,8 @@ import {googlePhotosItem} from "../dataStruct/originalGoogleResponse/pubilcItem"
 import {latLngItem} from "../dataStruct/pubilcItem";
 import {googleGeocodeAutocompleteResult} from "../dataStruct/originalGoogleResponse/geocodeAutocompleteResponse";
 import {dbInsertResponse} from "../dataStruct/mongodb/pubilcItem";
-
+import {computeRoutesResponse} from "../dataStruct/originalGoogleResponse/computeRoutesResponse";
+import {googleRoutesApiRequest} from "../dataStruct/request/googleRoutesApiRequest";
 
 function googleApiLogInsertDoc(doc: googleApiLogDocument): Promise<dbInsertResponse> {
     const googleApiLogCol = global.mongodbClient.foodMapDb.googleApiLogCol;
@@ -126,6 +127,22 @@ export function insertGoogleApiGeocodeAutocompleteLog(req: {
         response: {
             length: req.response.length,
             data: req.response as googleGeocodeAutocompleteResult[]
+        }
+    };
+    return googleApiLogInsertDoc(googleApiLogDoc);
+}
+
+export function insertGoogleApiComputeRoutesLog(req: {
+    request: googleRoutesApiRequest;
+    response: computeRoutesResponse;
+}) {
+    let googleApiLogDoc: googleApiLogDocument = {
+        createTime: new Date(),
+        mode: apiLogModeEnum.geocode_autocomplete,
+        request: (req.request as googleRoutesApiRequest),
+        response: {
+            length: (req.response as computeRoutesResponse).routes.length,
+            data: (req.response as computeRoutesResponse)
         }
     };
     return googleApiLogInsertDoc(googleApiLogDoc);

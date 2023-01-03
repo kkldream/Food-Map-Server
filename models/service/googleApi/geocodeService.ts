@@ -1,9 +1,10 @@
 import axios from "axios";
-import {insertGoogleApiGeocodeAutocompleteLog} from "../googleApiLogService";
+import {insertGoogleApiComputeRoutesLog, insertGoogleApiGeocodeAutocompleteLog} from "../googleApiLogService";
 import {latLngItem} from "../../dataStruct/pubilcItem";
 import {googleGeocodeAutocompleteResponse} from "../../dataStruct/originalGoogleResponse/geocodeAutocompleteResponse";
 import {computeRoutesResponse} from "../../dataStruct/originalGoogleResponse/computeRoutesResponse";
 import {
+    googleRoutesApiRequest,
     routeTravelModeEnum,
     waypointByLocation,
     waypointByPlaceId
@@ -42,7 +43,7 @@ export async function callGoogleApiComputeRoutes(origin: latLngItem | waypointBy
             "X-Goog-FieldMask": "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline",
             "Content-Type": "application/json"
         },
-        data: {
+        data: ({
             origin: "place_id" in origin ? ({place_id: origin.place_id} as waypointByPlaceId) :
                 ({location: {latLng: {latitude: origin.lat, longitude: origin.lng}}} as waypointByLocation),
             destination: "place_id" in destination ? ({place_id: destination.place_id} as waypointByPlaceId) :
@@ -51,9 +52,9 @@ export async function callGoogleApiComputeRoutes(origin: latLngItem | waypointBy
             computeAlternativeRoutes: false,
             routeModifiers: {avoidIndoor: false},
             languageCode: "zh-TW"
-        }
+        } as googleRoutesApiRequest)
     };
     let response: computeRoutesResponse = (await axios(config)).data;
-    // insertGoogleApiGeocodeAutocompleteLog({address, response: response.results});
+    insertGoogleApiComputeRoutesLog({request: config.data, response});
     return response;
 }
