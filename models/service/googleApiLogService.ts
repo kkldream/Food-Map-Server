@@ -138,7 +138,7 @@ export function insertGoogleApiComputeRoutesLog(req: {
 }) {
     let googleApiLogDoc: googleApiLogDocument = {
         createTime: new Date(),
-        mode: apiLogModeEnum.geocode_autocomplete,
+        mode: apiLogModeEnum.route,
         request: (req.request as googleRoutesApiRequest),
         response: {
             length: (req.response as computeRoutesResponse).routes.length,

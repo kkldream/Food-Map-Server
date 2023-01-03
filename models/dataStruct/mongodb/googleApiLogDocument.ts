@@ -39,6 +39,7 @@ export enum apiLogModeEnum {
     photo = "photo",
     autocomplete = "autocomplete",
     geocode_autocomplete = "geocode_autocomplete",
+    route = "route",
 }
 
 export interface placeRequest {
