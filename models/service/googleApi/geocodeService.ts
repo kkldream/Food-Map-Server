@@ -18,7 +18,7 @@ export async function callGoogleApiGeocodeAddress(location: latLngItem): Promise
         + `&key=${process.env.GOOGLE_API_KEY}`
         + `&language=zh-TW`;
     let response: googleGeocodeAutocompleteResponse = (await axios({method: 'get', url})).data;
-    insertGoogleApiGeocodeAutocompleteLog({location, response: response.results});
+    await insertGoogleApiGeocodeAutocompleteLog({location, response: response.results});
     return response;
 }
 
@@ -29,7 +29,7 @@ export async function callGoogleApiGeocodeLocation(address: string): Promise<goo
         + `&key=${process.env.GOOGLE_API_KEY}`
         + `&language=zh-TW`;
     let response: googleGeocodeAutocompleteResponse = (await axios({method: 'get', url})).data;
-    insertGoogleApiGeocodeAutocompleteLog({address, response: response.results});
+    await insertGoogleApiGeocodeAutocompleteLog({address, response: response.results});
     return response;
 }
 
@@ -58,6 +58,6 @@ export async function callGoogleApiComputeRoutes(origin: waypoint, destination: 
         } as googleRoutesApiRequest)
     };
     let response: computeRoutesResponse = (await axios(config)).data;
-    insertGoogleApiComputeRoutesLog({request: config.data, response});
+    await insertGoogleApiComputeRoutesLog({request: config.data, response});
     return response;
 }

@@ -101,7 +101,7 @@ export function insertGoogleApiAutocompleteLog(req: {
         request: ({
             input: req.input,
             type: req.type ?? null,
-            radius: req.distance !== -1 ? req.distance : null,
+            radius: req.distance,
             location: responseLocationConvertDb(req.location)
         } as autocompleteRequest),
         response: {

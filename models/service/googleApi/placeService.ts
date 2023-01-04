@@ -8,9 +8,6 @@ import {
 import {googleAutocompleteResponse} from "../../dataStruct/originalGoogleResponse/autocompleteResponse";
 import {latLngItem} from "../../dataStruct/pubilcItem";
 import {googleDetailResponse} from "../../dataStruct/originalGoogleResponse/detailResponse";
-import {responseLocationConvertDb} from "../../utils";
-import config from "../../../config";
-import {googleApiLogDocument} from "../../dataStruct/mongodb/googleApiLogDocument";
 
 // https://developers.google.com/maps/documentation/places/web-service/search-nearby
 export async function callGoogleApiNearBySearch(searchPageNum: number, location: latLngItem, type: string, distance: number): Promise<googlePlaceResult[]> {
@@ -90,7 +87,14 @@ export async function callGoogleApiDetail(place_id: string): Promise<googleDetai
 }
 
 // https://developers.google.com/maps/documentation/places/web-service/autocomplete
-export async function callGoogleApiAutocomplete(input: string, location: latLngItem, type: string | undefined, distance: number = 50000): Promise<googleAutocompleteResponse> {
+/**
+ *
+ * @param input
+ * @param location
+ * @param type
+ * @param distance 單位公尺，預設為30000，範圍大於等於1
+ */
+export async function callGoogleApiAutocomplete(input: string, location: latLngItem, type: string | undefined, distance: number = 30000): Promise<googleAutocompleteResponse> {
     let url = 'https://maps.googleapis.com/maps/api/place/autocomplete/json?'
         + `&input=${input}`
         + `&location=${location.lat},${location.lng}`
@@ -104,60 +108,4 @@ export async function callGoogleApiAutocomplete(input: string, location: latLngI
         input, type, distance, response: response.predictions, location
     });
     return response;
-}
-
-/**
- * 判斷此地是否有搜尋過
- * @param location
- * @param distance
- */
-export async function isSearchByDistanceHaveHistory(location: latLngItem, distance: number = -1): Promise<boolean> {
-    const googleApiLogCol = global.mongodbClient.foodMapDb.googleApiLogCol;
-    const options = {allowDiskUse: false};
-    let pipeline: any[] = [
-        {
-            "$geoNear": {
-                "near": responseLocationConvertDb(location),
-                "distanceField": "distance",
-                "spherical": true,
-                "maxDistance": 100,
-                "query": {
-                    "mode": "place",
-                    "createTime": {"$gte": new Date(new Date().setSeconds(-config.keywordUpdateRangeSecond))},
-                    "request.keyword": null,
-                    "request.rankby": distance <= 0 ? "distance" : null,
-                    "request.radius": distance <= 0 ? null : distance
-                }
-            }
-        },
-        {"$count": "count"}
-    ];
-    let historyResult: { count: number; } = await googleApiLogCol.aggregate(pipeline, options).toArray();
-    return historyResult !== undefined;
-}
-
-export async function getSearchByKeywordHistory(location: latLngItem, distance: number, keyword: string): Promise<googlePlaceResult[]> {
-    const googleApiLogCol = global.mongodbClient.foodMapDb.googleApiLogCol;
-    const options = {allowDiskUse: false};
-    let pipeline: any[] = [
-        {
-            "$geoNear": {
-                "near": responseLocationConvertDb(location),
-                "distanceField": "distance",
-                "spherical": true,
-                "maxDistance": 100,
-                "query": {
-                    "mode": "place",
-                    "createTime": {"$gte": new Date(new Date().setSeconds(-config.keywordUpdateRangeSecond))},
-                    "request.keyword": keyword,
-                    "request.rankby": distance <= 0 ? "distance" : null,
-                    "request.radius": distance <= 0 ? null : distance
-                }
-            }
-        },
-        {"$sort": {"createTime": -1}},
-        {"$limit": 1}
-    ];
-    let historyResult: googleApiLogDocument[] = await googleApiLogCol.aggregate(pipeline, options).toArray();
-    return historyResult.length > 0 ? (historyResult[0].response.data as googlePlaceResult[]) : [];
 }

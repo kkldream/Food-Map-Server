@@ -5,6 +5,12 @@ import {dbPlaceDocument} from "../dataStruct/mongodb/googlePlaceDocument";
 import {googleDetailItem} from "../dataStruct/originalGoogleResponse/detailResponse";
 import {responseLocationConvertDb} from "../utils";
 import {googleImageListConvertPhotoId} from "./imageService";
+import {latLngItem} from "../dataStruct/pubilcItem";
+import config from "../../config";
+import {googlePlaceResult} from "../dataStruct/originalGoogleResponse/placeResponse";
+import {googleApiLogDocument} from "../dataStruct/mongodb/googleApiLogDocument";
+import {foodTypeEnum} from "../dataStruct/staticCode/foodTypeEnum";
+import {placeAutocompletePrediction} from "../dataStruct/originalGoogleResponse/autocompleteResponse";
 
 export async function isFavoriteByUserId(userId: string, place_id: string) {
     const userCol = global.mongodbClient.foodMapDb.userCol;
@@ -71,4 +77,100 @@ export async function detailToDocument(requestTime: Date, detailItem: googleDeta
         originalPlace: findResult ? findResult.originalPlace : null,
         originalDetail: detailItem
     };
+}
+
+/**
+ * 判斷此地是否有搜尋過
+ * @param location
+ * @param distance
+ */
+export async function isSearchByDistanceHaveHistory(location: latLngItem, distance: number = -1): Promise<boolean> {
+    const googleApiLogCol = global.mongodbClient.foodMapDb.googleApiLogCol;
+    const options = {allowDiskUse: false};
+    let pipeline: any[] = [
+        {
+            "$geoNear": {
+                "near": responseLocationConvertDb(location),
+                "distanceField": "distance",
+                "spherical": true,
+                "maxDistance": 100,
+                "query": {
+                    "mode": "place",
+                    "createTime": {"$gte": new Date(new Date().setSeconds(-config.keywordUpdateRangeSecond))},
+                    "request.keyword": null,
+                    "request.rankby": distance <= 0 ? "distance" : null,
+                    "request.radius": distance <= 0 ? null : distance
+                }
+            }
+        },
+        {"$count": "count"}
+    ];
+    let historyResult: { count: number; } = await googleApiLogCol.aggregate(pipeline, options).toArray();
+    return historyResult !== undefined;
+}
+
+/**
+ * 取的近期的關鍵字查詢紀錄
+ * @param location
+ * @param distance
+ * @param keyword
+ */
+export async function getSearchByKeywordHistory(location: latLngItem, distance: number, keyword: string): Promise<googlePlaceResult[]> {
+    const googleApiLogCol = global.mongodbClient.foodMapDb.googleApiLogCol;
+    const options = {allowDiskUse: false};
+    let pipeline: any[] = [
+        {
+            "$geoNear": {
+                "near": responseLocationConvertDb(location),
+                "distanceField": "distance",
+                "spherical": true,
+                "maxDistance": 100,
+                "query": {
+                    "mode": "place",
+                    "createTime": {"$gte": new Date(new Date().setSeconds(-config.keywordUpdateRangeSecond))},
+                    "request.keyword": keyword,
+                    "request.rankby": distance <= 0 ? "distance" : null,
+                    "request.radius": distance <= 0 ? null : distance
+                }
+            }
+        },
+        {"$sort": {"createTime": -1}},
+        {"$limit": 1}
+    ];
+    let historyResult: googleApiLogDocument[] = await googleApiLogCol.aggregate(pipeline, options).toArray();
+    return historyResult.length > 0 ? (historyResult[0].response.data as googlePlaceResult[]) : [];
+}
+
+/**
+ * 取的近期的Autocomplete查詢紀錄
+ * @param location
+ * @param input
+ * @param distance
+ * @param type
+ */
+export async function getAutocompleteHistory(location: latLngItem, input: string, distance: number, type: foodTypeEnum | undefined, maxDistance: number = 100): Promise<placeAutocompletePrediction[]> {
+    const googleApiLogCol = global.mongodbClient.foodMapDb.googleApiLogCol;
+    const options = {allowDiskUse: false};
+    let pipeline: any[] = [
+        {
+            "$geoNear": {
+                "near": responseLocationConvertDb(location),
+                "distanceField": "distance",
+                "spherical": true,
+                "maxDistance": maxDistance,
+                "query": {
+                    "mode": "autocomplete",
+                    "createTime": {"$gte": new Date(new Date().setSeconds(-config.keywordUpdateRangeSecond))},
+                    "request.input": input,
+                    "request.radius": distance,
+                    "request.type": type
+                }
+            }
+        },
+        {"$sort": {"createTime": -1}},
+        {"$limit": 1}
+    ];
+    let historyResult: googleApiLogDocument[] = await googleApiLogCol.aggregate(pipeline, options).toArray();
+    if (historyResult.length === 0) return [];
+    return historyResult[0].response.data as placeAutocompletePrediction[];
 }

@@ -10,14 +10,9 @@ import {getBlackList} from "./service/blackListService";
 import {photoDocument} from "./dataStruct/mongodb/photoDocument";
 import {photoResult} from "./dataStruct/response/photoResponse";
 import {responseAutocompleteItem, responseAutocompleteResult} from "./dataStruct/response/autocompleteResponses";
-import {
-    callGoogleApiAutocomplete,
-    callGoogleApiDetail, getSearchByKeywordHistory,
-    isSearchByDistanceHaveHistory
-} from "./service/googleApi/placeService";
+import {callGoogleApiAutocomplete, callGoogleApiDetail} from "./service/googleApi/placeService";
 import {googlePlaceResult} from "./dataStruct/originalGoogleResponse/placeResponse";
 import {foodTypeEnum} from "./dataStruct/staticCode/foodTypeEnum";
-import {googleApiLogDocument} from "./dataStruct/mongodb/googleApiLogDocument";
 import {responseLocationConvertDb, twoLocateDistance} from "./utils";
 import {
     googleAutocompleteResponse,
@@ -28,7 +23,10 @@ import {
     dbPlaceDocumentWithDistance,
     dbPlaceListConvertResponse,
     detailToDocument,
-    isFavoriteByUserId
+    getAutocompleteHistory,
+    getSearchByKeywordHistory,
+    isFavoriteByUserId,
+    isSearchByDistanceHaveHistory
 } from "./service/placeService";
 import {responseDetailResult} from "./dataStruct/response/detailResponses";
 import {googleDetailItem} from "./dataStruct/originalGoogleResponse/detailResponse";
@@ -246,13 +244,18 @@ async function getHtmlPhoto(photoId: string): Promise<string> {
 }
 
 async function autocomplete(location: latLngItem, input: string, distance: number): Promise<responseAutocompleteResult> {
-    if (isUndefined([location, input])) throwError(errorCodes.requestDataError);
+    if (isUndefined([location, input, distance])) throwError(errorCodes.requestDataError);
+    distance = distance < 1 ? 1 : distance; // autocomplete的distance範圍為1以上
+    let updated = false;
     let outputList: responseAutocompleteItem[] = [];
     await Promise.all(config.foodTypeList.map(async (type: foodTypeEnum) => {
-        let response: googleAutocompleteResponse = await callGoogleApiAutocomplete(
-            input, location, type, distance === -1 ? 1 : distance
-        );
-        let output: responseAutocompleteItem[] = response.predictions.map((item: placeAutocompletePrediction): responseAutocompleteItem => ({
+        let predictions: placeAutocompletePrediction[] = await getAutocompleteHistory(location, input, distance, type);
+        if (predictions.length === 0) {
+            let response: googleAutocompleteResponse = await callGoogleApiAutocomplete(input, location, type, distance);
+            updated = true;
+            predictions = response.predictions;
+        }
+        let output: responseAutocompleteItem[] = predictions.map((item: placeAutocompletePrediction): responseAutocompleteItem => ({
             place_id: item.place_id,
             name: item.structured_formatting.main_text,
             address: item.structured_formatting.secondary_text,
@@ -267,8 +270,7 @@ async function autocomplete(location: latLngItem, input: string, distance: numbe
     outputList = [{place_id: "", name: input, address: "", description: ""}].concat(outputList);
     outputList[0].isSearch = true;
     return {
-        updated: true,
-        dbStatus: undefined,
+        updated,
         placeCount: outputList.length,
         placeList: outputList
     };
