@@ -245,7 +245,7 @@ async function getHtmlPhoto(photoId: string): Promise<string> {
     return photoDoc.data;
 }
 
-async function autocomplete(location: latLngItem, input: string, distance: number, deepSearch: boolean = false): Promise<responseAutocompleteResult> {
+async function autocomplete(location: latLngItem, input: string, distance: number): Promise<responseAutocompleteResult> {
     if (isUndefined([location, input])) throwError(errorCodes.requestDataError);
     let outputList: responseAutocompleteItem[] = [];
     await Promise.all(config.foodTypeList.map(async (type: foodTypeEnum) => {
@@ -261,23 +261,6 @@ async function autocomplete(location: latLngItem, input: string, distance: numbe
         }));
         outputList = outputList.concat(output);
     }));
-    if (deepSearch) {
-        for (let distanceTemp = 1; distanceTemp <= 5; distanceTemp++) {
-            await Promise.all(config.foodTypeList.map(async (type: foodTypeEnum) => {
-                let response: googleAutocompleteResponse = await callGoogleApiAutocomplete(
-                    input, location, type, distanceTemp * 50000
-                );
-                let output: responseAutocompleteItem[] = response.predictions.map((item: placeAutocompletePrediction): responseAutocompleteItem => ({
-                    place_id: item.place_id,
-                    name: item.structured_formatting.main_text,
-                    address: item.structured_formatting.secondary_text,
-                    description: item.description,
-                    isSearch: true,
-                }));
-                outputList = outputList.concat(output);
-            }));
-        }
-    }
     let set = new Set();
     outputList = outputList.filter(item => !set.has(item.place_id) ? set.add(item.place_id) : false);
     // 前端小帥要求

@@ -72,9 +72,9 @@ router.get('/get_html_photo/:photoId', async function (req: any, res: any, next:
 router.post('/autocomplete', async function (req: any, res: any, next: any) {
     let response = new apiResponseBase();
     try {
-        let {userId, accessKey, location, input, distance, deepSearch} = req.body;
+        let {userId, accessKey, location, input, distance} = req.body;
         await response.verifyUser(userId, accessKey);
-        response.result = await placeMgr.autocomplete(location, input, distance, deepSearch);
+        response.result = await placeMgr.autocomplete(location, input, distance);
     } catch (error: apiError | any) {
         response.errorHandle(error);
     }
