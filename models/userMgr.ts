@@ -17,6 +17,7 @@ import {placeListItem, placeListResult} from "./dataStruct/response/placeListRes
 import {googleDetailItem, googleDetailResponse} from "./dataStruct/originalGoogleResponse/detailResponse";
 import {latLngItem} from "./dataStruct/pubilcItem";
 import {detailToDocument} from "./service/placeService";
+import googleMapsMgr from "./googleMapsMgr";
 
 async function register(username: string, password: string, deviceId: string) {
     if (isUndefined([username, password, deviceId])) throwError(errorCodes.requestDataError);
@@ -301,6 +302,7 @@ async function pushPlaceList(userId: string, place_id: string, name: string, add
         userDoc.placeList.push(newData);
     }
     await userCol.updateOne(userQuery, {$set: {placeList: userDoc.placeList}});
+    googleMapsMgr.updateCustom(location, -1, "").then(res => console.log(res));
     return {msg: '添加常用地點成功', info};
 }
 

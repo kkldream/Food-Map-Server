@@ -29,7 +29,7 @@ export async function googleImageListConvertPhotoId(photoReference: googlePhotos
             + `&photoreference=${googlePhoto.photo_reference}`
             + `&key=${process.env.GOOGLE_API_KEY}`;
         let photo: photoItem = await compressUrlImageToBase64(imageUrl, config.image.compressRate);
-        await insertGoogleApiPhotoLog({photoReference: googlePhoto, response: photo})
+        await insertGoogleApiPhotoLog({photoReference: googlePhoto, response: photo});
         let uploadUserTemp = googlePhoto.html_attributions[0];
         let {photoId} = await getPhotoId({
             updateTime: responseTime,

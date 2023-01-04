@@ -10,7 +10,11 @@ import {getBlackList} from "./service/blackListService";
 import {photoDocument} from "./dataStruct/mongodb/photoDocument";
 import {photoResult} from "./dataStruct/response/photoResponse";
 import {responseAutocompleteItem, responseAutocompleteResult} from "./dataStruct/response/autocompleteResponses";
-import {callGoogleApiAutocomplete, callGoogleApiDetail} from "./service/googleApi/placeService";
+import {
+    callGoogleApiAutocomplete,
+    callGoogleApiDetail, getSearchByKeywordHistory,
+    isSearchByDistanceHaveHistory
+} from "./service/googleApi/placeService";
 import {googlePlaceResult} from "./dataStruct/originalGoogleResponse/placeResponse";
 import {foodTypeEnum} from "./dataStruct/staticCode/foodTypeEnum";
 import {googleApiLogDocument} from "./dataStruct/mongodb/googleApiLogDocument";
@@ -43,12 +47,19 @@ async function searchByDistance(userId: string, location: latLngItem, distance: 
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let updated = false;
     let dbStatus: any;
+    // 若此地區近期無搜尋紀錄則更新
+    if (!await isSearchByDistanceHaveHistory(location)) {
+        dbStatus = await googleMapsMgr.updatePlaceByDistance(location);
+        updated = true;
+    }
+    // 從placeCol取得資料
     let pipeline: any = [
         {
             "$geoNear": {
                 "near": responseLocationConvertDb(location),
                 "distanceField": "distance",
                 "spherical": true,
+                "maxDistance": distance <= 0 ? 30000 : distance,
                 "query": {
                     "$and": [
                         {"types": {"$in": config.foodTypeList}},
@@ -61,20 +72,14 @@ async function searchByDistance(userId: string, location: latLngItem, distance: 
         {"$skip": skip},
         {"$limit": limit}
     ];
-    if (distance !== -1) pipeline[0]["$geoNear"]["maxDistance"] = distance;
-    let placeCountResult = await placeCol.aggregate([pipeline[0], {"$count": "count"}]).toArray();
-    let placeCount = placeCountResult.length !== 0 ? placeCountResult[0].count : 0;
-    if (placeCount < config.minResponseCount) {
-        dbStatus = await googleMapsMgr.updatePlaceByDistance(location);
-        updated = true;
-    }
+    let placeCount: number = (await placeCol.aggregate([pipeline[0], {"$count": "count"}]).toArray())[0].count ?? 0;
     let dbPlaceDocList: dbPlaceDocumentWithDistance[] = await placeCol.aggregate(pipeline).toArray();
     let responsePlaceList: responsePlaceItem[] = await dbPlaceListConvertResponse(dbPlaceDocList, userId);
-    return {updated, dbStatus, placeCount, placeList: responsePlaceList}
+    return {updated, dbStatus, placeCount, placeList: responsePlaceList};
 }
 
 /**
- * 使用關鍵字搜尋附近餐廳
+ * 使用關鍵字搜尋附近餐廳，因關鍵字搜尋法本地無法實現，所以資料都從以前呼叫過的API紀錄獲取。
  * @param userId
  * @param location
  * @param distance
@@ -84,49 +89,31 @@ async function searchByDistance(userId: string, location: latLngItem, distance: 
  */
 async function searchByKeyword(userId: string, location: latLngItem, distance: number, keyword: string, skip: number, limit: number): Promise<responsePlaceResult> {
     if (isUndefined([userId, location, distance, keyword, skip, limit])) throwError(errorCodes.requestDataError);
-    const requestTime = new Date();
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
-    const googleApiLogCol = global.mongodbClient.foodMapDb.googleApiLogCol;
     let updated = false;
     let dbStatus: any;
-    const options = {allowDiskUse: false};
-    let pipeline: any[] = [
-        {
-            "$geoNear": {
-                "near": responseLocationConvertDb(location),
-                "distanceField": "distance",
-                "spherical": true,
-                "maxDistance": 100,
-                "query": {
-                    "mode": "place",
-                    "createTime": {"$gte": new Date(requestTime.setSeconds(-config.keywordUpdateRangeSecond))}
-                }
-            }
-        },
-        {"$sort": {"createTime": -1}},
-        {"$limit": 1}
-    ];
-    if (distance === -1) pipeline[0]["$geoNear"].query["request.rankby"] = "distance";
-    else pipeline[0]["$geoNear"].query["request.radius"] = distance;
-    let findResult: googleApiLogDocument[] = await googleApiLogCol.aggregate(pipeline, options).toArray();
-    if (findResult.length === 0) {
+    // 取得此地區近期的關鍵字搜尋紀錄
+    let googlePlaceList: googlePlaceResult[] = await getSearchByKeywordHistory(location, distance, keyword);
+    // 若無紀錄則更新
+    if (googlePlaceList.length === 0) {
         dbStatus = await googleMapsMgr.updatePlaceByKeyword(location, keyword, distance);
         updated = true;
-        findResult = await googleApiLogCol.aggregate(pipeline, options).toArray();
+        googlePlaceList = await getSearchByKeywordHistory(location, distance, keyword);
     }
-    let googlePlaceList: googlePlaceResult[] = findResult[0].response.data as googlePlaceResult[];
+    let placeCount: number = googlePlaceList.length;
     let googlePlaceIdList: string[] = googlePlaceList.map(googlePlace => googlePlace.place_id);
-    let dbPlaceDocList: dbPlaceDocument[] = await placeCol.find({place_id: {$in: googlePlaceIdList}}).toArray();
+    let dbPlaceDocList: dbPlaceDocument[] = await placeCol
+        .find({place_id: {$in: googlePlaceIdList}})
+        .skip(skip).limit(limit).toArray();
     let dbPlaceDocWithDistanceList: dbPlaceDocumentWithDistance[] = dbPlaceDocList.map((dbPlaceDoc: dbPlaceDocument): dbPlaceDocumentWithDistance => ({
-        ...dbPlaceDoc,
-        distance: twoLocateDistance(location, dbPlaceDoc.content.location)
+        ...dbPlaceDoc, distance: twoLocateDistance(location, dbPlaceDoc.content.location)
     })).sort((a: dbPlaceDocumentWithDistance, b: dbPlaceDocumentWithDistance) => {
         if (a.distance > b.distance) return 1;
         if (a.distance < b.distance) return -1;
         return 0;
     });
     let responsePlaceList: responsePlaceItem[] = await dbPlaceListConvertResponse(dbPlaceDocWithDistanceList, userId);
-    return {updated, dbStatus, placeCount: responsePlaceList.length, placeList: responsePlaceList};
+    return {updated, dbStatus, placeCount, placeList: responsePlaceList};
 }
 
 /**

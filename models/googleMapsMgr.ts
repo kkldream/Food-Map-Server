@@ -7,6 +7,12 @@ import {googleImageListConvertPhotoId} from "./service/imageService";
 import {latLngItem} from "./dataStruct/pubilcItem";
 import {googlePlaceResult} from "./dataStruct/originalGoogleResponse/placeResponse";
 
+/**
+ *
+ * @param location 經緯度
+ * @param distance -1~0:搜尋來中心最近的、>0:搜尋範圍內相關性最高的
+ * @param keyword 關鍵字搜尋，空字串表示不使用關鍵字
+ */
 async function updateCustom(location: latLngItem, distance: number, keyword: string) {
     if (isUndefined([location, distance, keyword])) throwError(errorCodes.requestDataError);
     let resultStatus = {
