@@ -7,16 +7,6 @@ import {googlePhotosItem} from "../dataStruct/originalGoogleResponse/pubilcItem"
 const imageToBase64 = require('image-to-base64');
 const Canvas = require('canvas');
 
-interface insertPhotoItemInput {
-    updateTime: Date;
-    photo_reference?: string;
-    uploadUser?: {
-        name: string;
-        url: string;
-    };
-    photoItem: photoItem;
-}
-
 export async function googleImageListConvertPhotoId(photoReference: googlePhotosItem[]): Promise<string[]> {
     if (!photoReference) return [];
     const photoCol = global.mongodbClient.foodMapDb.photoCol;
@@ -44,12 +34,18 @@ export async function googleImageListConvertPhotoId(photoReference: googlePhotos
     }));
 }
 
-interface getPhotoIdResponse {
+export async function getPhotoId(req: {
+    updateTime: Date;
+    photo_reference?: string;
+    uploadUser?: {
+        name: string;
+        url: string;
+    };
+    photoItem: photoItem;
+}): Promise<{
     updated: boolean;
     photoId: string;
-}
-
-export async function getPhotoId(req: insertPhotoItemInput): Promise<getPhotoIdResponse> {
+}> {
     let nowTime = new Date();
     const photoCol = global.mongodbClient.foodMapDb.photoCol;
     let photoDoc: photoDocument = req.photo_reference
