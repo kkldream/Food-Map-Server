@@ -54,3 +54,9 @@ export enum googleStatusEnum {
     INVALID_REQUEST = "INVALID_REQUEST",
     UNKNOWN_ERROR = "UNKNOWN_ERROR"
 }
+
+export interface dbStatus {
+    upsertCount: number;
+    matchCount: number;
+    modifiedCount: number;
+}

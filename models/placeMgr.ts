@@ -33,6 +33,7 @@ import {
 import {responseDetailResult} from "./dataStruct/response/detailResponses";
 import {googleDetailItem} from "./dataStruct/originalGoogleResponse/detailResponse";
 import {googleImageListConvertPhotoId} from "./service/imageService";
+import {dbStatus} from "./dataStruct/originalGoogleResponse/pubilcItem";
 
 /**
  * 使用經緯度搜尋附近餐廳
@@ -46,7 +47,7 @@ async function searchByDistance(userId: string, location: latLngItem, distance: 
     if (isUndefined([userId, location, distance, skip, limit])) throwError(errorCodes.requestDataError);
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let updated = false;
-    let dbStatus: any;
+    let dbStatus: dbStatus | undefined;
     // 若此地區近期無搜尋紀錄則更新
     if (!await isSearchByDistanceHaveHistory(location)) {
         dbStatus = await googleMapsMgr.updatePlaceByDistance(location);
@@ -91,7 +92,7 @@ async function searchByKeyword(userId: string, location: latLngItem, distance: n
     if (isUndefined([userId, location, distance, keyword, skip, limit])) throwError(errorCodes.requestDataError);
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let updated = false;
-    let dbStatus: any;
+    let dbStatus: dbStatus | undefined;
     // 取得此地區近期的關鍵字搜尋紀錄
     let googlePlaceList: googlePlaceResult[] = await getSearchByKeywordHistory(location, distance, keyword);
     // 若無紀錄則更新
@@ -175,7 +176,7 @@ async function drawCard(userId: string, location: latLngItem, mode: drawCardMode
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     let placeList: dbPlaceDocumentWithDistance[] = [];
     let updated = false;
-    let dbStatus: any;
+    let dbStatus: dbStatus | undefined;
     switch (mode) {
         case drawCardModeEnum.near:
             let pipeline = [
