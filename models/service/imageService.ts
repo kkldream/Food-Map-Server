@@ -1,14 +1,15 @@
 import config from "../../config";
 import {photoDocument, photoItem} from "../dataStruct/mongodb/photoDocument";
 import {insertGoogleApiPhotoLog} from "./googleApiLogService";
-import {errorCodes, throwError} from "../dataStruct/throwError";
+import {errorCodes, isUndefined, throwError} from "../dataStruct/throwError";
 import {googlePhotosItem} from "../dataStruct/originalGoogleResponse/pubilcItem";
 
 const imageToBase64 = require('image-to-base64');
 const Canvas = require('canvas');
 
 export async function googleImageListConvertPhotoId(photoReference: googlePhotosItem[]): Promise<string[]> {
-    if (!photoReference) return [];
+    if (isUndefined([photoReference])) throwError(errorCodes.requestDataError);
+    if (photoReference.length > 5) photoReference.length = 5; // 限制圖片張數
     const photoCol = global.mongodbClient.foodMapDb.photoCol;
     let responseTime = new Date();
     return await Promise.all(photoReference.map(async (googlePhoto: googlePhotosItem): Promise<string> => {
