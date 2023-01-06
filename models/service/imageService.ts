@@ -8,7 +8,7 @@ const imageToBase64 = require('image-to-base64');
 const Canvas = require('canvas');
 
 export async function googleImageListConvertPhotoId(photoReference: googlePhotosItem[]): Promise<string[]> {
-    if (isUndefined([photoReference])) throwError(errorCodes.requestDataError);
+    if (!photoReference) return [];
     if (photoReference.length > 5) photoReference.length = 5; // 限制圖片張數
     const photoCol = global.mongodbClient.foodMapDb.photoCol;
     let responseTime = new Date();
