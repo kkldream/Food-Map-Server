@@ -14,8 +14,8 @@ export default {
         ratingStar: 4,
         ratingTotal: 100,
     },
-    detailUpdateRangeSecond: 24 * 60 * 60,
-    keywordUpdateRangeSecond: 24 * 60 * 60,
+    detailUpdateRangeSecond: 60 * 60 * 24 * 7,
+    keywordUpdateRangeSecond: 60 * 60 * 24 * 7,
     image: {
         maxWidth: 600,
         compressRate: 0.6,
