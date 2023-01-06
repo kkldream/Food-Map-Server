@@ -105,8 +105,8 @@ export async function isSearchByDistanceHaveHistory(location: latLngItem, distan
         },
         {"$count": "count"}
     ];
-    let historyResult: { count: number; } = await googleApiLogCol.aggregate(pipeline, options).toArray();
-    return historyResult !== undefined;
+    let historyResult: { count: number; }[] = await googleApiLogCol.aggregate(pipeline, options).toArray();
+    return historyResult.length > 0;
 }
 
 /**

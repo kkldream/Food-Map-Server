@@ -71,7 +71,7 @@ async function searchByDistance(userId: string, location: latLngItem, distance: 
         {"$skip": skip},
         {"$limit": limit}
     ];
-    let placeCount: number = (await placeCol.aggregate([pipeline[0], {"$count": "count"}]).toArray())[0].count ?? 0;
+    let placeCount: number = (await placeCol.aggregate([pipeline[0], {"$count": "count"}]).toArray())[0]?.count ?? 0;
     let dbPlaceDocList: dbPlaceDocumentWithDistance[] = await placeCol.aggregate(pipeline).toArray();
     let responsePlaceList: responsePlaceItem[] = await dbPlaceListConvertResponse(dbPlaceDocList, userId);
     return {updated, dbStatus, placeCount, placeList: responsePlaceList};
