@@ -1,7 +1,7 @@
 import config from "../../config";
 import {photoDocument, photoItem} from "../dataStruct/mongodb/photoDocument";
 import {insertGoogleApiPhotoLog} from "./googleApiLogService";
-import {errorCodes, isUndefined, throwError} from "../dataStruct/throwError";
+import {errorCodes, throwError} from "../dataStruct/throwError";
 import {googlePhotosItem} from "../dataStruct/originalGoogleResponse/pubilcItem";
 
 const imageToBase64 = require('image-to-base64');
