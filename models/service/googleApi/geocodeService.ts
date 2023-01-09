@@ -9,6 +9,7 @@ import {
     waypointByLocation,
     waypointByPlaceId
 } from "../../dataStruct/request/googleRoutesApiRequest";
+import {errorCodes, throwError} from "../../dataStruct/throwError";
 
 // https://developers.google.com/maps/documentation/geocoding/start#reverse
 export async function callGoogleApiGeocodeAddress(location: latLngItem): Promise<googleGeocodeAutocompleteResponse> {
@@ -36,6 +37,7 @@ export async function callGoogleApiGeocodeLocation(address: string): Promise<goo
 export interface waypoint extends latLngItem, waypointByPlaceId {
 
 }
+
 // https://developers.google.com/maps/documentation/routes/specify_location
 export async function callGoogleApiComputeRoutes(origin: waypoint, destination: waypoint): Promise<computeRoutesResponse> {
     let config = {
@@ -57,7 +59,15 @@ export async function callGoogleApiComputeRoutes(origin: waypoint, destination: 
             languageCode: "zh-TW"
         } as googleRoutesApiRequest)
     };
-    let response: computeRoutesResponse = (await axios(config)).data;
+    let response: computeRoutesResponse;
+    try {
+        response = (await axios(config)).data;
+    } catch (error: any) {
+        if (error.code === "ERR_BAD_REQUEST")
+            throwError(errorCodes.unknown, "API權限錯誤");
+        throwError(errorCodes.unknown);
+        throw Error();
+    }
     await insertGoogleApiComputeRoutesLog({request: config.data, response});
     return response;
 }
