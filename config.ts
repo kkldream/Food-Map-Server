@@ -3,19 +3,19 @@ import {foodTypeEnum} from "./models/dataStruct/staticCode/foodTypeEnum";
 export default {
     // https://developers.google.com/maps/documentation/places/web-service/supported_types
     foodTypeList: [
-        // foodTypeEnum.food,
-        // foodTypeEnum.meal_delivery,
-        // foodTypeEnum.meal_takeaway,
         foodTypeEnum.restaurant,
     ],
-    minResponseCount: 20,
     drawCard: {
-        maxDistance: 1000,
-        ratingStar: 4,
-        ratingTotal: 100,
+        near: {
+            maxDistance: 1000,
+            ratingStar: 4,
+            ratingTotal: 100,
+        },
+        favorite: {
+            maxDistance: 3000,
+        }
     },
-    detailUpdateRangeSecond: 60 * 60 * 24 * 7,
-    keywordUpdateRangeSecond: 60 * 60 * 24 * 7,
+    reUpdateIntervalSecond: 60 * 60 * 24 * 30,
     image: {
         maxWidth: 600,
         compressRate: 0.6,

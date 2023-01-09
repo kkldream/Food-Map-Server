@@ -96,7 +96,7 @@ export async function isSearchByDistanceHaveHistory(location: latLngItem, distan
                 "maxDistance": 100,
                 "query": {
                     "mode": "place",
-                    "createTime": {"$gte": new Date(new Date().setSeconds(-config.keywordUpdateRangeSecond))},
+                    "createTime": {"$gte": new Date(new Date().setSeconds(-config.reUpdateIntervalSecond))},
                     "request.keyword": null,
                     "request.rankby": distance <= 0 ? "distance" : null,
                     "request.radius": distance <= 0 ? null : distance
@@ -127,7 +127,7 @@ export async function getSearchByKeywordHistory(location: latLngItem, distance: 
                 "maxDistance": 100,
                 "query": {
                     "mode": "place",
-                    "createTime": {"$gte": new Date(new Date().setSeconds(-config.keywordUpdateRangeSecond))},
+                    "createTime": {"$gte": new Date(new Date().setSeconds(-config.reUpdateIntervalSecond))},
                     "request.keyword": keyword,
                     "request.rankby": distance <= 0 ? "distance" : null,
                     "request.radius": distance <= 0 ? null : distance
@@ -160,7 +160,7 @@ export async function getAutocompleteHistory(location: latLngItem, input: string
                 "maxDistance": maxDistance,
                 "query": {
                     "mode": "autocomplete",
-                    "createTime": {"$gte": new Date(new Date().setSeconds(-config.keywordUpdateRangeSecond))},
+                    "createTime": {"$gte": new Date(new Date().setSeconds(-config.reUpdateIntervalSecond))},
                     "request.input": input,
                     "request.radius": distance,
                     "request.type": type

@@ -18,7 +18,7 @@ export async function getGeocodeAutocompleteHistory(input: latLngItem | string):
                     "maxDistance": 10,
                     "query": {
                         "mode": "geocode_autocomplete",
-                        "createTime": {"$gte": new Date(new Date().setSeconds(-config.keywordUpdateRangeSecond))},
+                        "createTime": {"$gte": new Date(new Date().setSeconds(-config.reUpdateIntervalSecond))},
                     }
                 }
             },
@@ -32,7 +32,7 @@ export async function getGeocodeAutocompleteHistory(input: latLngItem | string):
         const address = input as string;
         let query: any = {
             mode: "geocode_autocomplete",
-            createTime: {"$gte": new Date(new Date().setSeconds(-config.keywordUpdateRangeSecond))},
+            createTime: {"$gte": new Date(new Date().setSeconds(-config.reUpdateIntervalSecond))},
             "request.address": address
         };
         let historyResult: googleApiLogDocument[] = await googleApiLogCol.find(query).sort({createTime: -1}).limit(1).toArray();

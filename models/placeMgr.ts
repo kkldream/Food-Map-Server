@@ -126,7 +126,7 @@ async function detailsByPlaceId(userId: string, place_id: string): Promise<respo
     const placeCol = global.mongodbClient.foodMapDb.placeCol;
     const userCol = global.mongodbClient.foodMapDb.userCol;
     let findResult: dbPlaceDocument = await placeCol.findOne({
-        place_id, updateTime: {$gt: new Date(requestTime.setSeconds(-config.detailUpdateRangeSecond))}
+        place_id, updateTime: {$gt: new Date(requestTime.setSeconds(-config.reUpdateIntervalSecond))}
     });
     let updated = false;
     if (!findResult || findResult.originalDetail === null) {
@@ -176,43 +176,59 @@ async function drawCard(userId: string, location: latLngItem, mode: drawCardMode
     let updated = false;
     let dbStatus: dbStatus | undefined;
     switch (mode) {
-        case drawCardModeEnum.near:
+        case drawCardModeEnum.near: {
             let pipeline = [
                 {
                     "$geoNear": {
                         "near": responseLocationConvertDb(location),
                         "distanceField": "distance",
                         "spherical": true,
-                        "maxDistance": config.drawCard.maxDistance,
+                        "maxDistance": config.drawCard.near.maxDistance,
                         "query": {
                             "$and": [
                                 {"types": {"$in": config.foodTypeList}},
-                                {"content.rating.star": {"$gte": config.drawCard.ratingStar}},
-                                {"content.rating.total": {"$gte": config.drawCard.ratingTotal}},
+                                {"content.rating.star": {"$gte": config.drawCard.near.ratingStar}},
+                                {"content.rating.total": {"$gte": config.drawCard.near.ratingTotal}},
                                 {"place_id": {"$nin": await getBlackList(userId)}}
                             ]
                         }
                     }
                 },
-                {"$sample": {"size": num}},
-                {"$sort": {"distance": 1}}
+                {"$sample": {"size": num}}
             ];
             let placeCountResult = await placeCol.aggregate([pipeline[0], {"$count": "count"}]).toArray();
             let placeCount = placeCountResult.length !== 0 ? placeCountResult[0].count : 0;
-            if (placeCount < config.minResponseCount) {
+            if (placeCount < num) {
                 dbStatus = await googleMapsMgr.updatePlaceByDistance(location);
                 updated = true;
             }
             placeList = await placeCol.aggregate(pipeline).toArray();
             break;
-        case drawCardModeEnum.favorite:
+        }
+        case drawCardModeEnum.favorite: {
             let favoriteIdList: string[] = (await userCol.findOne({_id: new ObjectId(userId)})).favoriteList;
             if (favoriteIdList.length === 0) break;
-            placeList = await placeCol.aggregate([
-                {$match: {$and: [{place_id: {$in: favoriteIdList}}, {types: {$in: config.foodTypeList}}]}},
-                {$sample: {size: num}}
-            ]).toArray();
+            let pipeline = [
+                {
+                    "$geoNear": {
+                        "near": responseLocationConvertDb(location),
+                        "distanceField": "distance",
+                        "spherical": true,
+                        "maxDistance": config.drawCard.favorite.maxDistance,
+                        "query": {
+                            "$and": [
+                                {"place_id": {$in: favoriteIdList}},
+                                {"types": {"$in": config.foodTypeList}},
+                                {"place_id": {"$nin": await getBlackList(userId)}}
+                            ]
+                        }
+                    }
+                },
+                {"$sample": {"size": num}}
+            ];
+            placeList = await placeCol.aggregate(pipeline).toArray();
             break;
+        }
     }
     let responsePlaceList: responsePlaceItem[] = await dbPlaceListConvertResponse(placeList, userId);
     return {updated, placeCount: responsePlaceList.length, placeList: responsePlaceList};
