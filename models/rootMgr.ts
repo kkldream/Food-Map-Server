@@ -4,6 +4,9 @@ import {photoItem} from "./dataStruct/mongodb/photoDocument";
 import {compressUrlImageToBase64, getPhotoId} from "./service/imageService";
 import {fcmSendMessage} from "./service/fcmService";
 import {ObjectId} from "mongodb";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 async function pushBlackList(placeIdList: string[]) {
     return userMgr.pushBlackList(config.root.userId, placeIdList);
@@ -61,10 +64,15 @@ async function fcmSend(userIdList: string[], notification: { title: string; body
     }
 }
 
+function getGoogleApiKey(): { key: string } {
+    return {key: process.env.GOOGLE_API_KEY ?? ""};
+}
+
 export default {
     pushBlackList,
     pullBlackList,
     getBlackList,
     pushUrlPhoto,
     fcmSend,
+    getGoogleApiKey,
 };

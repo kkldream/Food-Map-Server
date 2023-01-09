@@ -78,4 +78,16 @@ router.post('/fcm_send', async function (req: any, res: any, next: any) {
     return res.send(response);
 });
 
+router.post('/get_google_api_key', async function (req: any, res: any, next: any) {
+    let response = new apiResponseBase();
+    try {
+        let {accessKey} = req.body;
+        await response.verifyRoot(accessKey);
+        response.result = rootMgr.getGoogleApiKey();
+    } catch (error: apiError | any) {
+        response.errorHandle(error);
+    }
+    return res.send(response);
+});
+
 export default router;
