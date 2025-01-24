@@ -88,12 +88,12 @@ docker run \\
         PROJECT_NAME = 'food_map'
       }
       post {
-        always {
+        success {
           library 'shared-library'
           discord_notifaction true
         }
 
-        failure {
+        unsuccessful {
           library 'shared-library'
           discord_notifaction false
         }
