@@ -65,7 +65,15 @@ docker run \\
 
     stage('Test') {
       steps {
-        sh 'echo Not test yet'
+        withCredentials([
+          string(credentialsId: 'kk_mongodb_url', variable: 'MONGODB_URL'),
+          string(credentialsId: 'food_map-google_api_key', variable: 'GOOGLE_API_KEY'),
+          string(credentialsId: 'food_map-fcm_access_key', variable: 'CREFCM_ACCESS_KEYD2')
+        ]) {
+          echo "MONGODB_URL: ${MONGODB_URL}"
+          echo "GOOGLE_API_KEY: ${GOOGLE_API_KEY}"
+          echo "CREFCM_ACCESS_KEYD2: ${CREFCM_ACCESS_KEYD2}"
+        }
       }
     }
 
