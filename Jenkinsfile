@@ -19,12 +19,12 @@ docker build \\
             branch 'main'
           }
           steps {
-            withCredentials([
-              string(credentialsId: 'kk_mongodb_url', variable: 'MONGODB_URL'),
-              string(credentialsId: 'food_map-google_api_key', variable: 'GOOGLE_API_KEY'),
-              string(credentialsId: 'food_map-fcm_access_key', variable: 'CREFCM_ACCESS_KEY')
-            ]) {
-              sh '''run_name=jk-${PROJECT_NAME}-${BRANCH_NAME}
+            withCredentials(bindings: [
+                            string(credentialsId: 'kk_mongodb_url', variable: 'MONGODB_URL'),
+                            string(credentialsId: 'food_map-google_api_key', variable: 'GOOGLE_API_KEY'),
+                            string(credentialsId: 'food_map-fcm_access_key', variable: 'CREFCM_ACCESS_KEY')
+                          ]) {
+                sh '''run_name=jk-${PROJECT_NAME}-${BRANCH_NAME}
 build_name=jenkins/${PROJECT_NAME}:${BRANCH_NAME}-${BUILD_NUMBER}
 
 docker rm -f ${run_name}
@@ -39,21 +39,22 @@ docker run \\
   -e GOOGLE_API_KEY=${GOOGLE_API_KEY} \\
   -e FCM_ACCESS_KEY=${CREFCM_ACCESS_KEY} \\
   ${build_name}'''
+              }
+
             }
           }
-        }
 
-        stage('dev') {
-          when {
-            branch 'dev'
-          }
-          steps {
-            withCredentials([
-              string(credentialsId: 'kk_mongodb_url', variable: 'MONGODB_URL'),
-              string(credentialsId: 'food_map-google_api_key', variable: 'GOOGLE_API_KEY'),
-              string(credentialsId: 'food_map-fcm_access_key', variable: 'CREFCM_ACCESS_KEY')
-            ]) {
-              sh '''run_name=jk-${PROJECT_NAME}-${BRANCH_NAME}
+          stage('dev') {
+            when {
+              branch 'dev'
+            }
+            steps {
+              withCredentials(bindings: [
+                              string(credentialsId: 'kk_mongodb_url', variable: 'MONGODB_URL'),
+                              string(credentialsId: 'food_map-google_api_key', variable: 'GOOGLE_API_KEY'),
+                              string(credentialsId: 'food_map-fcm_access_key', variable: 'CREFCM_ACCESS_KEY')
+                            ]) {
+                  sh '''run_name=jk-${PROJECT_NAME}-${BRANCH_NAME}
 build_name=jenkins/${PROJECT_NAME}:${BRANCH_NAME}-${BUILD_NUMBER}
 
 docker rm -f ${run_name}
@@ -68,33 +69,34 @@ docker run \\
   -e GOOGLE_API_KEY=${GOOGLE_API_KEY} \\
   -e FCM_ACCESS_KEY=${CREFCM_ACCESS_KEY} \\
   ${build_name}'''
+                }
+
+              }
             }
+
+          }
+        }
+
+        stage('Test') {
+          steps {
+            sh 'echo Not test yet!'
           }
         }
 
       }
-    }
+      environment {
+        PROJECT_NAME = 'food_map'
+      }
+      post {
+        always {
+          library 'shared-library'
+          discord_notifaction true
+        }
 
-    stage('Test') {
-      steps {
-        sh 'echo Not test yet'
+        failure {
+          library 'shared-library'
+          discord_notifaction false
+        }
+
       }
     }
-
-  }
-  environment {
-    PROJECT_NAME = 'food_map'
-  }
-  post {
-    always {
-      library 'shared-library'
-      discord_notifaction(true)
-    }
-
-    failure {
-      library 'shared-library'
-      discord_notifaction(false)
-    }
-
-  }
-}
