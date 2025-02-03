@@ -43,38 +43,6 @@ docker run \\
 
             }
           }
-
-          stage('dev') {
-            when {
-              branch 'dev'
-            }
-            steps {
-              withCredentials(bindings: [
-                              string(credentialsId: 'kk_mongodb_url', variable: 'MONGODB_URL'),
-                              string(credentialsId: 'food_map-google_api_key', variable: 'GOOGLE_API_KEY'),
-                              string(credentialsId: 'food_map-fcm_access_key', variable: 'CREFCM_ACCESS_KEY')
-                            ]) {
-                  sh '''run_name=jk-${PROJECT_NAME}-${BRANCH_NAME}
-build_name=jenkins/${PROJECT_NAME}:${BRANCH_NAME}-${BUILD_NUMBER}
-
-docker rm -f ${run_name}
-docker run \\
-  -d \\
-  --restart=always \\
-  --name ${run_name} \\
-  -p 54000:3000 \\
-  -e NODE_ENV=development \\
-  -e ROOT_ACCESS_KEY=mmslab \\
-  -e MONGODB_URL=${MONGODB_URL} \\
-  -e GOOGLE_API_KEY=${GOOGLE_API_KEY} \\
-  -e FCM_ACCESS_KEY=${CREFCM_ACCESS_KEY} \\
-  ${build_name}'''
-                }
-
-              }
-            }
-
-          }
         }
 
         stage('Test') {
