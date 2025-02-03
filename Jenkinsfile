@@ -43,6 +43,8 @@ docker run \\
 
             }
           }
+
+          }
         }
 
         stage('Test') {
