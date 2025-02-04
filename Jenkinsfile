@@ -20,7 +20,7 @@ docker build \\
           }
           steps {
             withCredentials(bindings: [
-                            string(credentialsId: 'kk_mongodb_url', variable: 'MONGODB_URL'),
+                            string(credentialsId: 'kk-mongodb_url', variable: 'MONGODB_URL'),
                             string(credentialsId: 'food_map-root_access_key', variable: 'ROOT_ACCESS_KEY'),
                             string(credentialsId: 'food_map-google_api_key', variable: 'GOOGLE_API_KEY'),
                             string(credentialsId: 'food_map-fcm_access_key', variable: 'CREFCM_ACCESS_KEY')
