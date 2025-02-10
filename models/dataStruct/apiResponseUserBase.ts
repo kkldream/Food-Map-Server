@@ -40,19 +40,26 @@ export default class apiResponseBase implements apiResponseBaseInterface {
     }
 
     async verifyUser(userId: string, accessKey: string): Promise<msgItem> {
-        let userDoc = await global.mongodbClient.foodMapDb.userCol.findOne({_id: new ObjectId(userId)});
-        if (!userDoc) {
+        try {
+            let userDoc = await global.mongodbClient.foodMapDb.userCol.findOne({_id: new ObjectId(userId)});
+            if (!userDoc) {
+                this.verify = false;
+                this.status = 3;
+                throwError(errorCodes.accountNotFound);
+            }
+            if (userDoc.accessKey !== accessKey) {
+                this.verify = false;
+                this.status = 4;
+                throwError(errorCodes.accessKeyVerifyError);
+            }
+            this.verify = true;
+            this.status = 0;
+            return {msg: '驗證成功'};
+        } catch (error: Error | any) {
             this.verify = false;
-            this.status = 3;
-            throwError(errorCodes.accountNotFound);
+            this.status = -1;
+            throwError(errorCodes.unknown, error.name + ': ' + error.message);
+            throw error;
         }
-        if (userDoc.accessKey !== accessKey) {
-            this.verify = false;
-            this.status = 4;
-            throwError(errorCodes.accessKeyVerifyError);
-        }
-        this.verify = true;
-        this.status = 0;
-        return {msg: '驗證成功'};
     }
 }
