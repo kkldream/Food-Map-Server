@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: food-map-server
+  namespace: apps
+  labels:
+    app: food-map-server-dev
+spec:
+  selector:
+    matchLabels:
+      app: food-map-server-dev
+  template:
+    metadata:
+      labels:
+        app: food-map-server-dev
+    spec:
+      containers:
+        - name: food-map-server
+          envFrom:
+            - secretRef:
+                name: food-map-secrets-dev

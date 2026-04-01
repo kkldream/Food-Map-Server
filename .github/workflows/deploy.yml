@@ -1,0 +1,69 @@
+name: Build and Deploy to K8s
+
+on:
+  push:
+    branches: [main, dev]
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: food-map-server
+  K8S_NAMESPACE: apps
+
+jobs:
+  build-and-deploy:
+    runs-on: 'kkldream-food-map-server'
+    environment: 'main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set deploy context
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          IMAGE_TAG="${BRANCH}-${SHORT_SHA}"
+
+          echo "BRANCH=${BRANCH}" >> $GITHUB_ENV
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
+
+          echo "SECRET_NAME=food-map-secrets-${BRANCH}" >> $GITHUB_ENV
+          echo "KUSTOMIZE_DIR=k8s/overlays/${BRANCH}" >> $GITHUB_ENV
+          echo "RESOURCE_NAME=food-map-server-${BRANCH}" >> $GITHUB_ENV
+
+          echo "Deploy context: branch=${BRANCH} image_tag=${IMAGE_TAG}"
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
+            -t ${{ env.IMAGE_NAME }}:${{ env.BRANCH }}-latest \
+            -f Dockerfile \
+            .
+          if [ "${{ env.BRANCH }}" = "main" ]; then
+            docker tag ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} ${{ env.IMAGE_NAME }}:latest
+          fi
+
+      - name: Create or update secrets
+        run: |
+          kubectl create secret generic ${{ env.SECRET_NAME }} \
+            --namespace=${{ env.K8S_NAMESPACE }} \
+            --from-literal=ROOT_ACCESS_KEY=${{ secrets.ROOT_ACCESS_KEY }} \
+            --from-literal=MONGODB_URL=${{ secrets.MONGODB_URL }} \
+            --from-literal=GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy to Kubernetes
+        run: |
+          sed -i "s|newTag: .*|newTag: ${{ env.IMAGE_TAG }}|g" ${{ env.KUSTOMIZE_DIR }}/kustomization.yaml
+          kubectl apply -k ${{ env.KUSTOMIZE_DIR }}
+
+      - name: Verify deployment
+        run: |
+          kubectl rollout status deployment/${{ env.RESOURCE_NAME }} \
+            -n ${{ env.K8S_NAMESPACE }} \
+            --timeout=120s
+          echo "========== Pods =========="
+          kubectl get pods -n ${{ env.K8S_NAMESPACE }} -l app=${{ env.RESOURCE_NAME }}
+          echo "========== Service =========="
+          kubectl get svc ${{ env.RESOURCE_NAME }} -n ${{ env.K8S_NAMESPACE }}
