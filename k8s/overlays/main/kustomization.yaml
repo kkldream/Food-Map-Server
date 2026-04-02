@@ -15,4 +15,4 @@ patches:
       name: food-map-server
 images:
   - name: food-map-server
-    newTag: main-latest
+    newTag: replace-me

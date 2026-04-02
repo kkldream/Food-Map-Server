@@ -37,12 +37,8 @@ jobs:
         run: |
           docker build \
             -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
-            -t ${{ env.IMAGE_NAME }}:${{ env.BRANCH }}-latest \
             -f Dockerfile \
             .
-          if [ "${{ env.BRANCH }}" = "main" ]; then
-            docker tag ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} ${{ env.IMAGE_NAME }}:latest
-          fi
 
       - name: Create or update secrets
         run: |
