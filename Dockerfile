@@ -19,6 +19,11 @@ COPY package.json yarn.lock ./
 RUN corepack enable \
     && node -v \
     && yarn -v \
+    && echo "=== Phase 1: yarn install --ignore-scripts ===" \
+    && yarn install ${YARN_INSTALL_FLAGS} --ignore-scripts \
+    && echo "=== Phase 2: canvas install only ===" \
+    && npm_config_build_from_source=true yarn add canvas@2.10.2 --ignore-workspace-root-check --verbose \
+    && echo "=== Phase 3: rebuild scripts ===" \
     && yarn install ${YARN_INSTALL_FLAGS} \
     && yarn cache clean
 
