@@ -33,9 +33,27 @@ jobs:
 
           echo "Deploy context: branch=${BRANCH} image_tag=${IMAGE_TAG}"
 
+      - name: Runner diagnostics
+        run: |
+          set -x
+          uname -a
+          id
+          nproc || true
+          free -h || true
+          df -h
+          cat /etc/resolv.conf || true
+          docker version
+          docker info
+          getent hosts registry.yarnpkg.com || true
+          getent hosts registry.npmjs.org || true
+          getent hosts github.com || true
+          curl -I --max-time 20 https://registry.yarnpkg.com/canvas || true
+          curl -I --max-time 20 https://github.com || true
+
       - name: Build Docker image
         run: |
           docker build \
+            --progress=plain \
             -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
             -f Dockerfile \
             .

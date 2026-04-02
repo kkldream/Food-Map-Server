@@ -1,5 +1,7 @@
 FROM node:20-bookworm-slim
 
+ARG YARN_INSTALL_FLAGS="--frozen-lockfile --network-timeout 300000 --verbose"
+
 RUN apt-get update && apt-get install -y \
     python3 \
     make \
@@ -14,7 +16,11 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /root/app
 
 COPY package.json yarn.lock ./
-RUN corepack enable && yarn install --frozen-lockfile --network-timeout 300000 && yarn cache clean
+RUN corepack enable \
+    && node -v \
+    && yarn -v \
+    && yarn install ${YARN_INSTALL_FLAGS} \
+    && yarn cache clean
 
 COPY . .
 EXPOSE 3000
