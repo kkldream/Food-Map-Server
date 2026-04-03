@@ -44,8 +44,8 @@ export default class MongodbClient {
     // }
 
     close() {
-        this.client.close().then(r => {
-            console.log('mongo client is disconnect')
+        return this.client.close().then(() => {
+            console.log('mongo client is disconnect');
         });
     }
 }
