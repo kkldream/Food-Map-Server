@@ -1,15 +1,11 @@
 import express from 'express';
-import createError from 'http-errors';
 import session from 'express-session';
-import {getDateFormat} from './models/utils';
+import {getEnv} from './lib/env';
+import {errorHandler, notFoundHandler} from './middleware/errorHandler';
+import {requestLogger} from './middleware/requestLogger';
 import apiRoute from './routes/api';
 import indexRoute from './routes/index';
 import {registerSwagger} from './swagger';
-
-declare global {
-  // eslint-disable-next-line no-var
-  var mongodbClient: any;
-}
 
 interface CreateAppOptions {
   enableRequestLogging?: boolean;
@@ -19,11 +15,12 @@ export function createApp(options: CreateAppOptions = {}) {
   const {
     enableRequestLogging = true
   } = options;
+  const env = getEnv();
   const app = express();
 
   app.use(require('cors')());
   app.use(session({
-    secret: process.env.SESSION_SECRET || 'dev-session-secret',
+    secret: env.sessionSecret,
     saveUninitialized: false,
     resave: false,
     name: 'user'
@@ -33,23 +30,15 @@ export function createApp(options: CreateAppOptions = {}) {
   app.set('view engine', 'jade');
 
   if (enableRequestLogging) {
-    app.use('/', (req, res, next) => {
-      console.log(`[${getDateFormat()}] ${req.method}: ${req.originalUrl}`);
-      next();
-    });
+    app.use('/', requestLogger);
   }
 
   registerSwagger(app);
   app.use('/', indexRoute);
   app.use('/api', apiRoute);
 
-  app.use((req, res, next) => next(createError(404)));
-  app.use((err: any, req: any, res: any, next: any) => {
-    res.locals.message = err.message;
-    res.locals.error = req.app.get('env') === 'development' ? err : {};
-    res.status(err.status || 500);
-    res.render('error');
-  });
+  app.use(notFoundHandler);
+  app.use(errorHandler);
 
   return app;
 }

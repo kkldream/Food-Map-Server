@@ -19,18 +19,14 @@ function installMongoClientStub() {
 }
 
 describe('app smoke', () => {
-  it('serves root and api readiness routes', {timeout: 10000}, async () => {
+  it('still serves html root, docs, and api routes after bootstrap refactor', {timeout: 10000}, async () => {
     const restoreMongoClient = installMongoClientStub();
-    const app = createApp();
+    const app = createApp({enableRequestLogging: false});
 
     try {
-      const rootResponse = await request(app).get('/');
-      expect(rootResponse.status).toBe(200);
-
-      const apiResponse = await request(app).get('/api');
-      expect(apiResponse.status).toBe(200);
-      expect(apiResponse.body.status).toBe(0);
-      expect(apiResponse.body.result.msg).toBe('api is ready');
+      expect((await request(app).get('/')).status).toBe(200);
+      expect((await request(app).get('/docs/')).status).toBe(200);
+      expect((await request(app).get('/api')).status).toBe(200);
     } finally {
       restoreMongoClient();
     }

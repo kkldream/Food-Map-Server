@@ -1,19 +1,22 @@
 import dotenv from 'dotenv';
 import {createApp} from './app';
-import MongodbClient from './models/mongodbMgr';
+import {getEnv} from './lib/env';
+import {connectMongo} from './lib/mongo';
 
 dotenv.config();
 
-const app = createApp();
-const port = process.env.PORT || 3000;
-const mongodbUrl = process.env.MONGODB_URL || 'mongodb://localhost:27017';
-
-global.mongodbClient = new MongodbClient(mongodbUrl, () => {
+async function main() {
+  const env = getEnv();
+  await connectMongo(env.mongodbUrl);
   console.log('mongo client is connected');
-  app.listen(port, () => {
-    console.log(`server is running on http://localhost:${port}/`);
+
+  const app = createApp();
+  app.listen(env.port, () => {
+    console.log(`server is running on http://localhost:${env.port}/`);
   });
-});
+}
+
+main();
 
 process.on('SIGINT', async () => {
   await global.mongodbClient.close?.();
