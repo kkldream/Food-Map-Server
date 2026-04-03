@@ -131,10 +131,9 @@ paths:
         '200':
           description: photo image
           content:
-            image/jpeg:
+            application/json:
               schema:
-                type: string
-                format: binary
+                $ref: '#/components/schemas/ApiResponse'
   /api/place/autocomplete:
     post:
       tags: [place]
