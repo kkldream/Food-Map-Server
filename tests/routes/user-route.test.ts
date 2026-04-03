@@ -101,6 +101,33 @@ describe('user routes', () => {
     expect(userMgr.loginByDevice).toHaveBeenCalledWith('demo', 'pass', 'web');
   });
 
+  it('persists login session fields for later api requests', async () => {
+    const verifyUserSpy = vi.spyOn(apiResponseBase.prototype, 'verifyUser').mockResolvedValue({
+      msg: '驗證成功'
+    });
+    const app = createApp();
+    const agent = request.agent(app);
+
+    const loginResponse = await agent.post('/api/user/login').send({
+      username: 'demo',
+      password: 'pass',
+      deviceId: 'web'
+    });
+
+    expect(loginResponse.status).toBe(200);
+    expect(loginResponse.headers['set-cookie']).toEqual(expect.arrayContaining([
+      expect.stringContaining('user=')
+    ]));
+
+    const logoutResponse = await agent.post('/api/user/logout').send({
+      deviceId: 'web'
+    });
+
+    expect(logoutResponse.status).toBe(200);
+    expect(verifyUserSpy).toHaveBeenCalledWith('u1', 'k1');
+    expect(userMgr.logoutByDevice).toHaveBeenCalledWith('u1', 'web');
+  });
+
   it('verifies the user and wraps the logout response', async () => {
     const verifyUserSpy = vi.spyOn(apiResponseBase.prototype, 'verifyUser').mockResolvedValue({
       msg: '驗證成功'
