@@ -22,7 +22,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: 10.8.1
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -71,6 +71,8 @@ jobs:
             --from-literal=ROOT_ACCESS_KEY=${{ secrets.ROOT_ACCESS_KEY }} \
             --from-literal=MONGODB_URL=${{ secrets.MONGODB_URL }} \
             --from-literal=GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }} \
+            --from-literal=FCM_ACCESS_KEY=${{ secrets.FCM_ACCESS_KEY }} \
+            --from-literal=SESSION_SECRET=${{ secrets.SESSION_SECRET }} \
             --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Deploy to Kubernetes

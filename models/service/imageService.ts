@@ -7,6 +7,23 @@ import sharp from "sharp";
 
 const imageToBase64 = require('image-to-base64');
 
+function getLegacyCompressedSize(width: number, height: number): {width: number; height: number} {
+    const maxSide = Math.max(width, height);
+    if (maxSide <= config.image.maxWidth) {
+        return {width, height};
+    }
+
+    // Keep the historical canvas sizing formula for backward-compatible output.
+    const minSide = Math.min(width, height);
+    const resizedMinSide = Math.max(1, Math.round((minSide / maxSide) * 1024));
+
+    if (width > height) {
+        return {width: config.image.maxWidth, height: resizedMinSide};
+    }
+
+    return {width: resizedMinSide, height: config.image.maxWidth};
+}
+
 export async function googleImageListConvertPhotoId(photoReference: googlePhotosItem[]): Promise<string[]> {
     if (!photoReference) return [];
     if (photoReference.length > 5) photoReference.length = 5; // 限制圖片張數
@@ -84,8 +101,20 @@ export async function compressUrlImageToBase64(url: string, rate: number = 0.5):
 }
 
 export async function compressImageBufferToBase64(buff: Buffer, rate: number = 0.5): Promise<photoItem> {
-    const pipeline = sharp(buff).rotate().resize({
-        width: config.image.maxWidth,
+    const image = sharp(buff).rotate();
+    const metadata = await image.metadata();
+    const sourceWidth = metadata.autoOrient?.width ?? metadata.width;
+    const sourceHeight = metadata.autoOrient?.height ?? metadata.height;
+
+    if (!sourceWidth || !sourceHeight) {
+        throw new Error("Image dimensions are missing before compression");
+    }
+
+    const targetSize = getLegacyCompressedSize(sourceWidth, sourceHeight);
+    const pipeline = image.resize({
+        width: targetSize.width,
+        height: targetSize.height,
+        fit: 'fill',
         withoutEnlargement: true
     });
 
