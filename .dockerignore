@@ -3,3 +3,5 @@ dist
 .idea
 .env
 .git*
+k8s/
+*.md
