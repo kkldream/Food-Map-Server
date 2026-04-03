@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: apps
+nameSuffix: -dev
+resources:
+  - ../../base
+patches:
+  - path: deployment-patch.yaml
+    target:
+      kind: Deployment
+      name: food-map-server
+  - path: service-patch.yaml
+    target:
+      kind: Service
+      name: food-map-server
+images:
+  - name: food-map-server
+    newName: registry.kkserver.net/food-map-server
+    newTag: replace-me
