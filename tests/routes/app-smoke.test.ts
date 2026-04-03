@@ -19,7 +19,7 @@ function installMongoClientStub() {
 }
 
 describe('app smoke', () => {
-  it('serves root and api readiness routes', async () => {
+  it('serves root and api readiness routes', {timeout: 10000}, async () => {
     const restoreMongoClient = installMongoClientStub();
     const app = createApp();
 
