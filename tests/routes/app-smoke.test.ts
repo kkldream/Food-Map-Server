@@ -4,14 +4,6 @@ import {createApp} from '../../app';
 
 describe('app smoke', () => {
   it('serves root and api readiness routes', async () => {
-    global.mongodbClient = {
-      foodMapDb: {
-        routeApiLogCol: {
-          insertOne: () => undefined
-        }
-      }
-    };
-
     const app = createApp();
 
     const rootResponse = await request(app).get('/');
