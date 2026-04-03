@@ -1,0 +1,424 @@
+paths:
+  /api/user/register:
+    post:
+      tags: [user]
+      summary: Register user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password, deviceId]
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                deviceId:
+                  type: string
+      responses:
+        '200':
+          description: register result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/user/login:
+    post:
+      tags: [user]
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password, deviceId]
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                deviceId:
+                  type: string
+      responses:
+        '200':
+          description: login result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/user/add_fcm_token:
+    post:
+      tags: [user]
+      summary: Add FCM token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, accessKey, deviceId, fcmToken]
+              properties:
+                userId:
+                  type: string
+                accessKey:
+                  type: string
+                deviceId:
+                  type: string
+                fcmToken:
+                  type: string
+      responses:
+        '200':
+          description: add FCM token result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/user/logout:
+    post:
+      tags: [user]
+      summary: Logout user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, accessKey, deviceId]
+              properties:
+                userId:
+                  type: string
+                accessKey:
+                  type: string
+                deviceId:
+                  type: string
+      responses:
+        '200':
+          description: logout result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/user/delete_account:
+    post:
+      tags: [user]
+      summary: Delete account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, accessKey]
+              properties:
+                userId:
+                  type: string
+                accessKey:
+                  type: string
+      responses:
+        '200':
+          description: delete account result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/user/get_image:
+    post:
+      tags: [user]
+      summary: Get user image
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, accessKey]
+              properties:
+                userId:
+                  type: string
+                accessKey:
+                  type: string
+      responses:
+        '200':
+          description: user image result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/user/set_image:
+    post:
+      tags: [user]
+      summary: Set user image
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, accessKey, userImage]
+              properties:
+                userId:
+                  type: string
+                accessKey:
+                  type: string
+                userImage:
+                  type: string
+      responses:
+        '200':
+          description: set image result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/user/set_password:
+    post:
+      tags: [user]
+      summary: Set password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, accessKey, password]
+              properties:
+                userId:
+                  type: string
+                accessKey:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: set password result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/user/push_favorite:
+    post:
+      tags: [user]
+      summary: Add favorite places
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, accessKey, favoriteList]
+              properties:
+                userId:
+                  type: string
+                accessKey:
+                  type: string
+                favoriteList:
+                  $ref: '#/components/schemas/StringArray'
+      responses:
+        '200':
+          description: add favorite result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/user/pull_favorite:
+    post:
+      tags: [user]
+      summary: Remove favorite places
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, accessKey, favoriteIdList]
+              properties:
+                userId:
+                  type: string
+                accessKey:
+                  type: string
+                favoriteIdList:
+                  $ref: '#/components/schemas/StringArray'
+      responses:
+        '200':
+          description: remove favorite result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/user/get_favorite:
+    post:
+      tags: [user]
+      summary: Get favorite places
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, accessKey]
+              properties:
+                userId:
+                  type: string
+                accessKey:
+                  type: string
+      responses:
+        '200':
+          description: favorite list result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/user/push_black_list:
+    post:
+      tags: [user]
+      summary: Add place IDs to black list
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, accessKey, placeIdList]
+              properties:
+                userId:
+                  type: string
+                accessKey:
+                  type: string
+                placeIdList:
+                  $ref: '#/components/schemas/StringArray'
+      responses:
+        '200':
+          description: add black list result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/user/pull_black_list:
+    post:
+      tags: [user]
+      summary: Remove place IDs from black list
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, accessKey, placeIdList]
+              properties:
+                userId:
+                  type: string
+                accessKey:
+                  type: string
+                placeIdList:
+                  $ref: '#/components/schemas/StringArray'
+      responses:
+        '200':
+          description: remove black list result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/user/get_black_list:
+    post:
+      tags: [user]
+      summary: Get black list
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, accessKey]
+              properties:
+                userId:
+                  type: string
+                accessKey:
+                  type: string
+      responses:
+        '200':
+          description: black list result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/user/push_place_list:
+    post:
+      tags: [user]
+      summary: Add place to custom place list
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, accessKey, place_id, name, address, location]
+              properties:
+                userId:
+                  type: string
+                accessKey:
+                  type: string
+                place_id:
+                  type: string
+                name:
+                  type: string
+                address:
+                  type: string
+                location:
+                  $ref: '#/components/schemas/Location'
+      responses:
+        '200':
+          description: add place list result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/user/pull_place_list:
+    post:
+      tags: [user]
+      summary: Remove place from custom place list
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, accessKey, place_id]
+              properties:
+                userId:
+                  type: string
+                accessKey:
+                  type: string
+                place_id:
+                  type: string
+      responses:
+        '200':
+          description: remove place list result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/user/get_place_list:
+    post:
+      tags: [user]
+      summary: Get custom place list
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, accessKey]
+              properties:
+                userId:
+                  type: string
+                accessKey:
+                  type: string
+      responses:
+        '200':
+          description: place list result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'

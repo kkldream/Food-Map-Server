@@ -4,6 +4,7 @@ import session from 'express-session';
 import {getDateFormat} from './models/utils';
 import apiRoute from './routes/api';
 import indexRoute from './routes/index';
+import {registerSwagger} from './swagger';
 
 declare global {
   // eslint-disable-next-line no-var
@@ -29,6 +30,7 @@ export function createApp() {
     next();
   });
 
+  registerSwagger(app);
   app.use('/', indexRoute);
   app.use('/api', apiRoute);
 
