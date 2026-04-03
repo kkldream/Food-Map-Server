@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import type {Express} from 'express';
+import type {Express, RequestHandler} from 'express';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 
@@ -61,5 +61,18 @@ export function getOpenApiSpec() {
 }
 
 export function registerSwagger(app: Express) {
-  app.use('/docs', swaggerUi.serve, swaggerUi.setup(getOpenApiSpec()));
+  let swaggerUiHandler: RequestHandler | null = null;
+
+  app.use('/docs', swaggerUi.serve);
+  app.use('/docs', (req, res, next) => {
+    try {
+      if (!swaggerUiHandler) {
+        swaggerUiHandler = swaggerUi.setup(getOpenApiSpec()) as RequestHandler;
+      }
+
+      return swaggerUiHandler(req, res, next);
+    } catch (error) {
+      return next(error);
+    }
+  });
 }
