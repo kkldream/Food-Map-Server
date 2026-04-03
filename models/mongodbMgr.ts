@@ -25,13 +25,15 @@ export default class MongodbClient {
         this.foodMapDb.routeApiLogCol = foodMapDb.collection('routeApiLog');
     }
 
-    constructor(url: string, callback: (() => void)) {
+    constructor(url: string, callback: (() => void), onError: ((error: unknown) => void) = () => undefined) {
         this.client = new MongoClient(url);
         this.client.connect().then(async client => {
             this.client = client;
             this.initDbColList(client);
             callback();
-        })
+        }).catch(error => {
+            onError(error);
+        });
     }
 
     db(dbName: string) {

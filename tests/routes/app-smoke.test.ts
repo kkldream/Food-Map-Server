@@ -26,7 +26,10 @@ describe('app smoke', () => {
     try {
       expect((await request(app).get('/')).status).toBe(200);
       expect((await request(app).get('/docs/')).status).toBe(200);
-      expect((await request(app).get('/api')).status).toBe(200);
+      const apiResponse = await request(app).get('/api');
+      expect(apiResponse.status).toBe(200);
+      expect(apiResponse.body.status).toBe(0);
+      expect(apiResponse.body.result.msg).toBe('api is ready');
     } finally {
       restoreMongoClient();
     }

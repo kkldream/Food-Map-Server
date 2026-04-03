@@ -6,7 +6,16 @@ declare global {
 }
 
 export async function connectMongo(url: string) {
-  return new Promise<MongodbClient>((resolve) => {
-    global.mongodbClient = new MongodbClient(url, () => resolve(global.mongodbClient));
+  return new Promise<MongodbClient>((resolve, reject) => {
+    let mongodbClient: MongodbClient;
+
+    mongodbClient = new MongodbClient(
+      url,
+      () => {
+        global.mongodbClient = mongodbClient;
+        resolve(mongodbClient);
+      },
+      (error) => reject(error)
+    );
   });
 }
