@@ -1,0 +1,10 @@
+openapi: 3.0.3
+info:
+  title: Food Map Server API
+  version: 1.0.0
+tags:
+  - name: user
+  - name: place
+  - name: geocode
+  - name: google_api
+  - name: root

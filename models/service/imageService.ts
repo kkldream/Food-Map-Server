@@ -3,9 +3,26 @@ import {photoDocument, photoItem} from "../dataStruct/mongodb/photoDocument";
 import {insertGoogleApiPhotoLog} from "./googleApiLogService";
 import {errorCodes, throwError} from "../dataStruct/throwError";
 import {googlePhotosItem} from "../dataStruct/originalGoogleResponse/pubilcItem";
+import sharp from "sharp";
 
 const imageToBase64 = require('image-to-base64');
-const Canvas = require('canvas');
+
+function getLegacyCompressedSize(width: number, height: number): {width: number; height: number} {
+    const maxSide = Math.max(width, height);
+    if (maxSide <= config.image.maxWidth) {
+        return {width, height};
+    }
+
+    // Keep the historical canvas sizing formula for backward-compatible output.
+    const minSide = Math.min(width, height);
+    const resizedMinSide = Math.max(1, Math.round((minSide / maxSide) * 1024));
+
+    if (width > height) {
+        return {width: config.image.maxWidth, height: resizedMinSide};
+    }
+
+    return {width: resizedMinSide, height: config.image.maxWidth};
+}
 
 export async function googleImageListConvertPhotoId(photoReference: googlePhotosItem[]): Promise<string[]> {
     if (!photoReference) return [];
@@ -80,44 +97,43 @@ export async function compressUrlImageToBase64(url: string, rate: number = 0.5):
     } catch (error) {
         throwError(errorCodes.photoUrlError);
     }
-    let buff = Buffer.from(base64, 'base64');
+    return compressImageBufferToBase64(Buffer.from(base64, 'base64'), rate);
+}
 
-    // 将文件绘制成图片对象
-    let image = new Canvas.Image();
-    image.src = buff;
+export async function compressImageBufferToBase64(buff: Buffer, rate: number = 0.5): Promise<photoItem> {
+    const image = sharp(buff).rotate();
+    const metadata = await image.metadata();
+    const sourceWidth = metadata.autoOrient?.width ?? metadata.width;
+    const sourceHeight = metadata.autoOrient?.height ?? metadata.height;
 
-    // 获取原始图片宽高
-    let drawWidth = image.width;
-    let drawHeight = image.height;
-
-    // 以下改变一下图片大小
-    var maxSide = Math.max(drawWidth, drawHeight);
-    if (maxSide > 600) {
-        var minSide = Math.min(drawWidth, drawHeight);
-        minSide = minSide / maxSide * 1024;
-        maxSide = 600;
-        if (drawWidth > drawHeight) {
-            drawWidth = maxSide;
-            drawHeight = minSide;
-        } else {
-            drawWidth = minSide;
-            drawHeight = maxSide;
-        }
+    if (!sourceWidth || !sourceHeight) {
+        throw new Error("Image dimensions are missing before compression");
     }
 
-    // 用 canvas 重绘
-    // let canvas = new Canvas.createCanvas(drawHeight, drawWidth);
-    let canvas = new Canvas.createCanvas(drawWidth, drawHeight);
-    let context = canvas.getContext('2d');
-    context.drawImage(image, 0, 0, drawWidth, drawHeight);
-    let data: string = canvas.toDataURL('image/jpeg', rate).slice(23);
+    const targetSize = getLegacyCompressedSize(sourceWidth, sourceHeight);
+    const pipeline = image.resize({
+        width: targetSize.width,
+        height: targetSize.height,
+        fit: 'fill',
+        withoutEnlargement: true
+    });
+
+    const quality = Math.max(1, Math.min(100, Math.round(rate * 100)));
+    const {data, info} = await pipeline
+        .jpeg({quality})
+        .toBuffer({resolveWithObject: true});
+
+    if (!info.width || !info.height) {
+        throw new Error("Image dimensions are missing after compression");
+    }
+
+    const base64 = data.toString('base64');
+
     return {
-        // width: drawHeight,
-        // height: drawWidth,
-        width: drawWidth,
-        height: drawHeight,
-        data: data,
-        length: data.length,
+        width: info.width,
+        height: info.height,
+        data: base64,
+        length: base64.length,
         format: "jpeg"
     };
 }

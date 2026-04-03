@@ -1,0 +1,166 @@
+paths:
+  /api/place/search_by_distance:
+    post:
+      tags: [place]
+      summary: Search nearby places by distance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, accessKey, location, distance, skip, limit]
+              properties:
+                userId:
+                  type: string
+                accessKey:
+                  type: string
+                location:
+                  $ref: '#/components/schemas/Location'
+                distance:
+                  type: number
+                skip:
+                  type: integer
+                limit:
+                  type: integer
+      responses:
+        '200':
+          description: place list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/place/search_by_keyword:
+    post:
+      tags: [place]
+      summary: Search places by keyword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, accessKey, location, distance, keyword, skip, limit]
+              properties:
+                userId:
+                  type: string
+                accessKey:
+                  type: string
+                location:
+                  $ref: '#/components/schemas/Location'
+                distance:
+                  type: number
+                keyword:
+                  type: string
+                skip:
+                  type: integer
+                limit:
+                  type: integer
+      responses:
+        '200':
+          description: keyword search result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/place/details_by_place_id:
+    post:
+      tags: [place]
+      summary: Get place detail by place ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, accessKey, place_id]
+              properties:
+                userId:
+                  type: string
+                accessKey:
+                  type: string
+                place_id:
+                  type: string
+      responses:
+        '200':
+          description: place detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/place/draw_card:
+    post:
+      tags: [place]
+      summary: Draw place cards
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, accessKey, location, mode, num]
+              properties:
+                userId:
+                  type: string
+                accessKey:
+                  type: string
+                location:
+                  $ref: '#/components/schemas/Location'
+                mode:
+                  type: integer
+                num:
+                  type: integer
+      responses:
+        '200':
+          description: draw card result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/place/get_html_photo/{photoId}:
+    get:
+      tags: [place]
+      summary: Get HTML photo image by photo ID
+      parameters:
+        - in: path
+          name: photoId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: photo image
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+  /api/place/autocomplete:
+    post:
+      tags: [place]
+      summary: Place autocomplete
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, accessKey, location, input, distance]
+              properties:
+                userId:
+                  type: string
+                accessKey:
+                  type: string
+                location:
+                  $ref: '#/components/schemas/Location'
+                input:
+                  type: string
+                distance:
+                  type: number
+      responses:
+        '200':
+          description: place autocomplete result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'

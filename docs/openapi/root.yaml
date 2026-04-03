@@ -1,0 +1,164 @@
+paths:
+  /api/root/push_black_list:
+    post:
+      tags: [root]
+      summary: Add place IDs to root black list
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accessKey, placeIdList]
+              properties:
+                accessKey:
+                  type: string
+                placeIdList:
+                  $ref: '#/components/schemas/StringArray'
+      responses:
+        '200':
+          description: add root black list result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/root/pull_black_list:
+    post:
+      tags: [root]
+      summary: Remove place IDs from root black list
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accessKey, placeIdList]
+              properties:
+                accessKey:
+                  type: string
+                placeIdList:
+                  $ref: '#/components/schemas/StringArray'
+      responses:
+        '200':
+          description: remove root black list result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/root/get_black_list:
+    post:
+      tags: [root]
+      summary: Get root black list
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accessKey]
+              properties:
+                accessKey:
+                  type: string
+      responses:
+        '200':
+          description: root black list result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/root/push_url_photo:
+    post:
+      tags: [root]
+      summary: Upload URL photo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accessKey, url]
+              properties:
+                accessKey:
+                  type: string
+                url:
+                  type: string
+      responses:
+        '200':
+          description: push URL photo result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/root/get_photo:
+    post:
+      tags: [root]
+      summary: Get photo by photo ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accessKey, photoId, detail]
+              properties:
+                accessKey:
+                  type: string
+                photoId:
+                  type: string
+                detail:
+                  type: boolean
+      responses:
+        '200':
+          description: photo payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/root/fcm_send:
+    post:
+      tags: [root]
+      summary: Send FCM message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accessKey, userIdList, notification, data]
+              properties:
+                accessKey:
+                  type: string
+                userIdList:
+                  $ref: '#/components/schemas/StringArray'
+                notification:
+                  $ref: '#/components/schemas/GenericObject'
+                data:
+                  $ref: '#/components/schemas/GenericObject'
+      responses:
+        '200':
+          description: FCM send result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/root/get_google_api_key:
+    post:
+      tags: [root]
+      summary: Get Google API key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accessKey]
+              properties:
+                accessKey:
+                  type: string
+      responses:
+        '200':
+          description: Google API key result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'

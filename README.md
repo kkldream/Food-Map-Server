@@ -6,12 +6,15 @@
 
 ## 環境
 
-需先在專案根目錄下建立 `.env` 檔來設置環境變數，內容如下：  
-```dotenv
-ROOT_ACCESS_KEY="......................." // 管理員呼叫API使用的Key
-MONGODB_URL="mongodb://................." // MongoDB資料庫位址
-GOOGLE_API_KEY="abcdefg................." // Google地圖API的Key
-```
-另外還有一個參數設定檔 `config.ts` 內可調整此 API Server 的設定。
+1. 使用 Node.js 20
+2. 執行 `corepack enable`
+3. 執行 `pnpm install`
+4. 建立 `.env` 並參考 `.env.example`
+5. 使用 `pnpm start` 啟動開發環境
 
-此專案僅包含 API Server 的部分，資料庫需要另外架設，目前資料庫是使用 MongoDB v5.0.6。
+另外還有一個參數設定檔 `config.ts` 內可調整此 API Server 的設定。此專案僅包含 API Server 的部分，資料庫需要另外架設，目前資料庫是使用 MongoDB v5.0.6。
+
+## 測試
+
+- `pnpm test`
+- `pnpm vitest run tests/services/image-service.test.ts`

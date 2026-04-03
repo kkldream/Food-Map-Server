@@ -1,0 +1,80 @@
+paths:
+  /api/geocode/autocomplete:
+    post:
+      tags: [geocode]
+      summary: Geocode autocomplete
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, accessKey, location, input]
+              properties:
+                userId:
+                  type: string
+                accessKey:
+                  type: string
+                location:
+                  $ref: '#/components/schemas/Location'
+                input:
+                  type: string
+      responses:
+        '200':
+          description: autocomplete list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/geocode/get_location_by_address:
+    post:
+      tags: [geocode]
+      summary: Get location by address
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, accessKey, address]
+              properties:
+                userId:
+                  type: string
+                accessKey:
+                  type: string
+                address:
+                  type: string
+      responses:
+        '200':
+          description: location result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/geocode/get_route_polyline:
+    post:
+      tags: [geocode]
+      summary: Get route polyline
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, accessKey, origin, destination]
+              properties:
+                userId:
+                  type: string
+                accessKey:
+                  type: string
+                origin:
+                  $ref: '#/components/schemas/GenericObject'
+                destination:
+                  $ref: '#/components/schemas/GenericObject'
+      responses:
+        '200':
+          description: route polyline result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'

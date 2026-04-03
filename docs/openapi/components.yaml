@@ -1,0 +1,36 @@
+components:
+  schemas:
+    ApiResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+        verify:
+          type: boolean
+        errMsg:
+          type: string
+        result:
+          type: object
+          additionalProperties: true
+    Location:
+      type: object
+      required:
+        - lat
+        - lng
+      properties:
+        lat:
+          type: number
+        lng:
+          type: number
+    GenericObject:
+      type: object
+      additionalProperties: true
+    StringArray:
+      type: array
+      items:
+        type: string
+    ObjectArray:
+      type: array
+      items:
+        type: object
+        additionalProperties: true

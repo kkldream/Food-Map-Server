@@ -1,0 +1,53 @@
+paths:
+  /api/google_api/update_custom:
+    post:
+      tags: [google_api]
+      summary: Refresh custom Google Maps data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accessKey, location, distance, keyword]
+              properties:
+                accessKey:
+                  type: string
+                location:
+                  $ref: '#/components/schemas/LatLng'
+                distance:
+                  type: number
+                keyword:
+                  type: string
+      responses:
+        '200':
+          description: custom update result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/google_api/update_place_by_distance:
+    post:
+      tags: [google_api]
+      summary: Refresh places by distance from Google Maps
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accessKey, location, searchPageNum]
+              properties:
+                accessKey:
+                  type: string
+                location:
+                  $ref: '#/components/schemas/LatLng'
+                searchPageNum:
+                  type: integer
+      responses:
+        '200':
+          description: place update result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
