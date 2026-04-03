@@ -11,7 +11,14 @@ declare global {
   var mongodbClient: any;
 }
 
-export function createApp() {
+interface CreateAppOptions {
+  enableRequestLogging?: boolean;
+}
+
+export function createApp(options: CreateAppOptions = {}) {
+  const {
+    enableRequestLogging = true
+  } = options;
   const app = express();
 
   app.use(require('cors')());
@@ -25,10 +32,12 @@ export function createApp() {
   app.set('views', './views');
   app.set('view engine', 'jade');
 
-  app.use('/', (req, res, next) => {
-    console.log(`[${getDateFormat()}] ${req.method}: ${req.originalUrl}`);
-    next();
-  });
+  if (enableRequestLogging) {
+    app.use('/', (req, res, next) => {
+      console.log(`[${getDateFormat()}] ${req.method}: ${req.originalUrl}`);
+      next();
+    });
+  }
 
   registerSwagger(app);
   app.use('/', indexRoute);

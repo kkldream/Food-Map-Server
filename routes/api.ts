@@ -58,10 +58,8 @@ router.get('/', function (req: any, res: any, next: any) {
 
 router.use(function (req: any, res: any, next: any) {
     let response = new apiResponseBase();
-    response.errorHandle({
-        status: -1 as any,
-        text: `Not found '${req.url}' api`
-    });
+    response.status = -1;
+    response.errorHandle(new Error(`Not found '${req.url}' api`));
     res.send(response);
 });
 

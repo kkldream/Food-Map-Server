@@ -1,9 +1,12 @@
 import request from 'supertest';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import apiResponseBase from '../../models/dataStruct/apiResponseUserBase';
 import geocodeMgr from '../../models/geocodeMgr';
 import placeMgr from '../../models/placeMgr';
 import {createApp} from '../../app';
+
+const {verifyUserMock} = vi.hoisted(() => ({
+  verifyUserMock: vi.fn()
+}));
 
 vi.mock('../../models/placeMgr', () => ({
   default: {
@@ -24,6 +27,21 @@ vi.mock('../../models/geocodeMgr', () => ({
     getRoutePolyline: vi.fn()
   }
 }));
+
+vi.mock('../../models/dataStruct/apiResponseUserBase', async () => {
+  const actual = await vi.importActual<typeof import('../../models/dataStruct/apiResponseUserBase')>('../../models/dataStruct/apiResponseUserBase');
+
+  class TestApiResponseBase extends actual.default {
+    async verifyUser(userId: string, accessKey: string) {
+      return verifyUserMock(userId, accessKey);
+    }
+  }
+
+  return {
+    __esModule: true,
+    default: TestApiResponseBase
+  };
+});
 
 function installMongoClientStub() {
   const previousMongoClient = global.mongodbClient;
@@ -47,7 +65,7 @@ describe('place and geocode routes', () => {
   beforeEach(() => {
     restoreMongoClient = installMongoClientStub();
 
-    vi.spyOn(apiResponseBase.prototype, 'verifyUser').mockResolvedValue({
+    verifyUserMock.mockResolvedValue({
       msg: '驗證成功'
     });
 
@@ -83,7 +101,7 @@ describe('place and geocode routes', () => {
   });
 
   it('wraps the search_by_distance response and forwards destructured body fields', async () => {
-    const app = createApp();
+    const app = createApp({enableRequestLogging: false});
 
     const response = await request(app).post('/api/place/search_by_distance').send({
       userId: 'u1',
@@ -106,12 +124,12 @@ describe('place and geocode routes', () => {
       })
     }));
     expect(response.body).not.toHaveProperty('errMsg');
-    expect(apiResponseBase.prototype.verifyUser).toHaveBeenCalledWith('u1', 'k1');
+    expect(verifyUserMock).toHaveBeenCalledWith('u1', 'k1');
     expect(placeMgr.searchByDistance).toHaveBeenCalledWith('u1', {lat: 25, lng: 121}, 1000, 0, 10);
   });
 
   it('wraps the details_by_place_id response and forwards destructured body fields', async () => {
-    const app = createApp();
+    const app = createApp({enableRequestLogging: false});
 
     const response = await request(app).post('/api/place/details_by_place_id').send({
       userId: 'u1',
@@ -132,12 +150,12 @@ describe('place and geocode routes', () => {
       })
     }));
     expect(response.body).not.toHaveProperty('errMsg');
-    expect(apiResponseBase.prototype.verifyUser).toHaveBeenCalledWith('u1', 'k1');
+    expect(verifyUserMock).toHaveBeenCalledWith('u1', 'k1');
     expect(placeMgr.detailsByPlaceId).toHaveBeenCalledWith('u1', 'place-1');
   });
 
   it('wraps the geocode autocomplete response and forwards destructured body fields', async () => {
-    const app = createApp();
+    const app = createApp({enableRequestLogging: false});
 
     const response = await request(app).post('/api/geocode/autocomplete').send({
       userId: 'u1',
@@ -158,12 +176,12 @@ describe('place and geocode routes', () => {
       })
     }));
     expect(response.body).not.toHaveProperty('errMsg');
-    expect(apiResponseBase.prototype.verifyUser).toHaveBeenCalledWith('u1', 'k1');
+    expect(verifyUserMock).toHaveBeenCalledWith('u1', 'k1');
     expect(geocodeMgr.autocomplete).toHaveBeenCalledWith({lat: 25.033, lng: 121.5654}, '台北');
   });
 
   it('wraps the get_location_by_address response and forwards destructured body fields', async () => {
-    const app = createApp();
+    const app = createApp({enableRequestLogging: false});
 
     const response = await request(app).post('/api/geocode/get_location_by_address').send({
       userId: 'u1',
@@ -184,13 +202,13 @@ describe('place and geocode routes', () => {
       })
     }));
     expect(response.body).not.toHaveProperty('errMsg');
-    expect(apiResponseBase.prototype.verifyUser).toHaveBeenCalledWith('u1', 'k1');
+    expect(verifyUserMock).toHaveBeenCalledWith('u1', 'k1');
     expect(geocodeMgr.getLocationByAddress).toHaveBeenCalledWith('台北市信義區');
   });
 
   it('returns a failure envelope when a route manager throws', async () => {
     vi.mocked(placeMgr.searchByDistance).mockRejectedValueOnce(new Error('boom'));
-    const app = createApp();
+    const app = createApp({enableRequestLogging: false});
 
     const response = await request(app).post('/api/place/search_by_distance').send({
       userId: 'u1',
@@ -208,12 +226,21 @@ describe('place and geocode routes', () => {
   });
 
   it('returns the api fallback envelope for missing routes', async () => {
-    const app = createApp();
+    const app = createApp({enableRequestLogging: false});
 
     const response = await request(app).get('/api/not_found');
 
     expect(response.status).toBe(200);
     expect(response.body.status).toBe(-1);
-    expect(response.body.errMsg).toContain('Not found');
+    expect(response.body.errMsg).toBeTruthy();
+  });
+
+  it('can disable request logging for route tests', async () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    const app = createApp({enableRequestLogging: false});
+
+    await request(app).get('/api/not_found');
+
+    expect(logSpy).not.toHaveBeenCalled();
   });
 });

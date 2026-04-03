@@ -41,8 +41,12 @@ describe('root routes', () => {
 
     vi.mocked(rootMgr.getGoogleApiKey).mockReturnValue({key: 'demo'});
     vi.mocked(placeMgr.getPhoto).mockResolvedValue({
-      photoBase64: 'base64-image',
-      format: 'jpeg'
+      updateTime: new Date('2024-01-01T00:00:00.000Z'),
+      format: 'jpeg',
+      data: 'base64-image',
+      width: 1,
+      height: 1,
+      length: 12
     });
   });
 
@@ -56,7 +60,7 @@ describe('root routes', () => {
     const verifyRootSpy = vi.spyOn(apiResponseBase.prototype, 'verifyRoot').mockResolvedValue({
       msg: '驗證成功'
     });
-    const app = createApp();
+    const app = createApp({enableRequestLogging: false});
 
     const response = await request(app).post('/api/root/get_google_api_key').send({
       accessKey: 'root'
@@ -78,7 +82,7 @@ describe('root routes', () => {
     const verifyRootSpy = vi.spyOn(apiResponseBase.prototype, 'verifyRoot').mockResolvedValue({
       msg: '驗證成功'
     });
-    const app = createApp();
+    const app = createApp({enableRequestLogging: false});
 
     const response = await request(app).post('/api/root/get_photo').send({
       accessKey: 'root',
@@ -90,7 +94,7 @@ describe('root routes', () => {
     expect(response.body).toEqual(expect.objectContaining({
       status: 0,
       result: expect.objectContaining({
-        photoBase64: 'base64-image',
+        data: 'base64-image',
         format: 'jpeg'
       })
     }));

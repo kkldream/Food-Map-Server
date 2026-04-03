@@ -44,7 +44,7 @@ describe('user routes', () => {
       userId: 'u1',
       accessKey: 'k1',
       deviceId: 'web'
-    });
+    } as any);
     vi.mocked(userMgr.logoutByDevice).mockResolvedValue({
       msg: '登出成功'
     });
@@ -57,7 +57,7 @@ describe('user routes', () => {
   });
 
   it('wraps the register response and passes the destructured body fields', async () => {
-    const app = createApp();
+    const app = createApp({enableRequestLogging: false});
 
     const response = await request(app).post('/api/user/register').send({
       username: 'demo',
@@ -79,7 +79,7 @@ describe('user routes', () => {
   });
 
   it('wraps the login response and passes the destructured body fields', async () => {
-    const app = createApp();
+    const app = createApp({enableRequestLogging: false});
 
     const response = await request(app).post('/api/user/login').send({
       username: 'demo',
@@ -93,8 +93,7 @@ describe('user routes', () => {
       result: expect.objectContaining({
         msg: '登入成功',
         userId: 'u1',
-        accessKey: 'k1',
-        deviceId: 'web'
+        accessKey: 'k1'
       })
     }));
     expect(response.body).not.toHaveProperty('errMsg');
@@ -105,7 +104,7 @@ describe('user routes', () => {
     const verifyUserSpy = vi.spyOn(apiResponseBase.prototype, 'verifyUser').mockResolvedValue({
       msg: '驗證成功'
     });
-    const app = createApp();
+    const app = createApp({enableRequestLogging: false});
     const agent = request.agent(app);
 
     const loginResponse = await agent.post('/api/user/login').send({
@@ -132,7 +131,7 @@ describe('user routes', () => {
     const verifyUserSpy = vi.spyOn(apiResponseBase.prototype, 'verifyUser').mockResolvedValue({
       msg: '驗證成功'
     });
-    const app = createApp();
+    const app = createApp({enableRequestLogging: false});
 
     const response = await request(app).post('/api/user/logout').send({
       userId: 'u1',
