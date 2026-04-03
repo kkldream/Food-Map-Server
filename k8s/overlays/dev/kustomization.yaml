@@ -15,4 +15,5 @@ patches:
       name: food-map-server
 images:
   - name: food-map-server
+    newName: registry.kkserver.net/food-map-server
     newTag: replace-me

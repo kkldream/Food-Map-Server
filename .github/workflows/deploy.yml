@@ -7,6 +7,7 @@ on:
 
 env:
   IMAGE_NAME: food-map-server
+  IMAGE_REGISTRY: registry.kkserver.net
   K8S_NAMESPACE: apps
 
 jobs:
@@ -30,8 +31,9 @@ jobs:
           echo "SECRET_NAME=food-map-secrets-${BRANCH}" >> $GITHUB_ENV
           echo "KUSTOMIZE_DIR=k8s/overlays/${BRANCH}" >> $GITHUB_ENV
           echo "RESOURCE_NAME=food-map-server-${BRANCH}" >> $GITHUB_ENV
+          echo "IMAGE_REF=${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}" >> $GITHUB_ENV
 
-          echo "Deploy context: branch=${BRANCH} image_tag=${IMAGE_TAG}"
+          echo "Deploy context: branch=${BRANCH} image_tag=${IMAGE_TAG} image_ref=${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}"
 
       - name: Runner diagnostics
         run: |
@@ -54,9 +56,13 @@ jobs:
         run: |
           docker build \
             --progress=plain \
-            -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
+            -t "${IMAGE_REF}:${IMAGE_TAG}" \
             -f Dockerfile \
             .
+
+      - name: Push image to registry
+        run: |
+          docker push "${IMAGE_REF}:${IMAGE_TAG}"
 
       - name: Create or update secrets
         run: |
