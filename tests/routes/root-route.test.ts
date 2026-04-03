@@ -87,7 +87,7 @@ describe('root routes', () => {
     const response = await request(app).post('/api/root/get_photo').send({
       accessKey: 'root',
       photoId: 'photo-1',
-      detail: 720
+      detail: true
     });
 
     expect(response.status).toBe(200);
@@ -100,6 +100,6 @@ describe('root routes', () => {
     }));
     expect(response.body).not.toHaveProperty('errMsg');
     expect(verifyRootSpy).toHaveBeenCalledWith('root');
-    expect(placeMgr.getPhoto).toHaveBeenCalledWith('photo-1', 720);
+    expect(placeMgr.getPhoto).toHaveBeenCalledWith('photo-1', true);
   });
 });

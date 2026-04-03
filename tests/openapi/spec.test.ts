@@ -8,6 +8,8 @@ describe('openApiSpec', () => {
     expect(openApiSpec.paths?.['/api/user/login']).toBeTruthy();
     expect(openApiSpec.paths?.['/api/place/search_by_distance']).toBeTruthy();
     expect(openApiSpec.paths?.['/api/geocode/autocomplete']).toBeTruthy();
+    expect(openApiSpec.paths?.['/api/google_api/update_custom']).toBeTruthy();
+    expect(openApiSpec.paths?.['/api/google_api/update_place_by_distance']).toBeTruthy();
     expect(openApiSpec.paths?.['/api/root/get_photo']).toBeTruthy();
   });
 

@@ -6,4 +6,5 @@ tags:
   - name: user
   - name: place
   - name: geocode
+  - name: google_api
   - name: root

@@ -9,7 +9,7 @@ dotenv.config();
 let server: Server | undefined;
 let isShuttingDown = false;
 
-function closeServer(httpServer: Server) {
+export function closeServer(httpServer: Server) {
   return new Promise<void>((resolve, reject) => {
     httpServer.close((error) => {
       if (error) {
@@ -22,7 +22,7 @@ function closeServer(httpServer: Server) {
   });
 }
 
-async function main() {
+export async function main() {
   const env = getEnv();
   await connectMongo(env.mongodbUrl);
   console.log('mongo client is connected');
@@ -33,7 +33,7 @@ async function main() {
   });
 }
 
-async function shutdown() {
+export async function shutdown() {
   if (isShuttingDown) return;
   isShuttingDown = true;
 
@@ -50,15 +50,31 @@ async function shutdown() {
   }
 }
 
-main().catch((error) => {
+export function handleStartupError(error: unknown) {
   console.error('Failed to start server', error);
   process.exit(1);
-});
+}
 
-process.on('SIGINT', () => {
-  void shutdown();
-});
+export function registerSignalHandlers(onSignal: () => Promise<void> | void = shutdown) {
+  process.on('SIGINT', () => {
+    void onSignal();
+  });
 
-process.on('SIGTERM', () => {
-  void shutdown();
-});
+  process.on('SIGTERM', () => {
+    void onSignal();
+  });
+}
+
+export async function startServer() {
+  registerSignalHandlers();
+
+  try {
+    await main();
+  } catch (error) {
+    handleStartupError(error);
+  }
+}
+
+if (require.main === module) {
+  void startServer();
+}
