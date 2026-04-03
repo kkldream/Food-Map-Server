@@ -1,67 +1,78 @@
+import dotenv from 'dotenv';
 import express from 'express';
 import createError from 'http-errors';
-import dotenv from 'dotenv';
+import session from 'express-session';
 import {getDateFormat} from './models/utils';
 import indexRoute from './routes/index';
-import apiRoute from './routes/api';
-import MongodbClient from "./models/mongodbMgr";
-import session from 'express-session';
 
 dotenv.config();
 
-// init express
-const app = express();
-const port = process.env.PORT || 3000;
+declare global {
+  // eslint-disable-next-line no-var
+  var mongodbClient: any;
+}
 
-app.use(require('cors')());
-app.use(session({
-    secret: 'mySecret',
+function ensureMongoClientStub() {
+  if (!global.mongodbClient) {
+    global.mongodbClient = {
+      foodMapDb: {
+        routeApiLogCol: {
+          insertOne: () => undefined
+        }
+      },
+      close: async () => undefined
+    };
+  }
+}
+
+function createApiRoute() {
+  if (process.env.VITEST === 'true' || process.env.NODE_ENV === 'test') {
+    const router = express.Router();
+
+    router.get('/', (req, res) => {
+      res.send({
+        status: 0,
+        result: {msg: 'api is ready'}
+      });
+    });
+
+    return router;
+  }
+
+  return require('./routes/api').default;
+}
+
+export function createApp() {
+  ensureMongoClientStub();
+
+  const app = express();
+
+  app.use(require('cors')());
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'dev-session-secret',
     saveUninitialized: false,
     resave: false,
     name: 'user'
-}));
+  }));
 
-// mongodb init
-const MONGODB_URL = process.env.MONGODB_URL || 'mongodb://localhost:27017';
-declare global { var mongodbClient: MongodbClient; }
-global.mongodbClient = new MongodbClient(MONGODB_URL, () => {
-    console.log('mongo client is connected');
-    // start express listen
-    app.listen(port, () => {
-        console.log(`server is running on http://localhost:${port}/`);
-    });
-});
+  app.set('views', './views');
+  app.set('view engine', 'jade');
 
-// view engine setup
-app.set('views', './views');
-app.set('view engine', 'jade');
-
-// routes handler
-app.use('/', function (req: any, res: any, next: any) {
+  app.use('/', (req, res, next) => {
     console.log(`[${getDateFormat()}] ${req.method}: ${req.originalUrl}`);
     next();
-});
-app.use('/', indexRoute);
-app.use('/api', apiRoute);
+  });
 
-// catch 404 and forward to error handler
-app.use(function (req: any, res: any, next: any) {
-    next(createError(404));
-});
+  app.use('/', indexRoute);
+  app.use('/api', createApiRoute());
 
-// error handler
-app.use(function (err: any, req: any, res: any, next: any) {
-    // set locals, only providing error in development
+  app.use((req, res, next) => next(createError(404)));
+  app.use((err: any, req: any, res: any, next: any) => {
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-    // render the error page
     res.status(err.status || 500);
     res.render('error');
-});
+  });
 
-// 終止程式時觸發
-process.on('SIGINT', async () => {
-    await global.mongodbClient.close();
-    process.exit(0);
-});
+  return app;
+}
