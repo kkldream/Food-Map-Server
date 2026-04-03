@@ -18,6 +18,8 @@ type OpenApiSpec = {
   }>;
 };
 
+let openApiSpecCache: OpenApiSpec | null = null;
+
 function resolveOpenApiDirectory() {
   const candidates = [
     path.resolve(__dirname, 'docs/openapi'),
@@ -36,20 +38,28 @@ function resolveOpenApiDirectory() {
   return openApiDirectory;
 }
 
-const openApiDirectory = resolveOpenApiDirectory();
+export function getOpenApiSpec() {
+  if (openApiSpecCache) {
+    return openApiSpecCache;
+  }
 
-export const openApiSpec = swaggerJsdoc({
-  definition: {
-    openapi: '3.0.3',
-    info: {
-      title: 'Food Map Server API',
-      version: '1.0.0'
-    }
-  },
-  apis: [path.join(openApiDirectory, '*.yaml')],
-  failOnErrors: true
-}) as OpenApiSpec;
+  const openApiDirectory = resolveOpenApiDirectory();
+
+  openApiSpecCache = swaggerJsdoc({
+    definition: {
+      openapi: '3.0.3',
+      info: {
+        title: 'Food Map Server API',
+        version: '1.0.0'
+      }
+    },
+    apis: [path.join(openApiDirectory, '*.yaml')],
+    failOnErrors: true
+  }) as OpenApiSpec;
+
+  return openApiSpecCache;
+}
 
 export function registerSwagger(app: Express) {
-  app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiSpec));
+  app.use('/docs', swaggerUi.serve, swaggerUi.setup(getOpenApiSpec()));
 }
