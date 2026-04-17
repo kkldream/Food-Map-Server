@@ -31,7 +31,9 @@ async function autocomplete(location: latLngItem, input: string | undefined): Pr
     if (input) {
         let predictions: placeAutocompletePrediction[] = await getAutocompleteHistory(location, input, 1, undefined, 10);
         if (predictions.length === 0) {
-            let response: googleAutocompleteResponse = await callGoogleApiAutocomplete(input, location, undefined, 1);
+            // The previous 1m fallback radius was too small and caused valid nearby
+            // place keywords (for example "麥當") to return empty predictions.
+            let response: googleAutocompleteResponse = await callGoogleApiAutocomplete(input, location, undefined);
             updated = true;
             predictions = response.predictions;
         }
@@ -49,6 +51,13 @@ async function autocomplete(location: latLngItem, input: string | undefined): Pr
             let response: googleGeocodeAutocompleteResponse = await callGoogleApiGeocodeAddress(location);
             updated = true;
             historyResult = response.results;
+        }
+        if (historyResult.length === 0) {
+            return {
+                updated,
+                placeCount: 0,
+                placeList: []
+            };
         }
         let item = historyResult[0];
         outputList = [{
@@ -78,6 +87,9 @@ async function getLocationByAddress(address: string): Promise<getLocationByAddre
         let response: googleGeocodeAutocompleteResponse = await callGoogleApiGeocodeLocation(address);
         updated = true;
         historyResult = response.results;
+    }
+    if (historyResult.length === 0) {
+        throwError(errorCodes.placeNotFound, "查無符合地址");
     }
     let item = historyResult[0];
     let output: responseAutocompleteItem = {

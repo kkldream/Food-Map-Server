@@ -10,6 +10,16 @@ import {
     waypointByPlaceId
 } from "../../dataStruct/request/googleRoutesApiRequest";
 import {errorCodes, throwError} from "../../dataStruct/throwError";
+import {googleStatusEnum} from "../../dataStruct/originalGoogleResponse/pubilcItem";
+
+function assertGoogleStatus(status: googleStatusEnum, errorMessage?: string) {
+    if (status === googleStatusEnum.OK || status === googleStatusEnum.ZERO_RESULTS) return;
+
+    throwError(
+        errorCodes.unknown,
+        `Google Geocoding API 錯誤: ${status}${errorMessage ? ` - ${errorMessage}` : ""}`
+    );
+}
 
 // https://developers.google.com/maps/documentation/geocoding/start#reverse
 export async function callGoogleApiGeocodeAddress(location: latLngItem): Promise<googleGeocodeAutocompleteResponse> {
@@ -19,6 +29,7 @@ export async function callGoogleApiGeocodeAddress(location: latLngItem): Promise
         + `&key=${process.env.GOOGLE_API_KEY}`
         + `&language=zh-TW`;
     let response: googleGeocodeAutocompleteResponse = (await axios({method: 'get', url})).data;
+    assertGoogleStatus(response.status, response.error_message);
     await insertGoogleApiGeocodeAutocompleteLog({location, response: response.results});
     return response;
 }
@@ -30,6 +41,7 @@ export async function callGoogleApiGeocodeLocation(address: string): Promise<goo
         + `&key=${process.env.GOOGLE_API_KEY}`
         + `&language=zh-TW`;
     let response: googleGeocodeAutocompleteResponse = (await axios({method: 'get', url})).data;
+    assertGoogleStatus(response.status, response.error_message);
     await insertGoogleApiGeocodeAutocompleteLog({address, response: response.results});
     return response;
 }
@@ -52,7 +64,7 @@ export async function callGoogleApiComputeRoutes(origin: waypoint, destination: 
             origin: origin.place_id !== "" ? ({place_id: origin.place_id} as waypointByPlaceId) :
                 ({location: {latLng: {latitude: origin.lat, longitude: origin.lng}}} as waypointByLocation),
             destination: destination.place_id !== "" ? ({place_id: destination.place_id} as waypointByPlaceId) :
-                ({location: {latLng: {latitude: destination.lat, longitude: destination.lat}}} as waypointByLocation),
+                ({location: {latLng: {latitude: destination.lat, longitude: destination.lng}}} as waypointByLocation),
             travelMode: routeTravelModeEnum.WALK,
             computeAlternativeRoutes: false,
             routeModifiers: {avoidIndoor: false},
@@ -63,8 +75,10 @@ export async function callGoogleApiComputeRoutes(origin: waypoint, destination: 
     try {
         response = (await axios(config)).data;
     } catch (error: any) {
+        const googleErrorMessage = error?.response?.data?.error?.message;
+
         if (error.code === "ERR_BAD_REQUEST")
-            throwError(errorCodes.unknown, "API權限錯誤");
+            throwError(errorCodes.unknown, `Google Routes API 錯誤${googleErrorMessage ? `: ${googleErrorMessage}` : ""}`);
         throwError(errorCodes.unknown);
         throw Error();
     }
