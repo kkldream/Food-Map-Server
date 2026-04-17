@@ -8,6 +8,33 @@ import {
 import {googleAutocompleteResponse} from "../../dataStruct/originalGoogleResponse/autocompleteResponse";
 import {latLngItem} from "../../dataStruct/pubilcItem";
 import {googleDetailResponse} from "../../dataStruct/originalGoogleResponse/detailResponse";
+import {googleStatusEnum} from "../../dataStruct/originalGoogleResponse/pubilcItem";
+import {errorCodes, throwError} from "../../dataStruct/throwError";
+
+function assertGoogleStatus(status: googleStatusEnum, errorMessage?: string) {
+    if (status === googleStatusEnum.OK || status === googleStatusEnum.ZERO_RESULTS) return;
+
+    throwError(
+        errorCodes.unknown,
+        `Google Places API 錯誤: ${status}${errorMessage ? ` - ${errorMessage}` : ""}`
+    );
+}
+
+async function fetchPlacesPage(url: string, pageToken?: string): Promise<googlePlaceResponse> {
+    for (let attempt = 0; attempt < 3; attempt++) {
+        let response: googlePlaceResponse = (await axios({method: 'get', url})).data;
+
+        if (pageToken && response.status === googleStatusEnum.INVALID_REQUEST && attempt < 2) {
+            await new Promise((r) => setTimeout(r, 1000));
+            continue;
+        }
+
+        assertGoogleStatus(response.status, response.error_message);
+        return response;
+    }
+
+    throwError(errorCodes.unknown, 'Google Places API 錯誤: INVALID_REQUEST - next_page_token 尚未生效');
+}
 
 // https://developers.google.com/maps/documentation/places/web-service/search-nearby
 export async function callGoogleApiNearBySearch(searchPageNum: number, location: latLngItem, type: string, distance: number): Promise<googlePlaceResult[]> {
@@ -24,7 +51,7 @@ export async function callGoogleApiNearBySearch(searchPageNum: number, location:
             + `&type=${type}`
             + (distance <= 0 ? "&rankby=distance" : `&radius=${distance}`)
             + "&components=country:tw";
-        let response: googlePlaceResponse = (await axios({method: 'get', url})).data;
+        let response: googlePlaceResponse = await fetchPlacesPage(url, next_page_token || undefined);
         originalDataList = originalDataList.concat(response.results);
         next_page_token = response.next_page_token;
         console.log(`update ${type}: +${response.results.length}/${originalDataList.length}, next_page = ${next_page_token !== undefined}`)
@@ -45,7 +72,7 @@ export async function callGoogleApiKeywordBySearch(searchPageNum: number, locati
         + `&keyword=${keyword}`
         + (distance <= 0 ? "&rankby=distance" : `&radius=${distance}`)
         + "&components=country:tw";
-    let response: googlePlaceResponse = (await axios({method: 'get', url})).data;
+    let response: googlePlaceResponse = await fetchPlacesPage(url);
     let originalDataList: googlePlaceResult[] = response.results;
     let next_page_token: string | undefined = response.next_page_token;
     console.log(`update ${type}: +${response.results.length}/${originalDataList.length}, next_page = ${next_page_token !== undefined}`);
@@ -62,7 +89,7 @@ export async function callGoogleApiKeywordBySearch(searchPageNum: number, locati
                 + `&keyword=${keyword}`
                 + (distance === -1 ? "&rankby=distance" : `&radius=${distance}`)
                 + "&components=country:tw";
-            let response: googlePlaceResponse = (await axios({method: 'get', url})).data;
+            let response: googlePlaceResponse = await fetchPlacesPage(url, next_page_token);
             originalDataList = originalDataList.concat(response.results);
             next_page_token = response.next_page_token;
             console.log(`update ${type}: +${response.results.length}/${originalDataList.length}, next_page = ${next_page_token !== undefined}`)
@@ -82,6 +109,7 @@ export async function callGoogleApiDetail(place_id: string): Promise<googleDetai
         + `&place_id=${place_id}`
         + `&key=${process.env.GOOGLE_API_KEY}`;
     let response: googleDetailResponse = (await axios({method: 'get', url})).data;
+    assertGoogleStatus(response.status, response.error_message);
     await insertGoogleApiDetailLog({place_id, response: response.result});
     return response;
 }
@@ -104,6 +132,7 @@ export async function callGoogleApiAutocomplete(input: string, location: latLngI
         + `&language=zh-TW`;
     if (type) url += `&type=${type}`;
     let response: googleAutocompleteResponse = (await axios({method: 'get', url})).data;
+    assertGoogleStatus(response.status, response.error_message);
     await insertGoogleApiAutocompleteLog({
         input, type, distance, response: response.predictions, location
     });

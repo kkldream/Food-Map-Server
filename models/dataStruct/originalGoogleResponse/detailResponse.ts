@@ -4,6 +4,7 @@ export interface googleDetailResponse {
     html_attributions: string[];
     result: googleDetailItem;
     status: googleStatusEnum;
+    error_message?: string;
 }
 
 export interface googleDetailItem {

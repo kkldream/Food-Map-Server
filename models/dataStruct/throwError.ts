@@ -15,7 +15,7 @@ export enum errorCodes {
     photoUrlError = 10,
 }
 
-export function throwError(errorCode: errorCodes, msg: string = ''): apiError {
+export function throwError(errorCode: errorCodes, msg: string = ''): never {
     let status = errorCode ?? errorCodes.unknown;
     if (msg === '')
         switch (errorCode) {
