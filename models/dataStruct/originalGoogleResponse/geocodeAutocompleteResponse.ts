@@ -4,6 +4,7 @@ export interface googleGeocodeAutocompleteResponse {
     plus_code?: plusCode;
     results: googleGeocodeAutocompleteResult[];
     status: googleStatusEnum;
+    error_message?: string;
 }
 
 export interface googleGeocodeAutocompleteResult {

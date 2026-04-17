@@ -5,6 +5,7 @@ export interface googlePlaceResponse {
     next_page_token: string;
     results: googlePlaceResult[];
     status: googleStatusEnum;
+    error_message?: string;
 }
 
 export interface googlePlaceResult {
