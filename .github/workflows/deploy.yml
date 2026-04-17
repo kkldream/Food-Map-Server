@@ -14,7 +14,7 @@ env:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: 'kkldream-food-map-server'
 
     steps:
       - name: Checkout code
