@@ -20,6 +20,18 @@ function assertGoogleStatus(status: googleStatusEnum, errorMessage?: string) {
     );
 }
 
+function handleGoogleAxiosError(error: unknown): never {
+    if (axios.isAxiosError(error)) {
+        const googleResponse = error.response?.data as {status?: googleStatusEnum; error_message?: string} | undefined;
+        if (googleResponse?.status) {
+            assertGoogleStatus(googleResponse.status, googleResponse.error_message);
+        }
+        throwError(errorCodes.unknown, error.message);
+    }
+
+    throw error;
+}
+
 async function fetchPlacesPage(url: string, pageToken?: string): Promise<googlePlaceResponse> {
     for (let attempt = 0; attempt < 3; attempt++) {
         let response: googlePlaceResponse = (await axios({method: 'get', url})).data;
@@ -123,18 +135,26 @@ export async function callGoogleApiDetail(place_id: string): Promise<googleDetai
  * @param distance 單位公尺，預設為30000，範圍大於等於1
  */
 export async function callGoogleApiAutocomplete(input: string, location: latLngItem, type: string | undefined, distance: number = 30000): Promise<googleAutocompleteResponse> {
-    let url = 'https://maps.googleapis.com/maps/api/place/autocomplete/json?'
-        + `&input=${input}`
-        + `&location=${location.lat},${location.lng}`
-        + `&components=country:tw`
-        + `&radius=${distance}`
-        + `&key=${process.env.GOOGLE_API_KEY}`
-        + `&language=zh-TW`;
-    if (type) url += `&type=${type}`;
-    let response: googleAutocompleteResponse = (await axios({method: 'get', url})).data;
-    assertGoogleStatus(response.status, response.error_message);
-    await insertGoogleApiAutocompleteLog({
-        input, type, distance, response: response.predictions, location
-    });
-    return response;
+    try {
+        const response: googleAutocompleteResponse = (await axios({
+            method: 'get',
+            url: 'https://maps.googleapis.com/maps/api/place/autocomplete/json',
+            params: {
+                input,
+                location: `${location.lat},${location.lng}`,
+                components: 'country:tw',
+                radius: distance,
+                key: process.env.GOOGLE_API_KEY,
+                language: 'zh-TW',
+                ...(type ? {types: type} : {})
+            }
+        })).data;
+        assertGoogleStatus(response.status, response.error_message);
+        await insertGoogleApiAutocompleteLog({
+            input, type, distance, response: response.predictions, location
+        });
+        return response;
+    } catch (error) {
+        handleGoogleAxiosError(error);
+    }
 }
