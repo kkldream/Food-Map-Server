@@ -2,7 +2,14 @@ import {beforeEach, describe, expect, it, vi} from 'vitest';
 import axios from 'axios';
 import {googleStatusEnum} from '../../models/dataStruct/originalGoogleResponse/pubilcItem';
 
-vi.mock('axios');
+vi.mock('axios', () => {
+  const axiosMock = vi.fn();
+  return {
+    default: Object.assign(axiosMock, {
+      isAxiosError: vi.fn()
+    })
+  };
+});
 vi.mock('../../models/service/googleApiLogService', () => ({
   insertGoogleApiAutocompleteLog: vi.fn(),
   insertGoogleApiDetailLog: vi.fn(),
@@ -14,6 +21,7 @@ import {callGoogleApiAutocomplete, callGoogleApiNearBySearch} from '../../models
 describe('google place service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(axios.isAxiosError).mockImplementation((error: unknown) => Boolean((error as {isAxiosError?: boolean})?.isAxiosError));
   });
 
   it('surfaces denied autocomplete responses with the Google status and message', async () => {
@@ -28,6 +36,48 @@ describe('google place service', () => {
     await expect(callGoogleApiAutocomplete('麥當', {lat: 25.0516, lng: 121.5604}, undefined)).rejects.toMatchObject({
       status: -1,
       text: expect.stringContaining('Google Places API 錯誤: REQUEST_DENIED')
+    });
+  });
+
+  it('uses the legacy autocomplete types parameter when filtering place types', async () => {
+    vi.mocked(axios).mockResolvedValue({
+      data: {
+        predictions: [],
+        status: googleStatusEnum.OK
+      }
+    } as never);
+
+    await callGoogleApiAutocomplete('麥當', {lat: 25.0516, lng: 121.5604}, 'restaurant', 100);
+
+    expect(vi.mocked(axios)).toHaveBeenCalledWith(expect.objectContaining({
+      method: 'get',
+      url: 'https://maps.googleapis.com/maps/api/place/autocomplete/json',
+      params: expect.objectContaining({
+        input: '麥當',
+        location: '25.0516,121.5604',
+        radius: 100,
+        language: 'zh-TW',
+        components: 'country:tw',
+        types: 'restaurant'
+      })
+    }));
+  });
+
+  it('converts Google HTTP errors into api errors instead of leaking a generic AxiosError', async () => {
+    vi.mocked(axios).mockRejectedValue({
+      isAxiosError: true,
+      message: 'Request failed with status code 400',
+      response: {
+        data: {
+          status: googleStatusEnum.INVALID_REQUEST,
+          error_message: 'Invalid types parameter.'
+        }
+      }
+    } as never);
+
+    await expect(callGoogleApiAutocomplete('麥當', {lat: 25.0516, lng: 121.5604}, 'restaurant', 100)).rejects.toMatchObject({
+      status: -1,
+      text: expect.stringContaining('Google Places API 錯誤: INVALID_REQUEST - Invalid types parameter.')
     });
   });
 
