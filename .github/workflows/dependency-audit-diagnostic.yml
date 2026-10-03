@@ -1,4 +1,4 @@
-name: Dependabot alert diagnostic
+name: Fix Dependabot alert 105
 
 on:
   push:
@@ -6,11 +6,32 @@ on:
       - fix/dependabot-105
 
 jobs:
-  diagnose:
+  fix:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
-      - name: Read Dependabot alert 105
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/dependabot-105
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.8.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Upgrade vulnerable transitive dependency
+        run: pnpm update fast-xml-builder@1.1.7 --lockfile-only
+      - name: Verify frozen install
+        run: pnpm install --frozen-lockfile
+      - name: Run tests
+        run: pnpm test
+      - name: Run TypeScript build
+        run: pnpm build
+      - name: Commit lockfile fix
         run: |
-          curl --fail-with-body             -H "Accept: application/vnd.github+json"             -H "Authorization: Bearer $GH_TOKEN"             -H "X-GitHub-Api-Version: 2022-11-28"             "https://api.github.com/repos/${{ github.repository }}/dependabot/alerts/105"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pnpm-lock.yaml
+          git diff --cached --quiet && exit 0
+          git commit -m "fix: upgrade fast-xml-builder to 1.1.7"
+          git push origin HEAD:fix/dependabot-105
