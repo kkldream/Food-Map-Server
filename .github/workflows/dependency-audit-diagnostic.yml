@@ -5,10 +5,6 @@ on:
     branches:
       - fix/dependabot-105
 
-permissions:
-  contents: read
-  security-events: read
-
 jobs:
   diagnose:
     runs-on: ubuntu-latest
